@@ -1,3 +1,6 @@
+use classicmodels;
+show tables;
+
 CREATE TABLE members (
     member_id INT AUTO_INCREMENT,
     name VARCHAR(100),
