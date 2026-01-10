@@ -84,4 +84,24 @@ SELECT firstName FROM employees
 EXCEPT
 SELECT contactFirstName FROM customers;
 
-select contactFirstName from customers;
+/* --- INTERSECT --- */
+/*
+The INTERSECT operator compares the result sets of two queries and returns the common rows.
+
+To use the INTERSECT operator for the queries, follow these rules:
+1.The order and the number of columns in the select list of the queries must be the same.
+2.The data types of the corresponding columns must be compatible.
+
+The INTERSECT operator uses the DISTINCT by default. This means that the DISTINCT removes duplicates from either side of the intersection. 
+If you want to retain duplicates, you explicitly specify the ALL option.
+*/
+
+SELECT id FROM t1
+INTERSECT
+SELECT id FROM t2;
+
+SELECT firstName FROM employees 
+INTERSECT
+SELECT contactFirstname FROM customers;
+
+
