@@ -6,7 +6,7 @@ SELECT lastname, firstname, jobtitle FROM employees WHERE jobtitle = 'Sales Rep'
 SELECT lastname, firstname, jobtitle, officeCode FROM employees WHERE jobtitle = 'Sales Rep' AND officeCode = 1;
 SELECT lastName, firstName, jobTitle, officeCode FROM employees WHERE jobtitle = 'Sales Rep' OR officeCode = 1 ORDER BY officeCode , jobTitle;
 SELECT firstName, lastName, officeCode FROM employees WHERE officeCode BETWEEN 1 AND 3 ORDER BY officeCode;
-SELECT firstName, lastName FROM employees WHERE lastName LIKE '%son' ORDER BY firstName;
+SELECT firstName, lastName FROM employees WHERE lastName LIKE 'son%' ORDER BY firstName;
 SELECT firstName, lastName, officeCode FROM employees WHERE officeCode IN (1 , 2, 3) ORDER BY officeCode;
 SELECT lastName, firstName, reportsTo FROM employees WHERE reportsTo IS NULL;
 SELECT lastname, firstname, jobtitle FROM employees WHERE jobtitle <> 'Sales Rep';
@@ -40,6 +40,7 @@ SELECT NULL IN (1,2,3);
 SELECT 0 IN (1 , 2, 3, NULL);
 SELECT NULL IN (1 , 2, 3, NULL);
 SELECT officeCode, city, phone, country FROM offices WHERE country IN ('USA' , 'France');
+SELECT officeCode, city, phone, country FROM offices WHERE country = 'USA' OR country ='France' ;
 
 
 /* --- NOT IN --- */
@@ -57,7 +58,7 @@ SELECT productCode, productName, buyPrice FROM products WHERE buyPrice NOT BETWE
 SELECT orderNumber, requiredDate, status FROM orders WHERE requireddate BETWEEN CAST('2003-01-01' AS DATE) AND CAST('2003-01-31' AS DATE);
 
 /* --- LIKE --- */
-SELECT employeeNumber, lastName, firstName FROM employees WHERE firstName LIKE 'a%';
+SELECT employeeNumber, lastName, firstName FROM employees WHERE firstName LIKE 'a%' LIMIT 1;
 /* Note that the pattern is not case-sensitive. Therefore, the b% and B% patterns return the same result. */
 SELECT productCode, productName FROM products WHERE productCode LIKE '%\_20%';
 SELECT productCode, productName FROM products WHERE productCode LIKE '%$_20%' ESCAPE '$';

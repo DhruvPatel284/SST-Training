@@ -1,4 +1,5 @@
 use classicmodels;
+use hr;
 show tables;
 
 CREATE TABLE members (
@@ -18,6 +19,8 @@ VALUES('John'),('Jane'),('Mary'),('David'),('Amelia');
 
 INSERT INTO committees(name)
 VALUES('John'),('Mary'),('Amelia'),('Joe');
+
+
 
 
 

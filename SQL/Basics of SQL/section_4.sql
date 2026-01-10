@@ -154,7 +154,7 @@ INNER JOIN customers c2 ON
 ORDER BY 
     c1.city;
 
-
+SELECT u.userid,username , count(orderid)  from orders as o inner join users on u.userid = o.userid group by userid having count(orderid) >= 5;
 
 
 
