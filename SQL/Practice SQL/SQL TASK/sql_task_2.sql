@@ -46,6 +46,9 @@ use sql_task;
  select category , count(*) from products group by category ;
 
 --9) Find total sales per day.
+  select date(order_date)as day_wise, sum(total_amount)
+  from orders
+  group by day_wise;
  
 --10) Get order details (order_id, product_name, quantity, price).
  select o.order_id , p.name , o.quantity , o.price

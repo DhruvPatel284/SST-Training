@@ -50,12 +50,14 @@ use sql_task;
   group by category;
 
 --8) Find users who ordered from more than 2 different categories.
-  select u.id , count(p.category)
-  from users u
-  inner join orders o on u.id = o.user_id
-  inner join order_items oi on o.id = oi.order_id
-  inner join products p on p.id = o.product_id
-  group by u.id;
+    select u.id, u.name , count(DISTINCT(p.category)) as category_count
+    from users u
+    inner join orders o on u.id = o.user_id
+    inner join order_items oi on o.id = oi.order_id
+    inner join products p on p.id = oi.product_id
+    group by u.id
+    having category_count > 2;
+  
 
 --9) Find the second highest priced product.
   select max(price)
@@ -65,3 +67,8 @@ use sql_task;
     from products
   );
 --10) Find the day with the highest total sales.
+    select date(order_date) as day_wise,sum(total_amount) as total_sales
+    from orders
+    group by day_wise
+    order by total_sales desc
+    limit 1;
