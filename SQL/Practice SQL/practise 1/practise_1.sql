@@ -50,3 +50,62 @@ select department , avg(salary) from worker group by department;
 --Find maximum salary in each department.--
 select department , max(salary) from worker group by department;
 
+--Find departments having more than 2 workers.--
+select department , count(worker_id) cnt from worker group by department having cnt > 2 ; 
+
+--Find total bonus amount received by each worker.--
+select worker_ref_id , sum(BONUS_AMOUNT) from bonus group by worker_ref_id;
+
+--Find count of workers for each title from Title table.--
+select WORKER_TITLE , count(worker_ref_id) from title group by WORKER_TITLE;
+
+--Find the department-wise total salary, but show only departments whose total salary is greater than 400000.--
+select department , sum(salary) as sum_sal from worker group by department having sum_sal >  400000;
+
+/* ---JOINS --- */
+
+--Display worker’s FIRST_NAME, LAST_NAME along with their WORKER_TITLE.--
+select w.first_name , w.last_name  , t.worker_title 
+from worker w
+inner join title t
+on w.worker_id = t.worker_ref_id;
+
+--Display worker’s FIRST_NAME, DEPARTMENT along with their BONUS_AMOUNT.--
+select w.first_name , w.department  , b.bonus_amount 
+from worker w
+inner join bonus b
+on w.worker_id = b.worker_ref_id;
+
+--Find total bonus received by each worker and show--
+select w.worker_id , w.first_name , sum(b.bonus_amount) 
+from worker w
+inner join bonus b
+on w.worker_id = b.worker_ref_id
+group by worker_id;
+
+--Show worker details who never received any bonus--
+select w.first_name , w.department  , b.bonus_amount 
+from worker w
+left join bonus b
+on w.worker_id = b.worker_ref_id
+where worker_ref_id is NULL;
+
+--Show department-wise total salary and total bonus--
+select department , sum(salary) as total_sal , sum(bonus_amount) as total_bonus
+from worker w
+left join bonus
+on worker_id = worker_ref_id
+group by department;
+
+--Find workers whose salary is greater than the average salary of their department--
+select w.worker_id , w.first_name , w.salary , w.department
+from worker w
+inner join (
+    select department , avg(salary) as avg_s
+    from worker
+    GROUP BY department
+)department_avg
+on w.department = department_avg.department
+where w.salary > department_avg.avg_s;
+
+
