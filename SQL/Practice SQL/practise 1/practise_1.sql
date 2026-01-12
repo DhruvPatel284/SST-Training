@@ -41,6 +41,12 @@ select avg(salary) from worker where department = w.department
 );
 
 /* --- GROUP BY --- */
+--Find total number of workers in each department.--
 select department , count(worker_id) from worker group by department; 
 
+--Find average salary of workers in each department.--
+select department , avg(salary) from worker group by department;
+
+--Find maximum salary in each department.--
+select department , max(salary) from worker group by department;
 
