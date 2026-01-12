@@ -108,4 +108,3 @@ inner join (
 on w.department = department_avg.department
 where w.salary > department_avg.avg_s;
 
-

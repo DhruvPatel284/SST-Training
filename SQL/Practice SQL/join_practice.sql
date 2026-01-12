@@ -33,5 +33,5 @@ RIGHT JOIN users AS u ON u.userid = o.userid
 GROUP BY u.userid, u.username
 HAVING total_orders >= 5;
 
-SELECT * from users ;
+= SELECT * from users ;
 
