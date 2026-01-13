@@ -15,7 +15,7 @@ use sql_task;
  select * from products where stock < 200 ;
  
 --5) Find users from a specific city (e.g., "Delhi").
- select * from users where city = 'Delhi';
+ SELECT * FROM users WHERE BINARY city = 'delhi';
 
 --6) Sort products by price (ascending).
  select * from products order by price ;

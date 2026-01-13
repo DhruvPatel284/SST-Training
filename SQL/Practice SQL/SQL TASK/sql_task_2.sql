@@ -21,17 +21,19 @@ use sql_task;
 --4) Get all products that were ordered at least once.
  select p.id , p.name 
  from products p
- inner join order_items o on p.id = o.product_id;
+ inner join order_items o on p.id = o.product_id
+ GROUP BY p.id;
 
 --5) Find total quantity sold for each product.
  select product_id , sum(quantity)
  from order_items 
  group by product_id;
  --or
- select p.id , p.name , sum(o.quantity)
+ select p.id , p.name , sum(o.quantity) as or_cnt
  from products p
  inner join order_items o on p.id = o.product_id
- group by product_id;
+ group by product_id
+ ORDER BY or_cnt desc;
  
 --6) Get users who have never placed an order.
  select u.id , u.name 

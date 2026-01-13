@@ -5,7 +5,7 @@ use sql_task;
   select user_id , total_amount from orders order by total_amount desc limit 1;
   --or
   select name from users where id = (select user_id  from orders order by total_amount desc limit 1);
-
+--todo
 --2) Find the most sold product (by quantity).
   select product_id , sum(quantity) as total_quantity from order_items group by product_id order by total_quantity desc limit 1;
   --or
@@ -30,15 +30,11 @@ use sql_task;
   where o.product_id is NULL;
 
 --5) Find the latest order for each user.
-  select u.name , o.id 
-  from users u
-  inner join orders o1 on u.id = o1.user_id
-  where o1.id = (
-    select max(o2.id)
-    from orders o2
-    where o2.id = o1.id
-  );
+   select user_id , max(DATE(order_date))
+   from orders
+   group by user_id;
   
+  --todo
 --6) Find users who ordered products worth more than 5000 in a single order // 800.
   select name from users where id in (select user_id from orders where total_amount > 800);
   --or
@@ -50,7 +46,7 @@ use sql_task;
   group by category;
 
 --8) Find users who ordered from more than 2 different categories.
-    select u.id, u.name , count(DISTINCT(p.category)) as category_count
+    select u.id, u.name , count(DISTINCT(p.category)) as category_count 
     from users u
     inner join orders o on u.id = o.user_id
     inner join order_items oi on o.id = oi.order_id
