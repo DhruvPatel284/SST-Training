@@ -6,15 +6,19 @@ use sql_task;
   --or
   select name from users where id = (select user_id  from orders order by total_amount desc limit 1);
 --todo
---2) Find the most sold product (by quantity).
-  select product_id , sum(quantity) as total_quantity from order_items group by product_id order by total_quantity desc limit 1;
-  --or
-  select p.name , o.product_id , sum(o.quantity) as total_quantity 
-  from order_items o
-  inner join products p on p.id = o.product_id
-  group by product_id 
-  order by total_quantity desc 
-  limit 1;
+--2) Find the most sold product (by quantity).  
+  SELECT p.name, p.id , SUM(oi.quantity) as total_quantity
+  FROM order_items oi
+  INNER JOIN products p ON p.id = oi.product_id
+  GROUP BY p.id, p.name
+  HAVING total_quantity = (
+    SELECT MAX(total_qty)
+    FROM (
+      SELECT SUM(quantity) as total_qty
+      FROM order_items
+      GROUP BY product_id
+    ) quantities
+  );
 
 --3) Find users who placed more than 3 orders.
   select u.id , u.name , count(o.id) as order_count 
@@ -30,9 +34,15 @@ use sql_task;
   where o.product_id is NULL;
 
 --5) Find the latest order for each user.
-   select user_id , max(DATE(order_date))
-   from orders
-   group by user_id;
+  SELECT u.name as username, o.id as order_id, o.user_id, o.order_date
+  FROM orders o
+  INNER JOIN users u ON o.user_id = u.id
+  INNER JOIN (
+    SELECT user_id, MAX(order_date) as latest_date
+    FROM orders
+    GROUP BY user_id
+  ) latest ON o.user_id = latest.user_id 
+  WHERE o.order_date = latest.latest_date;
   
   --todo
 --6) Find users who ordered products worth more than 5000 in a single order // 800.
