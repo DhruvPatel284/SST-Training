@@ -16,15 +16,17 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
-import { UserDto } from './dtos/user.dto';
+import { AuthResDto } from './dtos/auth-res.dto';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './user.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PassportAuthGuard } from 'src/guards/passport-auth.guard';
+import { PassportAuthGuard } from '../guards/passport-auth.guard';
+import { PassportJwtAuthGuard } from '../guards/passport-jwt-auth.guard';
+
 
 @Controller('auth')
-//@Serialize(UserDto)
+//
 export class UsersController {
   constructor(
     private usersService: UsersService,
@@ -32,9 +34,9 @@ export class UsersController {
   ) {}
 
   @Get('/whoami')
-  @UseGuards(AuthGuard)
-  whoAmI(@CurrentUser() user: User) {
-    return user;
+  @UseGuards(PassportJwtAuthGuard)
+  whoAmI(@Request() req) {
+    return req.user;
   }
 
   @Post('/signout')
@@ -42,18 +44,23 @@ export class UsersController {
     session.userId = null;
   }
 
+  @Serialize(AuthResDto)
   @Post('/signup')
   async createUser(@Body() body: CreateUserDto) {
     const user = await this.authService.signup(body.email, body.password);
     return user;
   }
 
+  @Serialize(AuthResDto)
   @Post('/signin')
   @UseGuards(PassportAuthGuard)
-  async signin(@Request() request) {
-    console.log(`inside controller email : ${request.user.email} and password : ${request.user.password}`)
-    const user = await this.authService.signin(request.user.email, request.user.password);
-    return user;
+  async signin(@Request() req) {
+    const accessToken = await this.authService.generatejwt(req.user.id, req.user.email);
+
+    return {
+      ...req.user,
+      accessToken,
+    };
   }
 
   @Get('/:id')
