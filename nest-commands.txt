@@ -1,0 +1,6 @@
+nest new project-name
+
+nest g module users
+
+-Full Resource (module + controller + service + dto, etc.)
+nest g resource users
