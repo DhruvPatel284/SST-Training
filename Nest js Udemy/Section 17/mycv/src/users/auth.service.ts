@@ -6,12 +6,24 @@ import {
 import { UsersService } from './users.service';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
+import { JwtService } from '@nestjs/jwt';
 
 const scrypt = promisify(_scrypt);
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private jwtService : JwtService,
+  ) {}
+
+  async generatejwt(id:number,email:string){
+    const tokenPayload = {
+      sub:id,
+      email:email
+    }
+    return await this.jwtService.signAsync(tokenPayload);
+  }
 
   async signup(email: string, password: string) {
     // See if email is in use
@@ -32,12 +44,15 @@ export class AuthService {
 
     // Create a new user and save it
     const user = await this.usersService.create(email, result);
+    const accessToken = await this.generatejwt(user.id,user.email);
+    Object.assign(user,{
+        accessToken
+    })
 
     // return the user
     return user;
   }
-
-  async signin(email: string, password: string) {
+  async validate(email: string, password: string) {
     const [user] = await this.usersService.find(email);
     if (!user) {
       throw new NotFoundException('user not found');
@@ -53,4 +68,14 @@ export class AuthService {
 
     return user;
   }
+
+  async signin(email: string, password: string) {
+    const user = await this.validate(email,password);
+    const accessToken = await this.generatejwt(user.id,user.email);
+    Object.assign(user,{
+        accessToken
+    })
+    return user;
+  }
+
 }

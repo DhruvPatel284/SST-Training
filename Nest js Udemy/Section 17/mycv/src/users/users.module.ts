@@ -5,14 +5,21 @@ import { UsersService } from './users.service';
 import { AuthService } from './auth.service';
 import { User } from './user.entity';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
+import { LocalStrategy } from './strategies/local.strategy';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'sst',
+      signOptions: { expiresIn: '2d' },
+    })
+  ],
   controllers: [UsersController],
-  providers: [UsersService, AuthService],
+  providers: [UsersService, AuthService, LocalStrategy],
 })
 export class UsersModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CurrentUserMiddleware).forRoutes('*');
-  }
+
 }
