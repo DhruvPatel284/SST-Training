@@ -66,7 +66,6 @@ export class UsersService {
       user.roles.push(role);
       await this.repo.save(user);
     }
-    console.log(user);
     return user;
   }
 
