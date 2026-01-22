@@ -5,9 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { ReportsModule } from './reports/reports.module';
 import { User } from './users/user.entity';
-import { Report } from './reports/report.entity';
+import { Role } from './users/role.entity';
 const cookieSession = require('cookie-session');
 
 @Module({
@@ -23,7 +22,7 @@ const cookieSession = require('cookie-session');
           type: 'sqlite',
           database: config.get<string>('DB_NAME'),
           synchronize: true,
-          entities: [User, Report],
+          entities: [User, Report , Role],
         };
       },
     }),
@@ -34,7 +33,6 @@ const cookieSession = require('cookie-session');
     //   synchronize: true,
     // }),
     UsersModule,
-    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

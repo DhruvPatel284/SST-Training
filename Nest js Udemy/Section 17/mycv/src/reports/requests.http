@@ -4,15 +4,15 @@ content-type: application/json
 {
   "make": "ford",
   "model": "mustang",
-  "year": 1981,
+  "year": 1982,
   "mileage": 50000,
   "lng": 45,
   "lat": 45,
-  "price": 15000
+  "price": 20000
 }
 
 ### Approve an existing report
-PATCH http://localhost:3000/reports/16
+PATCH http://localhost:3000/reports/1
 content-type: application/json
 
 {

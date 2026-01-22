@@ -1,4 +1,4 @@
-import { Expose , Transform } from 'class-transformer';
+import { Expose } from 'class-transformer';
 
 export class UserDto {
   @Expose()
@@ -6,8 +6,4 @@ export class UserDto {
 
   @Expose()
   email: string;
-
- @Expose()
- @Transform(({ obj }) => obj.roles?.map((role) => role.name) || [])
- roles: string[];
 }

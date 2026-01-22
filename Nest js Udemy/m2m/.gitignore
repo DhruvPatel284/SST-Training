@@ -5,6 +5,7 @@
 #envs
 .env.development
 .env.test
+
 # Logs
 logs
 *.log
