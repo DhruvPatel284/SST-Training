@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
+import { Role } from './role.entity';
+import { Console } from 'console';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private repo: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private repo: Repository<User>,
+    @InjectRepository(Role) private roleRepo: Repository<Role>,
+  ) {}
 
   create(email: string, password: string) {
     const user = this.repo.create({ email, password });
@@ -39,5 +44,39 @@ export class UsersService {
       throw new NotFoundException('user not found');
     }
     return this.repo.remove(user);
+  }
+
+  async addRoleToUser(userId: number, roleName: string) {
+    const user = await this.repo.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    let role = await this.roleRepo.findOne({ where: { name: roleName } });
+
+    // if role doesn't exist, create it
+    if (!role) {
+      role = this.roleRepo.create({ name: roleName });
+      await this.roleRepo.save(role);
+    }
+
+    // add role if not already exists
+    const alreadyHasRole = user.roles.some((r) => r.name === roleName);
+    if (!alreadyHasRole) {
+      user.roles.push(role);
+      await this.repo.save(user);
+    }
+    console.log(user);
+    return user;
+  }
+
+  async getUserWithRoles(userId: number) {
+    const response = this.repo.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+    return response;
   }
 }

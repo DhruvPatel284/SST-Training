@@ -54,6 +54,19 @@ export class UsersController {
     return user;
   }
 
+  @Post('/roles/:id')
+  addRole(
+    @Param('id') id: string,
+    @Body('role') role: string,
+  ) {
+    return this.usersService.addRoleToUser(Number(id), role);
+  }
+
+  @Get('/roles/:id')
+  getUser(@Param('id') id: string) {
+    return this.usersService.getUserWithRoles(Number(id));
+  }
+
   @Get('/:id')
   async findUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(parseInt(id));

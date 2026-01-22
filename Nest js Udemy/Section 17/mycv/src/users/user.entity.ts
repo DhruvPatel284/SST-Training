@@ -5,9 +5,12 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  OneToMany,
+  OneToMany,  
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Report } from '../reports/report.entity';
+import { Role } from './role.entity';
 
 @Entity()
 export class User {
@@ -25,6 +28,12 @@ export class User {
 
   @OneToMany(() => Report, (report) => report.user)
   reports: Report[];
+
+    // ✅ Many-to-Many
+  @ManyToMany(() => Role, (role) => role.users, { cascade: true })
+  @JoinTable()
+  // JoinTable creates a junction table automatically: user_roles_role
+  roles: Role[];
 
   @AfterInsert()
   logInsert() {
