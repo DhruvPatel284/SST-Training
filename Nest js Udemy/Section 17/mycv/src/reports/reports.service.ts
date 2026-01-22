@@ -5,10 +5,25 @@ import { Report } from './report.entity';
 import { CreateReportDto } from './dtos/create-report.dto';
 import { User } from '../users/user.entity';
 import { GetEstimateDto } from './dtos/get-estimate.dto';
+import { FilterOperator, FilterSuffix, Paginate, PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
+
 
 @Injectable()
 export class ReportsService {
   constructor(@InjectRepository(Report) private repo: Repository<Report>) {}
+
+  getAllReports(query:PaginateQuery):Promise<Paginated<Report>> {
+       console.log(`query : ${query}`)
+         return paginate(query , this.repo , {
+          relations: ['user'], 
+          sortableColumns : ['id','price','make','model','year','lng','lat','mileage'],
+          nullSort: 'last',
+          defaultSortBy: [['id', 'DESC']],
+          defaultLimit: 10,
+          searchableColumns: ['model'],
+          select: ['id','price','make','model','year','lng','lat','mileage','user.email'],
+         })
+    }
 
   createEstimate({ make, model, lng, lat, year, mileage }: GetEstimateDto) {
     return this.repo
