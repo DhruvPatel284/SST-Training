@@ -9,6 +9,7 @@ import { APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { PostsModule } from './posts/posts.module';
 import { Post } from './posts/post.entity';
+import { Comment } from './posts/comment.entity';
 
 
 @Module({
@@ -20,7 +21,7 @@ import { Post } from './posts/post.entity';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'db.sqlite',
-      entities: [User,Post],
+      entities: [User,Post,Comment],
       synchronize: true,
     }),
     UsersModule, 

@@ -5,6 +5,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Post } from '../posts/post.entity'
+import { Comment } from '../posts/comment.entity';
 
 @Entity()
 export class User{
@@ -22,4 +23,7 @@ export class User{
 
     @OneToMany(()=>Post,(post)=>post.user)
     posts:Post[]
+
+    @OneToMany(()=>Comment,(comment)=>comment.user)
+    comments:Comment[]
 }
