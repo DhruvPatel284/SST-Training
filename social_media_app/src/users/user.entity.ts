@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
 } from 'typeorm';
+import { Post } from '../posts/post.entity'
 
 @Entity()
 export class User{
@@ -18,4 +19,7 @@ export class User{
 
     @Column()
     password:string
+
+    @OneToMany(()=>Post,(post)=>post.user)
+    posts:Post[]
 }
