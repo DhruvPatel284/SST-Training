@@ -5,6 +5,8 @@ import { Post } from './post.entity';
 import { CreateAndUpdatePostDto } from './dtos/create-update-post.dto';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/user.entity';
+import { PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
+
 
 @Injectable()
 export class PostsService {
@@ -36,6 +38,18 @@ export class PostsService {
                 user: true,   
             },
         });
+    }
+
+    async getAllPosts(query:PaginateQuery):Promise<Paginated<Post>>{
+        return paginate(query , this.postsRepo , {
+          relations: ['user'], 
+          sortableColumns : ['id','createdAt'],
+          nullSort: 'last',
+          defaultSortBy: [['id', 'DESC']],
+          defaultLimit: 10,
+          searchableColumns: ['content'],
+          select: ['id','content','createdAt','updatedAt','user.name','user.email'],
+        })
     }
 
     async updatePost(id:number , body:CreateAndUpdatePostDto){

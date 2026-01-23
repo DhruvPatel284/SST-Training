@@ -1,6 +1,6 @@
 import { 
     Controller,
-    Post  ,
+    Post as PostReq ,
     Get ,
     Patch,
     UseGuards ,
@@ -12,6 +12,10 @@ import {
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
 import { PostsService } from './posts.service';
 import { CreateAndUpdatePostDto } from './dtos/create-update-post.dto';
+import { Paginate } from 'nestjs-paginate';
+import type { PaginateQuery, Paginated } from 'nestjs-paginate';
+import { Post } from './post.entity';
+
 
 
 @Controller('posts')
@@ -21,7 +25,7 @@ export class PostsController {
       private postsService : PostsService,
     ){}
 
-    @Post()
+    @PostReq()
     async create(@Request() req , @Body() body : CreateAndUpdatePostDto){
       return await this.postsService.createPost(req.currentUser, body);
     }
@@ -36,8 +40,8 @@ export class PostsController {
     }
 
     @Get()
-    getAll(){
-
+    async getAll(@Paginate() query:PaginateQuery):Promise<Paginated<Post>>{
+       return await this.postsService.getAllPosts(query);
     }
 
     @Patch(':id')
