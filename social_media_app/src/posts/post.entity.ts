@@ -8,7 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn
 } from 'typeorm';
-import { Comment } from './comment.entity';
+import { Comment } from '../comments/comment.entity';
 
 @Entity()
 export class Post{
@@ -29,4 +29,6 @@ export class Post{
 
     @OneToMany(()=>Comment,(comment)=>comment.post)
     comments:Comment[]
+
+    commentCount?: number;
 }

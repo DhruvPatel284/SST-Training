@@ -9,8 +9,10 @@ import { APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { PostsModule } from './posts/posts.module';
 import { Post } from './posts/post.entity';
-import { Comment } from './posts/comment.entity';
-
+import { Comment } from './comments/comment.entity';
+import { CommentsModule } from './comments/comments.module';
+import { CurrentUserInterceptor } from './interceptors/current-user.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { Comment } from './posts/comment.entity';
       synchronize: true,
     }),
     UsersModule, 
-    AuthModule, PostsModule
+    AuthModule, PostsModule, CommentsModule
   ],
   controllers: [AppController],
   providers: [
@@ -35,6 +37,10 @@ import { Comment } from './posts/comment.entity';
       useValue: new ValidationPipe({
         whitelist: true,
       }),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CurrentUserInterceptor,
     },
   ],
 })

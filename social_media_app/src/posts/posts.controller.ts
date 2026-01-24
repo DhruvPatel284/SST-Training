@@ -15,6 +15,8 @@ import { CreateAndUpdatePostDto } from './dtos/create-update-post.dto';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
 import { Post } from './post.entity';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { CreatePostResDto } from './dtos/create-post-res.dto';
 
 
 
@@ -26,6 +28,7 @@ export class PostsController {
     ){}
 
     @PostReq()
+    @Serialize(CreatePostResDto)
     async create(@Request() req , @Body() body : CreateAndUpdatePostDto){
       return await this.postsService.createPost(req.currentUser, body);
     }

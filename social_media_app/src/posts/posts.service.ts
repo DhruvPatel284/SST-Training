@@ -40,17 +40,32 @@ export class PostsService {
         });
     }
 
-    async getAllPosts(query:PaginateQuery):Promise<Paginated<Post>>{
-        return paginate(query , this.postsRepo , {
-          relations: ['user'], 
-          sortableColumns : ['id','createdAt'],
-          nullSort: 'last',
-          defaultSortBy: [['id', 'DESC']],
-          defaultLimit: 10,
-          searchableColumns: ['content'],
-          select: ['id','content','createdAt','updatedAt','user.name','user.email'],
-        })
+    async getAllPosts(query: PaginateQuery): Promise<Paginated<Post>> {
+        const qb = this.postsRepo
+            .createQueryBuilder('post')
+            .leftJoin('post.user', 'user')
+            .loadRelationCountAndMap(
+                'post.commentCount',
+                'post.comments',
+            )
+            .select([
+                'post.id',
+                'post.content',
+                'post.createdAt',
+                'post.updatedAt',
+                'user.id',
+                'user.name',
+                'user.email',
+            ]);
+
+        return paginate(query, qb, {
+            sortableColumns: ['id', 'createdAt'],
+            defaultSortBy: [['id', 'DESC']],
+            defaultLimit: 10,
+            searchableColumns: ['content'],
+        });
     }
+
 
     async updatePost(id:number , body:CreateAndUpdatePostDto){
         
