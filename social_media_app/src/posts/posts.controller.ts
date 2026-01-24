@@ -48,7 +48,8 @@ export class PostsController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id : string, @Body() body : CreateAndUpdatePostDto){
-      return await this.postsService.updatePost(parseInt(id),body) 
+    @Serialize(CreatePostResDto)
+    async update(@Request() req,@Param('id') id : string, @Body() body : CreateAndUpdatePostDto){
+      return await this.postsService.updatePost(req.user.userId,parseInt(id),body) 
     }
 }

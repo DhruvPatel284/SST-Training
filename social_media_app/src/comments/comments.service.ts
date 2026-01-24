@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
@@ -42,11 +42,18 @@ export class CommentsService {
         return await this.commentsRepo.save(commentEntity);
     }
 
-    async updateComment(id:number , comment:string){
-       const commentRes = await this.commentsRepo.findOneBy({id});
+    async updateComment(userId:number,id:number , comment:string){
+       const commentRes = await this.commentsRepo.findOne({
+        where:{id},
+        relations:{user:true}
+       });
        if(!commentRes){
         throw new NotFoundException('Post Not Found');
        }
+       if(userId != commentRes.user.id){
+        return new UnauthorizedException('Only Authorized user can Update the comment');
+       }
+
        commentRes.comment = comment;
        return this.commentsRepo.save(commentRes);
     }
@@ -70,7 +77,7 @@ export class CommentsService {
         return paginate(query, qb, {
             sortableColumns: ['id', 'createdAt'],
             defaultSortBy: [['createdAt', 'DESC']],
-            defaultLimit: 10,
+            defaultLimit: 5,
         });
     }
 }

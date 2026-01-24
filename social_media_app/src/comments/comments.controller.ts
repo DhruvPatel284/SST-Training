@@ -34,8 +34,9 @@ export class CommentsController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id : string, @Body() body : CreateAndUpdateCommentDto){
-       return await this.commentsService.updateComment(parseInt(id),body.comment);
+    @Serialize(CreateCommentResDto)
+    async update(@Request() req,@Param('id') id : string, @Body() body : CreateAndUpdateCommentDto){
+       return await this.commentsService.updateComment(req.user.userId,parseInt(id),body.comment);
     }
     
     @Get(':postId')

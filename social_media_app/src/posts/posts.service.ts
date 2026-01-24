@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Post } from './post.entity';
@@ -70,11 +70,19 @@ export class PostsService {
     }
 
 
-    async updatePost(id:number , body:CreateAndUpdatePostDto){
+    async updatePost(userId:number,id:number , body:CreateAndUpdatePostDto){
         
-       const post = await this.postsRepo.findOneBy({id});
+       const post = await this.postsRepo.findOne({
+            where: { id },
+            relations: {
+                user: true
+            },
+        });
        if(!post){
-        throw new NotFoundException('Post Not Found');
+         throw new NotFoundException('Post Not Found');
+       }
+       if(userId != post.user.id){
+         throw new UnauthorizedException('Only Creator can Update the Post');
        }
        post.content = body.content;
        return this.postsRepo.save(post);
