@@ -3,6 +3,8 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Post } from '../posts/post.entity'
 import { Comment } from '../comments/comment.entity';
@@ -26,4 +28,12 @@ export class User{
 
     @OneToMany(()=>Comment,(comment)=>comment.user)
     comments:Comment[]
+
+    @ManyToMany(()=>Post,(post)=>post.likedBy)
+    @JoinTable({
+      name: 'user_likes_post', 
+      joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+      inverseJoinColumn: { name: 'post_id', referencedColumnName: 'id' },
+    })
+    likes:Post[]
 }

@@ -6,7 +6,8 @@ import {
   ManyToOne,
   OneToMany,
   CreateDateColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
+  ManyToMany
 } from 'typeorm';
 import { Comment } from '../comments/comment.entity';
 
@@ -21,14 +22,19 @@ export class Post{
     @ManyToOne(() => User, (user) => user.posts)
     user:User
 
+    @OneToMany(()=>Comment,(comment)=>comment.post)
+    comments:Comment[]
+
+    @ManyToMany(()=>User,(user)=>user.likes)
+    likedBy:User[]
+
     @CreateDateColumn()
     createdAt: Date;
 
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @OneToMany(()=>Comment,(comment)=>comment.post)
-    comments:Comment[]
-
     commentCount?: number;
+    likeCount?: number;
+    isLikedByCurrentUser?: boolean;
 }

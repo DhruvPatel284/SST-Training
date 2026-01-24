@@ -7,8 +7,6 @@ import {
     Request,
     Body,
     Param,
-    NotFoundException,
-    RequestMethod
 } from '@nestjs/common';
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
 import { CommentsService } from './comments.service';
@@ -16,8 +14,6 @@ import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
 import { Comment } from './comment.entity';
 import { CreateAndUpdateCommentDto } from './dtos/create-and-update-comment.dto';
-import { CreateAndUpdatePostDto } from 'src/posts/dtos/create-update-post.dto';
-import { PassportAuthGuard } from 'src/guards/passport-auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CreateCommentResDto } from './dtos/create-comment-res.dto';
 

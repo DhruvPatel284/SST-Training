@@ -2,9 +2,6 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
-import { User } from 'src/users/user.entity';
-import { Post } from 'src/posts/post.entity';
-import { CreateAndUpdateCommentDto } from './dtos/create-and-update-comment.dto';
 import { PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
 import { PostsService } from 'src/posts/posts.service';
 import { UsersService } from 'src/users/users.service';
@@ -58,7 +55,7 @@ export class CommentsService {
        return this.commentsRepo.save(commentRes);
     }
     
-    async getComments(postId:number,query: PaginateQuery){
+    async getComments(postId:number,query: PaginateQuery):Promise<Paginated<Comment>>{
        const qb = this.commentsRepo
             .createQueryBuilder('comment')
             .leftJoin('comment.user', 'user')

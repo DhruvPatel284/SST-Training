@@ -12,6 +12,7 @@ import { Post } from './posts/post.entity';
 import { Comment } from './comments/comment.entity';
 import { CommentsModule } from './comments/comments.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LikesModule } from './likes/likes.module';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       synchronize: true,
     }),
     UsersModule, 
-    AuthModule, PostsModule, CommentsModule
+    AuthModule, PostsModule, CommentsModule, LikesModule
   ],
   controllers: [AppController],
   providers: [
