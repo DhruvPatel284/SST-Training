@@ -5,23 +5,41 @@ import { Comment } from './comment.entity';
 import { User } from 'src/users/user.entity';
 import { Post } from 'src/posts/post.entity';
 import { CreateAndUpdateCommentDto } from './dtos/create-and-update-comment.dto';
+import { PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
+import { PostsService } from 'src/posts/posts.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class CommentsService {
     constructor(
         @InjectRepository(Comment)
-        private commentsRepo : Repository<Comment>
+        private commentsRepo : Repository<Comment>,
+        private postsService : PostsService,
+        private usersService : UsersService
     ){}
 
-    async createComment(user:User,post:Post,{comment,postId}:CreateAndUpdateCommentDto){
-        console.log(user);
-        console.log(post);
-       const commentRes =  this.commentsRepo.create({
-                            comment,
-                            user,
-                            post 
-                        });
-        return await this.commentsRepo.save(commentRes);
+    async createComment(
+        userId: number,
+        postId: number,
+        comment : string,
+    ) {
+        const user = await this.usersService.findOne(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const post = await this.postsService.getPost(postId);
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
+        const commentEntity = this.commentsRepo.create({
+            comment,
+            user,
+            post,
+        });
+
+        return await this.commentsRepo.save(commentEntity);
     }
 
     async updateComment(id:number , comment:string){
@@ -33,4 +51,26 @@ export class CommentsService {
        return this.commentsRepo.save(commentRes);
     }
     
+    async getComments(postId:number,query: PaginateQuery){
+       const qb = this.commentsRepo
+            .createQueryBuilder('comment')
+            .leftJoin('comment.user', 'user')
+            .leftJoin('comment.post', 'post')
+            .where('post.id = :postId', { postId })
+            .select([
+            'comment.id',
+            'comment.comment',
+            'comment.createdAt',
+            'comment.updatedAt',
+            'user.id',
+            'user.name',
+            'user.email',
+            ]);
+
+        return paginate(query, qb, {
+            sortableColumns: ['id', 'createdAt'],
+            defaultSortBy: [['createdAt', 'DESC']],
+            defaultLimit: 10,
+        });
+    }
 }

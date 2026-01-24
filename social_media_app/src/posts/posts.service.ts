@@ -16,16 +16,18 @@ export class PostsService {
         private usersService : UsersService
     ){}
 
-    async createPost(user:User , body : CreateAndUpdatePostDto){
-         try {
-            const post =  this.postsRepo.create({
-                            ...body,
-                            user, 
-                        });
-            return await this.postsRepo.save(post);
-         } catch (error) {
-            console.log(error);
-         }
+    async createPost(userId: number,{ content }: CreateAndUpdatePostDto) {
+        const user = await this.usersService.findOne(userId);
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        const post = this.postsRepo.create({
+            content,
+            user,
+        });
+
+        return await this.postsRepo.save(post);
     }
 
     async getPost(id:number){
@@ -36,6 +38,7 @@ export class PostsService {
             where: { id },
             relations: {
                 user: true,   
+                comments : true
             },
         });
     }

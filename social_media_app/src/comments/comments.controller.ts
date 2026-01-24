@@ -27,14 +27,20 @@ export class CommentsController {
     constructor(
         private commentsService : CommentsService
     ){}
-    @Post()
+    @Post(':postId')
     @Serialize(CreateCommentResDto)
-    async create(@Request() req , @Body() body:CreateAndUpdateCommentDto){
-       return await this.commentsService.createComment(req.currentUser,req.currentPost,body);
+    async create(@Request() req , @Param('postId') postId:string , @Body() body:CreateAndUpdateCommentDto){
+       return await this.commentsService.createComment(req.user.userId,parseInt(postId),body.comment);
     }
 
     @Patch(':id')
     async update(@Param('id') id : string, @Body() body : CreateAndUpdateCommentDto){
        return await this.commentsService.updateComment(parseInt(id),body.comment);
+    }
+    
+    @Get(':postId')
+    async get(@Param('postId') postId:string , @Paginate() query:PaginateQuery):Promise<Paginated<Comment>>{
+       console.log(postId)
+       return await this.commentsService.getComments(parseInt(postId),query);
     }
 }

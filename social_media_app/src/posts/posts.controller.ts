@@ -30,7 +30,7 @@ export class PostsController {
     @PostReq()
     @Serialize(CreatePostResDto)
     async create(@Request() req , @Body() body : CreateAndUpdatePostDto){
-      return await this.postsService.createPost(req.currentUser, body);
+      return await this.postsService.createPost(req.user.userId, body);
     }
 
     @Get(':id')
