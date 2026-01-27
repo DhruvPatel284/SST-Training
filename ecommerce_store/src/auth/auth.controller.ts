@@ -21,15 +21,15 @@ export class AuthController {
 
     @Post('/signup')
     @Serialize(AuthResDto)
-    signup(@Body() body:CreateUserDto){
-      return this.authService.signup(body.email,body.password,body.name);
+    signup(@Request() req , @Body() body:CreateUserDto){
+      return this.authService.signup(req , body.email,body.password,body.name);
     }
 
     @UseGuards(PassportAuthGuard)
     @Post('/signin')
     @Serialize(AuthResDto)
     signin(@Request() req){
-       return this.authService.signin(req.user);
+       return this.authService.signin(req.user,req);
     }
 
     @Get('/whoami')
@@ -37,4 +37,17 @@ export class AuthController {
     whoAmI(@Request() req) {
       return req.user;
     }
+    @Post('/signout')
+    signout(@Request() req) {
+        req.session.destroy((err) => {
+            if (err) {
+            console.error(err);
+            }
+        });
+
+        return {
+            message: 'Signed out successfully',
+        };
+    }
+
 }

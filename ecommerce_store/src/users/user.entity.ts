@@ -1,9 +1,13 @@
+import { IsIn } from 'class-validator';
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+}
 
 @Entity()
 export class User{
@@ -18,5 +22,12 @@ export class User{
 
     @Column()
     password:string
+
+    @Column({
+    type: 'text',
+    default: UserRole.USER,
+    })
+    @IsIn([UserRole.USER, UserRole.ADMIN])
+    role: UserRole;
 
 }

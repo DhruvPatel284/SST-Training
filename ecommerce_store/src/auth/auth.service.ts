@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Request
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
@@ -17,15 +18,16 @@ export class AuthService {
       private usersService : UsersService,
       private jwtService : JwtService,
     ){}
-    async generatejwt(id:number,email:string){
+    async generatejwt(id:number,email:string , userRole : string){
     const tokenPayload = {
       sub:id,
-      email:email
+      email:email,
+      role : userRole
     }
     return await this.jwtService.signAsync(tokenPayload);
   }
 
-  async signup(email: string, password: string , name?: string ) {
+  async signup( @Request() req,email: string, password: string , name?: string ) {
     
     const users = await this.usersService.find(email);
     if (users.length) {
@@ -39,11 +41,11 @@ export class AuthService {
     const result = salt + '.' + hash.toString('hex');
 
     const user = await this.usersService.create({name,email, password:result});
-    const accessToken = await this.generatejwt(user.id,user.email);
+    const accessToken = await this.generatejwt(user.id,user.email,user.role);
     Object.assign(user,{
         accessToken
     })
-
+    req.session.accessToken = accessToken;
     return user;
   }
   async validate(email: string, password: string) {
@@ -63,11 +65,12 @@ export class AuthService {
     return user;
   }
 
-  async signin(user:User) {
-    const accessToken = await this.generatejwt(user.id,user.email);
+  async signin(user:User, @Request() req) {
+    const accessToken = await this.generatejwt(user.id,user.email,user.role);
     Object.assign(user,{
         accessToken
     })
+    req.session.accessToken = accessToken;
     return user;
   }
 }
