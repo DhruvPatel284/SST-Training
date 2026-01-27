@@ -34,17 +34,13 @@ export class PostsController {
     }
 
     @Get(':id')
-    async getPost(@Param('id') id : string){
-      const post = await this.postsService.getPost(parseInt(id));
-      if(!post){
-        throw new NotFoundException('Post is not available');
-      }
-      return post;
+    async getPost(@Request()req , @Param('id') id : string){
+      return await this.postsService.getPostByid(req.user.userId, parseInt(id));
     }
 
     @Get()
-    async getAll(@Paginate() query:PaginateQuery):Promise<Paginated<Post>>{
-       return await this.postsService.getAllPosts(query);
+    async getAll(@Request() req , @Paginate() query:PaginateQuery):Promise<Paginated<Post>>{
+       return await this.postsService.getAllPosts(req.user.userId,query);
     }
 
     @Patch(':id')

@@ -65,7 +65,7 @@ export class LikesService {
             await queryRunner.rollbackTransaction();
 
             throw new InternalServerErrorException(
-                error.message || 'Failed to toggle like',
+                 'Failed to toggle like',
             );
         } finally {
             await queryRunner.release();
