@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from '../users/user.entity';
@@ -14,52 +14,63 @@ export class LikesService {
     private dataSource: DataSource,
   ) {}
 
-  async toggleLike(userId: number, postId: number) {
-    console.log('postId:', postId, typeof postId);
+    async toggleLike(userId: number, postId: number) {
+        const queryRunner = this.dataSource.createQueryRunner();
 
-    return this.dataSource.transaction(async (manager) => {
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-      const userRepo = manager.getRepository(User);
-      const postRepo = manager.getRepository(Post);
+        try {
+            const userRepo = queryRunner.manager.getRepository(User);
+            const postRepo = queryRunner.manager.getRepository(Post);
 
-      const user = await userRepo.findOne({
-        where: { id: userId },
-        relations: ['likes'],
-      });
+            const user = await userRepo.findOne({
+                where: { id: userId },
+                relations: ['likes'],
+            });
 
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
 
-      const post = await postRepo.findOne({
-        where: { id: postId },
-      });
+            const post = await postRepo.findOne({
+                where: { id: postId },
+            });
 
-      if (!post) {
-        throw new NotFoundException('Post not found');
-      }
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
 
-      const alreadyLiked = user.likes.some(
-        (likedPost) => likedPost.id === postId,
-      );
+            const alreadyLiked = user.likes.some(
+                (likedPost) => likedPost.id === postId,
+            );
 
-      if (alreadyLiked) {
-        // UNLIKE
-        user.likes = user.likes.filter(
-          (likedPost) => likedPost.id !== postId,
-        );
-      } else {
-        // LIKE
-        user.likes.push(post);
-      }
+            if (alreadyLiked) {
+                user.likes = user.likes.filter(
+                (likedPost) => likedPost.id !== postId,
+                );
+            } else {
+                user.likes.push(post);
+            }
 
-      await userRepo.save(user);
+            await userRepo.save(user);
 
-      return {
-        liked: !alreadyLiked,
-      };
-    });
-  }
+            await queryRunner.commitTransaction();
+
+            return {
+                liked: !alreadyLiked,
+            };
+
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+
+            throw new InternalServerErrorException(
+                error.message || 'Failed to toggle like',
+            );
+        } finally {
+            await queryRunner.release();
+        }
+    }
 
   async getUsersWhoLikedPost(postId: number,query: PaginateQuery): Promise<Paginated<User>> {
         const qb = this.usersRepo
