@@ -18,6 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
         if (!payload?.sub) {
             throw new UnauthorizedException('Please Sign In');
         }
+        console.log(`userId : ${payload.sub}`)
         return {userId : payload.sub , email : payload.email};
     }
 }

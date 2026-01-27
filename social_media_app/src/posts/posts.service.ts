@@ -47,10 +47,17 @@ export class PostsService {
         const qb = this.postsRepo
             .createQueryBuilder('post')
             .leftJoin('post.user', 'user')
+
             .loadRelationCountAndMap(
                 'post.commentCount',
                 'post.comments',
             )
+
+            .loadRelationCountAndMap(
+                'post.likeCount',
+                'post.likedBy',
+            )
+
             .select([
                 'post.id',
                 'post.content',
