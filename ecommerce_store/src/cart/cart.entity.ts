@@ -17,7 +17,9 @@ export class Cart{
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column()
+    @Column({
+      default:1
+    })
     quantity: number
 
     @ManyToOne(()=>User , (user)=>user.cart_items)
