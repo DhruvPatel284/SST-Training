@@ -13,6 +13,7 @@ import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
 import { AddressesService } from './addresses.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { AddressResponseDto } from 'src/common/dtos/address-res.dto';
+import { UserResponseDto } from 'src/common/dtos/user-res.dto';
 
 @Controller('users')
 @UseGuards(PassportJwtAuthGuard)
@@ -21,6 +22,18 @@ export class UsersController {
         private usersService : UsersService,
         private addressesService : AddressesService,
     ){}
+
+    @Patch('profile')
+    @Serialize(UserResponseDto)
+    async updateUser(@Request() req ,@Body() body){
+        return await this.usersService.updateUserProfile(req.user.userId,body);
+    }
+
+    @Get('profile')
+    @Serialize(UserResponseDto)
+    async getUser(@Request() req){
+        return await this.usersService.getUserProfile(req.user.userId);
+    }
 
     @Post('address')
     @Serialize(AddressResponseDto)
