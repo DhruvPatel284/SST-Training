@@ -17,11 +17,15 @@ export class Product{
     @Column()
     name: string
 
-    @Column()
+    @Column({
+      default:0
+    })
     price: number
 
-    @Column()
-    stock:string
+    @Column({
+      default:0
+    })
+    stock:number
 
     @Column()
     category:string
@@ -31,4 +35,6 @@ export class Product{
 
     @OneToMany(()=>OrderItem , (order_item)=>order_item.product)
     order_items : OrderItem[]
+
+    orderCount?: number
 }
