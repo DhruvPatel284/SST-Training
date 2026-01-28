@@ -12,10 +12,13 @@ import {
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { CartItemResponseDto } from 'src/common/dtos/cart-res.dto';
 
 
 @Controller('cart')
 @UseGuards(PassportJwtAuthGuard)
+@Serialize(CartItemResponseDto)
 export class CartController {
     constructor(
         private cartService : CartService,

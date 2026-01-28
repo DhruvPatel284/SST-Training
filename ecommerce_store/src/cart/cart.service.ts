@@ -80,7 +80,6 @@ export class CartService {
                 product:true
             }
         })
-        console.log(cart)
         return cart;
     }
 }
