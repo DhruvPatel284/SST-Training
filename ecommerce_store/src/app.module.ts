@@ -10,6 +10,11 @@ import { ConfigModule } from '@nestjs/config';
 import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { ProductsModule } from './products/products.module';
+import { Address } from './users/address.entity';
+import { Product } from './products/product.entity';
+import { Order } from './orders/order.entity';
+import { OrderItem } from './orders/order-item.entity';
+import { Cart } from './cart/cart.entity';
 
 @Module({
   imports: [
@@ -20,11 +25,14 @@ import { ProductsModule } from './products/products.module';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'db.sqlite',
-      entities: [User],
+      entities: [User,Address,Product,Order,OrderItem,Cart],
       synchronize: true,
     }),
     UsersModule, 
-    AuthModule, OrdersModule, CartModule, ProductsModule,
+    AuthModule, 
+    OrdersModule, 
+    CartModule, 
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -25,7 +25,6 @@ export class Address{
     @Column()
     pincode:string
 
-    @Column()
     @ManyToOne(()=>User ,(user)=>user.addresses)
     user : User
 }

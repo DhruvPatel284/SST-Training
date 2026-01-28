@@ -25,11 +25,9 @@ export class OrderItem{
     @Column()
     total_price: number
 
-    @Column()
     @ManyToOne(()=>Order , (order)=>order.order_items)
     order : Order
 
-    @Column()
     @ManyToOne(()=>Product , (product)=>product.order_items)
     product : Product
 

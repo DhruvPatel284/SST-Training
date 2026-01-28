@@ -18,8 +18,8 @@ export class User{
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column()
-    name: string
+    @Column({ nullable: true })
+    name?: string
 
     @Column()
     email: string
@@ -27,18 +27,15 @@ export class User{
     @Column()
     password:string
 
-    @Column()
-    phone_no:string
+    @Column({ nullable: true })
+    phone_no?:string
 
-    @Column()
     @OneToMany(()=>Address ,(address)=>address.user)
     addresses : Address[]
     
-    @Column()
     @OneToMany(()=>Order ,(order)=>order.user)
     orders : Order[]
 
-    @Column()
     @OneToMany(()=>Cart ,(cart)=>cart.user)
     cart_items : Cart[]
 

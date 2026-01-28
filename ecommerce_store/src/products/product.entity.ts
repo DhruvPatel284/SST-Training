@@ -26,11 +26,9 @@ export class Product{
     @Column()
     category:string
 
-    @Column()
     @OneToMany(()=>Cart , (cart)=>cart.product)
     cart_items : Cart
 
-    @Column()
     @OneToMany(()=>OrderItem , (order_item)=>order_item.product)
     order_items : OrderItem[]
 }

@@ -34,11 +34,9 @@ export class Order{
     @IsIn(Object.values(OrderStatus))
     status: OrderStatus;
 
-    @Column()
     @ManyToOne(()=>User , (user)=>user.orders)
     user : User
 
-    @Column()
     @OneToMany(()=>OrderItem , (order_item)=>order_item.order)
     order_items : OrderItem[]
 

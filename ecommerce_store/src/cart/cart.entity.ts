@@ -20,11 +20,9 @@ export class Cart{
     @Column()
     quantity: number
 
-    @Column()
     @ManyToOne(()=>User , (user)=>user.cart_items)
     user : User
 
-    @Column()
     @ManyToOne(()=>Product , (product)=>product.order_items)
     product : Product
 
