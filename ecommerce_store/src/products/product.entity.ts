@@ -1,0 +1,36 @@
+import { Cart } from 'src/cart/cart.entity';
+import { OrderItem } from 'src/orders/order-item.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToMany,
+  ManyToOne,
+} from 'typeorm';
+
+@Entity()
+export class Product{
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    name: string
+
+    @Column()
+    price: number
+
+    @Column()
+    stock:string
+
+    @Column()
+    category:string
+
+    @Column()
+    @OneToMany(()=>Cart , (cart)=>cart.product)
+    cart_items : Cart
+
+    @Column()
+    @OneToMany(()=>OrderItem , (order_item)=>order_item.product)
+    order_items : OrderItem[]
+}
