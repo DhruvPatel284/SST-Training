@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
+import { Address } from 'src/users/address.entity';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -36,6 +37,9 @@ export class Order{
 
     @ManyToOne(()=>User , (user)=>user.orders)
     user : User
+
+    @ManyToOne(()=>Address , (address)=>address.orders)
+    address : Address
 
     @OneToMany(()=>OrderItem , (order_item)=>order_item.order)
     order_items : OrderItem[]

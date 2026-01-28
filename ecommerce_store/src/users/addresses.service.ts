@@ -35,6 +35,26 @@ export class AddressesService {
     }
 
     async updateUserAddress(id:number, userId:number, body:UpdateAddressDto){
+        const addressObj = await this.getAddress(id,userId);
+        Object.assign(addressObj, body);
+        return await this.addressRepo.save(addressObj);
+    }
+
+    async getAddressByid(id:number , userId:number) {
+        return await this.getAddress(id,userId);
+    }
+
+    async getAllUserAddresses(userId:number){
+        return await this.addressRepo.find({
+            where:{
+                user :{
+                    id:userId
+                }
+            },
+        }) 
+    }
+
+    async getAddress(id:number , userId:number) {
         const user = await this.usersService.findOne(userId);
         if(!user){
            throw new NotFoundException('User Not Found');
@@ -42,16 +62,17 @@ export class AddressesService {
         const addressObj = await this.addressRepo.findOne({
             where : {id},
             relations : {
-                user : true
+                user : true,
+                orders : true
             }
         })
         if(!addressObj){
             throw new NotFoundException('Address Not Found');
         }
         if(userId != addressObj.user.id){
-            throw new UnauthorizedException('Only Valid User can Update the Address');
+            throw new UnauthorizedException('Only Valid User can Access the Address');
         }
-        Object.assign(addressObj, body);
-        return await this.addressRepo.save(addressObj);
+        return addressObj;
     }
+
 }

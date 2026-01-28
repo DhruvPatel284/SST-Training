@@ -7,6 +7,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Order } from 'src/orders/order.entity';
 
 @Entity()
 export class Address{
@@ -27,4 +28,8 @@ export class Address{
 
     @ManyToOne(()=>User ,(user)=>user.addresses)
     user : User
+
+    @OneToMany(()=>Order , (order)=>order.address)
+    orders : Order[]
+    
 }

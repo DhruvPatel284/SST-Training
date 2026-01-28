@@ -35,12 +35,14 @@ export class UsersController {
     }
 
     @Get('address/:id')
-    getAddress(){
-
+    @Serialize(AddressResponseDto)
+    async getAddress(@Param('id') id,@Request() req){
+        return await this.addressesService.getAddressByid(parseInt(id),req.user.userId);
     }
     
     @Get('address')
-    getAllAddress(){
-
+    @Serialize(AddressResponseDto)
+    async getAllAddress(@Request() req){
+        return await this.addressesService.getAllUserAddresses(req.user.userId);
     }
 }
