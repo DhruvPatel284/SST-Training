@@ -212,6 +212,55 @@ export class OrdersService {
     }
   }
 
-  
+  async getOrderByid(id:number,userId:number){
+    const order = await this.orderRepo.findOne({
+      where:{id},
+      relations:{
+        user:true,
+        order_items:{
+          product:true
+        },
+        address:true
+      }
+    })
+    if(!order){
+      throw new NotFoundException('Order Not Found');
+    }
+    if(order.user.id != userId){
+      throw new BadRequestException('Only Valid User can Access Order');
+    }
+    return order;
+  }
+
+  async getOrderHistory(userId:number){
+    if(!userId){
+      return null;
+    }
+    return await this.orderRepo.find({
+      where:{
+        user:{
+          id:userId
+        }
+      },
+      relations:{
+        order_items:{
+          product:true
+        }
+      }
+    })
+  }
+  async changeOrderStatus(orderId: number, status: OrderStatus) {
+    const order = await this.orderRepo.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = status;
+    return await this.orderRepo.save(order);
+  }
+
 
 }
