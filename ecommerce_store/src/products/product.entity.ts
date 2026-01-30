@@ -37,4 +37,6 @@ export class Product{
     order_items : OrderItem[]
 
     orderCount?: number
+    inCart?: boolean;
+    cartQuantity?: number;
 }

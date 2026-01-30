@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { OrderStatus } from 'src/orders/order.entity';
 import { AddressResponseDto } from './address-res.dto';
 import { OrderItemsResponseDto } from './order-items-res.dto';
@@ -21,8 +21,10 @@ export class OrderResponseDto {
   user:UserResponseDto;
 
   @Expose()
+  @Type(() => AddressResponseDto)
   address: AddressResponseDto;
 
   @Expose()
-  order_items:OrderItemsResponseDto[];
+  @Type(() => OrderItemsResponseDto)
+  order_items:OrderItemsResponseDto;
 }

@@ -26,6 +26,19 @@ export class CartService {
         if(product.stock < 1){
             throw new NotFoundException('Product is Out Of Stock');
         }
+        const cart_check = await this.cartRepo.findOne({
+            where:{
+                user:{
+                    id:userId
+                },
+                product:{
+                    id:productId
+                }
+            }
+        })
+        if(cart_check){
+            throw new BadRequestException('This Product is already exist in Cart')
+        }
         const cart_item = this.cartRepo.create({user,product,quantity:1});
         return await this.cartRepo.save(cart_item);
     }

@@ -12,6 +12,7 @@ import { CreateUserDto } from '../common/dtos/create-user.dto';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { AuthResDto } from './dtos/auth-res.dto';
 import { PassportJwtAuthGuard } from '../guards/passport-jwt-auth.guard';
+import { ResponseMessage } from '../decorators/response-message.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +22,7 @@ export class AuthController {
 
     @Post('/signup')
     @Serialize(AuthResDto)
+    @ResponseMessage('User registered successfully')
     signup(@Request() req , @Body() body:CreateUserDto){
       return this.authService.signup(req , body.email,body.password,body.name);
     }
@@ -28,16 +30,20 @@ export class AuthController {
     @UseGuards(PassportAuthGuard)
     @Post('/signin')
     @Serialize(AuthResDto)
+    @ResponseMessage('User signed in successfully')
     signin(@Request() req){
        return this.authService.signin(req.user,req);
     }
 
     @Get('/whoami')
     @UseGuards(PassportJwtAuthGuard)
+    @ResponseMessage('User details retrieved successfully')
     whoAmI(@Request() req) {
       return req.user;
     }
+
     @Post('/signout')
+    @ResponseMessage('Signed out successfully')
     signout(@Request() req) {
         req.session.destroy((err) => {
             if (err) {
@@ -45,9 +51,7 @@ export class AuthController {
             }
         });
 
-        return {
-            message: 'Signed out successfully',
-        };
+        return null; // or return empty object {}
     }
 
 }

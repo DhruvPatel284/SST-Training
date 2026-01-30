@@ -14,6 +14,9 @@ import { AdminAuthGuard } from 'src/guards/admin-auth.guard';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
 import { Product } from './product.entity';
+import { ResponseMessage } from '../decorators/response-message.decorator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { ProductResponseDto } from 'src/common/dtos/product-res.dto';
 
 
 @Controller('products')
@@ -25,24 +28,31 @@ export class ProductsController {
 
     @UseGuards(AdminAuthGuard)
     @Post()
+    @ResponseMessage('Product Added Successfully')
+    @Serialize(ProductResponseDto)
     async add(@Body() body) {
         return await this.productsService.addProduct(body);
     }
 
     @UseGuards(AdminAuthGuard)
     @Patch(':id')
+    @ResponseMessage('Product Updated Successfully')
+    @Serialize(ProductResponseDto)
     async update(@Param('id') id, @Body() body) {
         return await this.productsService.updateProduct(parseInt(id),body);
     }
 
     @Get(':id')
+    @ResponseMessage('Product Retrivied Successfully')
+    @Serialize(ProductResponseDto)
     async get(@Param('id') id){
         return await this.productsService.getProductByid(id);
     }
 
     @Get()
-    async getAll(@Paginate() query:PaginateQuery):Promise<Paginated<Product>> {
-        return await this.productsService.getAllProducts(query);
+    @ResponseMessage('Products Retrivied Successfully')
+    async getAll(@Request() req,@Paginate() query:PaginateQuery):Promise<Paginated<Product>> {
+        return await this.productsService.getAllProducts(req.user.userId,query);
     }
 
 }

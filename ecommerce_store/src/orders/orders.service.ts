@@ -250,6 +250,10 @@ export class OrdersService {
     })
   }
   async changeOrderStatus(orderId: number, status: OrderStatus) {
+     // validate status against enum
+    if (!Object.values(OrderStatus).includes(status as OrderStatus)) {
+        throw new BadRequestException('Invalid order status');
+    }
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
     });
