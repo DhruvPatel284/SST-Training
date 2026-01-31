@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common'
 import { Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { PassportAuthGuard } from '../guards/passport-auth.guard';
-import { CreateUserDto } from '../common/dtos/create-user.dto';
-import { Serialize } from '../interceptors/serialize.interceptor';
-import { AuthResDto } from './dtos/auth-res.dto';
-import { PassportJwtAuthGuard } from '../guards/passport-jwt-auth.guard';
+import { PassportAuthGuard } from '../../guards/passport-auth.guard';
+import { CreateUserDto } from '../../common/dtos/create-user.dto';
+import { Serialize } from '../../interceptors/serialize.interceptor';
+import { AuthResDto } from './../api/dtos/auth-res.dto';
+import { PassportJwtAuthGuard } from '../../guards/passport-jwt-auth.guard';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
     constructor(
       private authService : AuthService,

@@ -1,7 +1,7 @@
 import { Strategy , ExtractJwt } from 'passport-jwt';
 import { AuthService } from "../auth.service";
 import { PassportStrategy } from "@nestjs/passport";
-import { JWT_SECRET } from '../../configs/config';
+import { JWT_SECRET } from '../../../configs/config';
 import { UnauthorizedException } from '@nestjs/common';
 
 

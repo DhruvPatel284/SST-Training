@@ -3,11 +3,11 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { UsersService } from '../../users/users.service';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../users/user.entity';
+import { User } from '../../users/user.entity';
 
 const scrypt = promisify(_scrypt);
 
