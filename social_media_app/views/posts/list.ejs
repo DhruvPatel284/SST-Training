@@ -1,14 +1,403 @@
-<h2>My Posts</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed - Social Connect</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<a href="/posts/new">Create Post</a>
-<hr/>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #ec4899;
+      --success: #10b981;
+      --background: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --shadow: rgba(0, 0, 0, 0.3);
+    }
 
-<ul>
-  <% posts.forEach(post => { %>
-    <li>
-      <a href="/posts/<%= post.id %>">
-        <%= post.content %>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--background) 0%, #1a1f3a 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+
+    /* ===== NAVIGATION ===== */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .navbar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-logout {
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-logout:hover {
+      background: var(--surface-light);
+      color: var(--text-primary);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    .header {
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    /* ===== CREATE POST BUTTON ===== */
+    .create-post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .create-post-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--background);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .create-post-link:hover {
+      border-color: var(--primary);
+      background: var(--surface-light);
+      color: var(--text-primary);
+    }
+
+    .create-post-link svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .create-post-link span {
+      font-size: 15px;
+      flex: 1;
+    }
+
+    /* ===== POST CARD ===== */
+    .post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px var(--shadow);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .post-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .post-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .post-card:hover::before {
+      opacity: 1;
+    }
+
+    .post-content {
+      color: var(--text-primary);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .view-post {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .view-post:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .view-post svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      margin-top: 32px;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      opacity: 0.8;
+    }
+
+    .empty-state-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .empty-state h3 {
+      font-size: 24px;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    .empty-state .create-post-link {
+      display: inline-flex;
+      width: auto;
+      border-style: solid;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      font-weight: 500;
+    }
+
+    .empty-state .create-post-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .navbar-container {
+        padding: 0 16px;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+
+      .container {
+        padding: 24px 16px;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .post-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/posts" class="logo">
+        <div class="logo-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        Social Connect
       </a>
-    </li>
-  <% }) %>
-</ul>
+
+      <div class="nav-actions">
+        <a href="/logout" class="btn-logout">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="container">
+    <div class="header">
+      <h1>Your Feed</h1>
+      <p>Share your thoughts with the world</p>
+    </div>
+
+    <!-- ===== CREATE POST PROMPT ===== -->
+    <div class="create-post-card">
+      <a href="/posts/new" class="create-post-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>What's on your mind?</span>
+      </a>
+    </div>
+
+    <!-- ===== POSTS LIST ===== -->
+    <% if (posts.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+          </svg>
+        </div>
+        <h3>No posts yet</h3>
+        <p>Be the first to share something amazing!</p>
+        <a href="/posts/new" class="create-post-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span>Create your first post</span>
+        </a>
+      </div>
+    <% } else { %>
+      <% posts.forEach(post => { %>
+        <div class="post-card">
+          <div class="post-content">
+            <%= post.content %>
+          </div>
+          
+          <div class="post-meta">
+            <div></div>
+            <a href="/posts/<%= post.id %>" class="view-post">
+              View Post
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+</body>
+</html>

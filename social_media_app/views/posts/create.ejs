@@ -1,7 +1,405 @@
-<h2>Create Post</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Post - Social Connect</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<form method="POST" action="/posts">
-  <textarea name="content" required></textarea>
-  <br/><br/>
-  <button type="submit">Create</button>
-</form>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #ec4899;
+      --success: #10b981;
+      --background: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --shadow: rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--background) 0%, #1a1f3a 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+
+    /* ===== NAVIGATION ===== */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .navbar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .btn-back {
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-back:hover {
+      background: var(--surface-light);
+      color: var(--text-primary);
+    }
+
+    .btn-back svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .header-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .header-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 16px;
+      background: var(--background);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    textarea::placeholder {
+      color: var(--text-secondary);
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+      background: var(--surface-light);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .char-count {
+      text-align: right;
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-light);
+      color: var(--text-primary);
+      border-color: var(--surface-light);
+    }
+
+    .tips {
+      margin-top: 32px;
+      padding: 20px;
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .tips h3 {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips h3 svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary-light);
+    }
+
+    .tips ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tips li {
+      color: var(--text-secondary);
+      font-size: 13px;
+      padding: 6px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .tips li::before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: var(--primary-light);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px 16px;
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/posts" class="logo">
+        <div class="logo-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        Social Connect
+      </a>
+
+      <a href="/posts" class="btn-back">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="header-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+        </div>
+        <h1>Create New Post</h1>
+        <p>Share your thoughts with the community</p>
+      </div>
+
+      <form method="POST" action="/posts" id="postForm">
+        <div class="form-group">
+          <label for="content">What's on your mind?</label>
+          <textarea 
+            id="content"
+            name="content" 
+            placeholder="Write something interesting, inspiring, or thought-provoking..."
+            required
+            maxlength="5000"
+          ></textarea>
+          <div class="char-count">
+            <span id="charCount">0</span> / 5000 characters
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="window.location.href='/posts'">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+            Publish Post
+          </button>
+        </div>
+      </form>
+
+      <div class="tips">
+        <h3>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+          Tips for a great post
+        </h3>
+        <ul>
+          <li>Be authentic and share your genuine thoughts</li>
+          <li>Keep it concise and engaging</li>
+          <li>Add value to your community</li>
+          <li>Be respectful and considerate</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Character counter
+    const textarea = document.getElementById('content');
+    const charCount = document.getElementById('charCount');
+
+    textarea.addEventListener('input', function() {
+      charCount.textContent = this.value.length;
+    });
+
+    // Auto-expand textarea
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.max(180, this.scrollHeight) + 'px';
+    });
+  </script>
+</body>
+</html>

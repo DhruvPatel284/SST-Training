@@ -22,7 +22,6 @@ export class LikesWebController {
     @Param('postId') postId: string,
     @Res() res: Response,
   ) {
-    console.log("hiii")
     await this.likesService.toggleLike(
       req.user.userId,
       Number(postId),
