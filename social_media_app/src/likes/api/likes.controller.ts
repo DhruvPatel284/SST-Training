@@ -5,7 +5,7 @@ import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
 import { User } from 'src/users/user.entity';
 
-@Controller('likes')
+@Controller('api/likes')
 @UseGuards(PassportJwtAuthGuard)
 export class LikesController {
     constructor(

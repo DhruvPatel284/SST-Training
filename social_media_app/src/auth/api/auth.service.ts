@@ -25,7 +25,7 @@ export class AuthService {
     return await this.jwtService.signAsync(tokenPayload);
   }
 
-  async signup(email: string, password: string , name?: string ) {
+  async signup(email: string, password: string , name?: string ){
     
     const users = await this.usersService.find(email);
     if (users.length) {

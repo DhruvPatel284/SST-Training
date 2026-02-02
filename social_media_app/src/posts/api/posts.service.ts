@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm'
-import { Post } from './post.entity';
+import { Post } from '../post.entity';
 import { CreateAndUpdatePostDto } from './dtos/create-update-post.dto';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/user.entity';
@@ -42,31 +42,43 @@ export class PostsService {
             },
         });
     }
-    async getPostByid(userId:number,id:number){
-        if (!id) {
-            return null;
-        }
+    async getPostByid(userId: number, id: number) {
         const post = await this.postsRepo.findOne({
             where: { id },
             relations: {
                 user: true,
-                comments:true,
-                likedBy:true
+                likedBy: true,        // 👈 needed
+                comments: {
+                    user: true,
+                },
             },
         });
-       if(!post){
-         throw new NotFoundException('Post Not Found');
-       }
-       if(userId != post.user.id){
-         throw new UnauthorizedException('Only Creator can See the Post');
-       }
+
+        if (!post) {
+            throw new NotFoundException('Post Not Found');
+        }
+
+        // authorization (your rule)
+        if (userId !== post.user.id) {
+            throw new UnauthorizedException('Only Creator can See the Post');
+        }
+
+        // ===== LIKE COUNT =====
+        post.likeCount = post.likedBy.length;
+
+        // ===== IS LIKED BY CURRENT USER =====
+        post.isLikedByCurrentUser = post.likedBy.some(
+            (user) => user.id === userId,
+        );
+
         return post;
     }
+
     async getAllPosts(userId:number , query: PaginateQuery): Promise<Paginated<Post>> {
         const qb = this.postsRepo
             .createQueryBuilder('post')
             .leftJoin('post.user', 'user')
-             .where('post.userId = :userId', { userId })
+            .where('post.userId = :userId', { userId })
 
             .loadRelationCountAndMap(
                 'post.commentCount',

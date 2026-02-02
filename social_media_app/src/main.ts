@@ -4,9 +4,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import  cookieParser from 'cookie-parser';
 import { join } from 'path';
 import express from 'express';
+import methodOverride from 'method-override';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.use(methodOverride('_method'));
 
   // ===== View Engine =====
   app.setViewEngine('ejs');

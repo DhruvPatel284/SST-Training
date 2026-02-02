@@ -12,7 +12,7 @@ import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
 import { CommentsService } from './comments.service';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
-import { Comment } from './comment.entity';
+import { Comment } from '../comment.entity';
 import { CreateAndUpdateCommentDto } from './dtos/create-and-update-comment.dto';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CreateCommentResDto } from './dtos/create-comment-res.dto';
@@ -23,7 +23,7 @@ export class CommentsController {
     constructor(
         private commentsService : CommentsService
     ){}
-    @Post(':postId')
+    @Post('post/:postId')
     @Serialize(CreateCommentResDto)
     async create(@Request() req , @Param('postId') postId:string , @Body() body:CreateAndUpdateCommentDto){
        return await this.commentsService.createComment(req.user.userId,parseInt(postId),body.comment);

@@ -1,24 +1,33 @@
-import { Strategy , ExtractJwt } from 'passport-jwt';
-import { AuthService } from "../auth.service";
-import { PassportStrategy } from "@nestjs/passport";
+import { Strategy, ExtractJwt } from 'passport-jwt';
+import { PassportStrategy } from '@nestjs/passport';
 import { JWT_SECRET } from '../../../configs/config';
 import { UnauthorizedException } from '@nestjs/common';
 
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        // 1️⃣ For API / Mobile
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
 
-export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
-    constructor(private authService:AuthService){
-        console.log(`jwt : ${JWT_SECRET}`)
-        super({ 
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: JWT_SECRET,
-        });
+        // 2️⃣ For Web (EJS)
+        (req) => {
+          return req?.cookies?.access_token;
+        },
+      ]),
+      ignoreExpiration: false,
+      secretOrKey: JWT_SECRET,
+    });
+  }
+
+  async validate(payload: { sub: number; email: string }) {
+    if (!payload?.sub) {
+      throw new UnauthorizedException('Please sign in');
     }
-    async validate(payload: {sub : number , email : string}){
-        if (!payload?.sub) {
-            throw new UnauthorizedException('Please Sign In');
-        }
-        console.log(`userId : ${payload.sub}`)
-        return {userId : payload.sub , email : payload.email};
-    }
+
+    return {
+      userId: payload.sub,
+      email: payload.email,
+    };
+  }
 }

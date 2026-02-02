@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
-import { Comment } from './comment.entity';
+import { Comment } from '../comment.entity';
 import { PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
-import { PostsService } from 'src/posts/posts.service';
+import { PostsService } from 'src/posts/api/posts.service';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class CommentsService {
 
         const post = await this.postsService.getPost(postId);
         if (!post) {
-            throw new NotFoundException('Post not found');
+            throw new NotFoundException('Comment not found');
         }
 
         const commentEntity = this.commentsRepo.create({
@@ -45,10 +45,10 @@ export class CommentsService {
         relations:{user:true}
        });
        if(!commentRes){
-        throw new NotFoundException('Post Not Found');
+        throw new NotFoundException('Comment  Not Found');
        }
        if(userId != commentRes.user.id){
-        return new UnauthorizedException('Only Authorized user can Update the comment');
+        throw new UnauthorizedException('Only Authorized user can Update the comment');
        }
 
        commentRes.comment = comment;

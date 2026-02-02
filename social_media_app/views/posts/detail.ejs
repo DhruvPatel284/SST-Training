@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Post Detail</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 600px;
+      margin: 40px auto;
+    }
+    textarea {
+      width: 100%;
+    }
+    .comment {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+    .actions {
+      margin-top: 6px;
+    }
+    form {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== POST ===== -->
+  <h2>Post</h2>
+
+  <p>
+    <strong>Author:</strong>
+    <%= post.user.name %>
+  </p>
+
+  <p>
+    <%= post.content %>
+  </p>
+
+  <p>
+    <small>Created at: <%= post.createdAt %></small>
+  </p>
+
+  <hr/>
+
+  <!-- ===== LIKE ===== -->
+  <form method="POST" action="/posts/<%= post.id %>/likes">
+    <button type="submit">
+      <%= post.isLikedByCurrentUser ? '❤️ Liked' : '🤍 Like' %>
+      (<%= post.likeCount || 0 %>)
+    </button>
+  </form>
+
+  <hr/>
+
+  <!-- ===== ADD COMMENT ===== -->
+  <h3>Add Comment</h3>
+
+  <form method="POST" action="/posts/<%= post.id %>/comments">
+    <textarea
+      name="comment"
+      rows="3"
+      placeholder="Write a comment..."
+      required
+    ></textarea>
+    <br/><br/>
+    <button type="submit">Add Comment</button>
+  </form>
+
+  <hr/>
+
+  <!-- ===== COMMENTS LIST ===== -->
+  <h3>Comments (<%= post.comments.length %>)</h3>
+
+  <% if (post.comments.length === 0) { %>
+    <p>No comments yet.</p>
+  <% } %>
+
+  <% post.comments.forEach(c => { %>
+    <div class="comment">
+      <p>
+        <strong>
+          <%= c.user ? c.user.name : 'Unknown user' %>
+        </strong>
+      </p>
+
+      <p>
+        <%= c.comment %>
+      </p>
+
+      <small>
+        <%= c.createdAt %>
+      </small>
+
+      <!-- ===== EDIT COMMENT (ONLY OWNER) ===== -->
+      <% if (c.user && c.user.id === user.userId) { %>
+        <div class="actions">
+          <form
+            method="POST"
+            action="/posts/<%= post.id %>/comments/<%= c.id %>?_method=PATCH"
+          >
+            <input
+              type="text"
+              name="comment"
+              value="<%= c.comment %>"
+              required
+            />
+            <button type="submit">Edit</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  <% }) %>
+
+  <hr/>
+
+  <!-- ===== NAVIGATION ===== -->
+  <a href="/posts">← Back to posts</a>
+
+</body>
+</html>

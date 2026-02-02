@@ -33,15 +33,15 @@ export class AuthWebController {
   // ===== HANDLE SIGNUP =====
   @Post('/signup')
   async signup(
-    @Body() body: { name: string; email: string; password: string },
+    @Body() body: { name?: string; email: string; password: string },
     @Res() res: Response,
   ) {
     const user:any = await this.authService.signup(
       body.email,
       body.password,
-      body.name,
+      body?.name,
     );
-
+  
     res.cookie('access_token', user.accessToken, {
       httpOnly: true,
     });
@@ -58,7 +58,6 @@ export class AuthWebController {
     res.cookie('access_token', user.accessToken, {
       httpOnly: true,
     });
-
     return res.redirect('/posts');
   }
 

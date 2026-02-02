@@ -1,8 +1,8 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm'
-import { User } from '../users/user.entity';
-import { Post } from '../posts/post.entity';
+import { User } from '../../users/user.entity';
+import { Post } from '../../posts/post.entity';
 import { PaginateQuery, paginate, Paginated } from 'nestjs-paginate';
 
 

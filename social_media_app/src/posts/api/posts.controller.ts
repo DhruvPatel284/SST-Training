@@ -14,13 +14,13 @@ import { PostsService } from './posts.service';
 import { CreateAndUpdatePostDto } from './dtos/create-update-post.dto';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery, Paginated } from 'nestjs-paginate';
-import { Post } from './post.entity';
+import { Post } from '../post.entity';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CreatePostResDto } from './dtos/create-post-res.dto';
 
 
 
-@Controller('posts')
+@Controller('api/posts')
 @UseGuards(PassportJwtAuthGuard)
 export class PostsController {
     constructor(
