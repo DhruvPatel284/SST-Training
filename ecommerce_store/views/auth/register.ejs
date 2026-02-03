@@ -1,0 +1,14 @@
+<h1>Register</h1>
+
+<% if (error) { %>
+  <p style="color:red;"><%= error %></p>
+<% } %>
+
+<form method="POST" action="/auth/register">
+  <input name="name" placeholder="Name" />
+  <input name="email" type="email" placeholder="Email" required />
+  <input name="password" type="password" placeholder="Password" required />
+  <button>Register</button>
+</form>
+
+<a href="/auth/login">Login</a>

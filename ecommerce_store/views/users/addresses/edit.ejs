@@ -1,0 +1,12 @@
+<h1>Edit Address</h1>
+
+<form
+  method="POST"
+  action="/profile/addresses/<%= address.id %>?_method=PATCH"
+>
+  <input name="address" value="<%= address.address %>" />
+  <input name="district" value="<%= address.district %>" />
+  <input name="state" value="<%= address.state %>" />
+  <input name="pincode" value="<%= address.pincode %>" />
+  <button>Update</button>
+</form>

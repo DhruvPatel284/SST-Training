@@ -16,7 +16,7 @@ import { AddressResponseDto } from 'src/common/dtos/address-res.dto';
 import { UserResponseDto } from 'src/common/dtos/user-res.dto';
 import { ResponseMessage } from '../decorators/response-message.decorator';
 
-@Controller('users')
+@Controller('api/users')
 @UseGuards(PassportJwtAuthGuard)
 export class UsersController {
     constructor(

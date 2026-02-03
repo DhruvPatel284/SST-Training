@@ -8,6 +8,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 import { UsersModule } from '../users/users.module';
+import { AuthPageController } from './web/auth-page.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { UsersModule } from '../users/users.module';
       signOptions: { expiresIn: '2d' },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController,AuthPageController],
   providers: [AuthService,LocalStrategy,JwtStrategy]
 })
 export class AuthModule {}

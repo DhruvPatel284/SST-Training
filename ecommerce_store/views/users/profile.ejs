@@ -1,0 +1,11 @@
+<h1>My Profile</h1>
+
+<form method="POST" action="/profile?_method=PATCH">
+  <input name="name" value="<%= user.name || '' %>" />
+  <input name="phone_no" value="<%= user.phone_no || '' %>" />
+  <button>Update</button>
+</form>
+
+<p>Email: <%= user.email %></p>
+
+<a href="/profile/addresses">Manage Addresses</a>

@@ -1,0 +1,14 @@
+<h1>My Addresses</h1>
+
+<a href="/profile/addresses/new">+ Add Address</a>
+
+<ul>
+  <% addresses.forEach(a => { %>
+    <li>
+      <%= a.address %>, <%= a.district %>, <%= a.state %> - <%= a.pincode %>
+      <a href="/profile/addresses/<%= a.id %>/edit">Edit</a>
+    </li>
+  <% }) %>
+</ul>
+
+<a href="/profile">Back to Profile</a>

@@ -14,7 +14,7 @@ import { AuthResDto } from './dtos/auth-res.dto';
 import { PassportJwtAuthGuard } from '../guards/passport-jwt-auth.guard';
 import { ResponseMessage } from '../decorators/response-message.decorator';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
     constructor(
       private authService : AuthService,
