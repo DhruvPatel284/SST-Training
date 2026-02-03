@@ -24,14 +24,29 @@ export class PostsWebController {
   @Get()
   @Render('posts/list')
   async list(@Request() req) {
-    const data = await this.postsService.getAllPosts(req.user.userId, {
-      page: 1,
-      limit: 10,
-      path: '',
-    });
+    const { page, limit, search, sortBy } = req.query;
 
-    return { posts: data.data };
+    const data = await this.postsService.getAllPosts(
+      req.user.userId,
+      {
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 10,
+        search: search ? String(search) : undefined,
+        sortBy: sortBy
+          ? [String(sortBy).split(':') as [string, 'ASC' | 'DESC']]
+          : undefined,
+        path: '/posts',
+      },
+    );
+
+    return {
+      posts: data.data,
+      meta: data.meta,
+      links: data.links,
+      query: req.query,
+    };
   }
+
 
   // ===== CREATE PAGE =====
   @Get('new')

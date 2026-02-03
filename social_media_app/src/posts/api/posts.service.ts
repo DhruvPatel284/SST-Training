@@ -78,7 +78,7 @@ export class PostsService {
         const qb = this.postsRepo
             .createQueryBuilder('post')
             .leftJoin('post.user', 'user')
-            .where('post.userId = :userId', { userId })
+            //.where('post.userId = :userId', { userId })
 
             .loadRelationCountAndMap(
                 'post.commentCount',
