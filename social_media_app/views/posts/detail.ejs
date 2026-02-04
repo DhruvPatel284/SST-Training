@@ -176,6 +176,7 @@
       align-items: center;
       padding-top: 20px;
       border-top: 1px solid var(--border);
+      flex-wrap: wrap;
     }
 
     .like-form {
@@ -210,6 +211,32 @@
     }
 
     .btn-like svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-edit-post {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-edit-post:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-edit-post svg {
       width: 18px;
       height: 18px;
     }
@@ -463,7 +490,8 @@
         align-items: stretch;
       }
 
-      .btn-like {
+      .btn-like,
+      .btn-edit-post {
         justify-content: center;
       }
     }
@@ -530,6 +558,16 @@
             <span><%= post.likeCount || 0 %> <%= (post.likeCount === 1) ? 'Like' : 'Likes' %></span>
           </button>
         </form>
+
+        <!-- ===== EDIT POST BUTTON (ONLY FOR OWNER) ===== -->
+        <% if (post.user && post.user.id === user.userId) { %>
+          <a href="/posts/<%= post.id %>/edit" class="btn-edit-post">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <span>Edit Post</span>
+          </a>
+        <% } %>
       </div>
     </div>
 

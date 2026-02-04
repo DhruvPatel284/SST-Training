@@ -101,7 +101,7 @@ export class PostsService {
             ]);
 
         return paginate(query, qb, {
-            sortableColumns: ['id', 'createdAt'],
+            sortableColumns: ['id', 'createdAt','updatedAt'],
             defaultSortBy: [['id', 'DESC']],
             defaultLimit: 10,
             searchableColumns: ['content'],
