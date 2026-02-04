@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { ProductsService } from 'src/products/products.service';
+import { Inject, forwardRef } from '@nestjs/common';
 
 @Injectable()
 export class CartService {
@@ -11,7 +12,8 @@ export class CartService {
         @InjectRepository(Cart)
         private cartRepo : Repository<Cart>,
         private usersService : UsersService,
-        private productsService : ProductsService,
+        @Inject(forwardRef(() => ProductsService))
+        private productsService: ProductsService,
     ){}
 
     async addToCart(productId:number , userId:number) {

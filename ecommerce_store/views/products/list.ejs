@@ -1,0 +1,54 @@
+<h1>Products</h1>
+
+<form method="GET" action="/products">
+  <input
+    type="text"
+    name="search"
+    placeholder="Search products"
+    value="<%= query.search || '' %>"
+  />
+  <button>Search</button>
+</form>
+
+<table border="1">
+  <tr>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Stock</th>
+    <th>Category</th>
+    <th>Cart</th>
+  </tr>
+
+  <% products.forEach(p => { %>
+    <tr>
+      <td>
+        <a href="/products/<%= p.id %>"><%= p.name %></a>
+      </td>
+      <td>₹<%= p.price %></td>
+      <td><%= p.stock %></td>
+      <td><%= p.category %></td>
+      <td>
+        <% if (p.inCart) { %>
+          In cart (Qty: <%= p.cartQuantity %>)
+        <% } else { %>
+          <form method="POST" action="/products/<%= p.id %>/cart">
+            <button>Add</button>
+          </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+</table>
+
+<!-- ===== PAGINATION ===== -->
+<div>
+  <% if (meta.currentPage > 1) { %>
+    <a href="<%= links.previous %>">Prev</a>
+  <% } %>
+
+  Page <%= meta.currentPage %> of <%= meta.totalPages %>
+
+  <% if (meta.currentPage < meta.totalPages) { %>
+    <a href="<%= links.next %>">Next</a>
+  <% } %>
+</div>

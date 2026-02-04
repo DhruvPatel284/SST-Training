@@ -59,9 +59,9 @@ export class PostsService {
         }
 
         // authorization (your rule)
-        if (userId !== post.user.id) {
-            throw new UnauthorizedException('Only Creator can See the Post');
-        }
+        // if (userId !== post.user.id) {
+        //     throw new UnauthorizedException('Only Creator can See the Post');
+        // }
 
         // ===== LIKE COUNT =====
         post.likeCount = post.likedBy.length;

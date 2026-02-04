@@ -17,7 +17,7 @@ import { CartItemResponseDto } from 'src/common/dtos/cart-res.dto';
 import { ResponseMessage } from '../decorators/response-message.decorator';
 
 
-@Controller('cart')
+@Controller('api/cart')
 @UseGuards(PassportJwtAuthGuard)
 @Serialize(CartItemResponseDto)
 export class CartController {

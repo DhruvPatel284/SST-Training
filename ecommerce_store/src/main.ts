@@ -35,6 +35,6 @@ async function bootstrap() {
    // ===== Static Files (optional) =====
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();

@@ -1,0 +1,54 @@
+<h1>My Cart</h1>
+
+<% if (cartItems.length === 0) { %>
+  <p>Your cart is empty</p>
+  <a href="/products">Go to products</a>
+<% } else { %>
+  <table border="1">
+    <tr>
+      <th>Product</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Subtotal</th>
+      <th>Action</th>
+    </tr>
+
+    <% cartItems.forEach(item => { %>
+      <tr>
+        <td><%= item.product.name %></td>
+        <td>₹<%= item.product.price %></td>
+        <td>
+          <form
+            method="POST"
+            action="/cart/<%= item.id %>?_method=PATCH"
+          >
+            <input
+              type="number"
+              name="quantity"
+              value="<%= item.quantity %>"
+              min="1"
+            />
+            <button>Update</button>
+          </form>
+        </td>
+        <td>
+          ₹<%= item.product.price * item.quantity %>
+        </td>
+        <td>
+          <form
+            method="POST"
+            action="/cart/<%= item.id %>?_method=DELETE"
+          >
+            <button>Remove</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+
+  <h3>Total: ₹<%= total %></h3>
+
+  <a href="/products">Continue shopping</a>
+  <br />
+  <a href="/orders/checkout">Proceed to Checkout</a>
+<% } %>

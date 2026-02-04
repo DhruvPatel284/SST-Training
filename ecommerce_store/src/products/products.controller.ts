@@ -18,8 +18,7 @@ import { ResponseMessage } from '../decorators/response-message.decorator';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { ProductResponseDto } from 'src/common/dtos/product-res.dto';
 
-
-@Controller('products')
+@Controller('api/products')
 @UseGuards(PassportJwtAuthGuard)
 export class ProductsController {
     constructor(
