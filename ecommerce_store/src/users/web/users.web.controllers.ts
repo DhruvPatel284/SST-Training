@@ -7,6 +7,7 @@ import {
   Body,
   Render,
   Request,
+  Delete,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -104,6 +105,18 @@ export class UsersWebController {
       Number(id),
       req.user.userId,
       body,
+    );
+    return res.redirect('/profile/addresses');
+  }
+  @Delete('addresses/:id')
+  async deleteAddress(
+    @Request() req,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    await this.addressesService.deleteUserAddress(
+      Number(id),
+      req.user.userId,
     );
     return res.redirect('/profile/addresses');
   }

@@ -12,11 +12,11 @@ import {
   Query,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { OrdersService } from './orders.service';
+import { OrdersService } from '../orders.service';
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
 import { UsersService } from 'src/users/users.service';
 import { CartService } from 'src/cart/cart.service';
-import { SkipTransform } from '../decorators/skip-transform.decorator'
+import { SkipTransform } from '../../decorators/skip-transform.decorator'
 import { AddressesService } from 'src/users/addresses.service';
 import { Cart } from 'src/cart/cart.entity';
 

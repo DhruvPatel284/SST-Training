@@ -75,4 +75,18 @@ export class AddressesService {
         return addressObj;
     }
 
+    async deleteUserAddress(id: number, userId: number) {
+        const address = await this.getAddress(id, userId);
+
+        // Optional safety: block delete if used in orders
+        if (address.orders && address.orders.length > 0) {
+            throw new BadRequestException(
+            'Address is already used in orders and cannot be deleted',
+            );
+        }
+
+        await this.addressRepo.remove(address);
+        return address;
+    }
+
 }

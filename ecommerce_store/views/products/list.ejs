@@ -1,54 +1,414 @@
-<h1>Products</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link active">Products</a></li>
+        <li><a href="/cart" class="nav-link">🛒 Cart</a></li>
+        <li><a href="/orders" class="nav-link">Orders</a></li>
+        <li><a href="/profile" class="nav-link">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<form method="GET" action="/products">
-  <input
-    type="text"
-    name="search"
-    placeholder="Search products"
-    value="<%= query.search || '' %>"
-  />
-  <button>Search</button>
-</form>
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50);">
+    <div class="container">
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1>Discover Products</h1>
+        <p style="color: var(--gray-600); margin: 0;">Browse our collection of quality products</p>
+      </div>
 
-<table border="1">
-  <tr>
-    <th>Name</th>
-    <th>Price</th>
-    <th>Stock</th>
-    <th>Category</th>
-    <th>Cart</th>
-  </tr>
+      <!-- Search and Filters Bar -->
+      <div class="card mb-xl">
+        <div class="card-body" style="padding: var(--spacing-lg);">
+          <form method="GET" action="/products" id="filterForm">
+            <div class="grid" style="grid-template-columns: 1fr auto auto; gap: var(--spacing-md); align-items: end;">
+              <!-- Search Input -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="search" class="form-label">Search Products</label>
+                <input
+                  type="text"
+                  id="search"
+                  name="search"
+                  class="form-input"
+                  placeholder="Search by product name..."
+                  value="<%= query.search || '' %>"
+                />
+              </div>
 
-  <% products.forEach(p => { %>
-    <tr>
-      <td>
-        <a href="/products/<%= p.id %>"><%= p.name %></a>
-      </td>
-      <td>₹<%= p.price %></td>
-      <td><%= p.stock %></td>
-      <td><%= p.category %></td>
-      <td>
-        <% if (p.inCart) { %>
-          In cart (Qty: <%= p.cartQuantity %>)
-        <% } else { %>
-          <form method="POST" action="/products/<%= p.id %>/cart">
-            <button>Add</button>
+              <!-- Category Filter -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="category" class="form-label">Category</label>
+                <select name="filter.category" id="category" class="form-select">
+                  <option value="">All Categories</option>
+                  <option value="Electronics" <%= query['filter.category'] === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+                  <option value="Clothing" <%= query['filter.category'] === 'Clothing' ? 'selected' : '' %>>Clothing</option>
+                  <option value="Home & Garden" <%= query['filter.category'] === 'Home & Garden' ? 'selected' : '' %>>Home & Garden</option>
+                  <option value="Books" <%= query['filter.category'] === 'Books' ? 'selected' : '' %>>Books</option>
+                  <option value="Sports & Outdoors" <%= query['filter.category'] === 'Sports & Outdoors' ? 'selected' : '' %>>Sports & Outdoors</option>
+                </select>
+              </div>
+
+              <!-- Search Button -->
+              <button type="submit" class="btn btn-primary" style="height: fit-content;">
+                🔍 Search
+              </button>
+            </div>
+
+            <!-- Advanced Filters (Collapsible) -->
+            <div id="advancedFilters" style="display: none; margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--gray-200);">
+              <div class="grid grid-cols-3">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="sortBy" class="form-label">Sort By</label>
+                  <select name="sortBy" id="sortBy" class="form-select">
+                    <option value="id:DESC" <%= query.sortBy === 'id:DESC' ? 'selected' : '' %>>Newest First</option>
+                    <option value="price:ASC" <%= query.sortBy === 'price:ASC' ? 'selected' : '' %>>Price: Low to High</option>
+                    <option value="price:DESC" <%= query.sortBy === 'price:DESC' ? 'selected' : '' %>>Price: High to Low</option>
+                    <option value="stock:DESC" <%= query.sortBy === 'stock:DESC' ? 'selected' : '' %>>Stock: High to Low</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="minPrice" class="form-label">Min Price</label>
+                  <input
+                    type="number"
+                    id="minPrice"
+                    name="filter.price.$gte"
+                    class="form-input"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    value="<%= query['filter.price.$gte'] || '' %>"
+                  />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="maxPrice" class="form-label">Max Price</label>
+                  <input
+                    type="number"
+                    id="maxPrice"
+                    name="filter.price.$lte"
+                    class="form-input"
+                    placeholder="10000"
+                    min="0"
+                    step="0.01"
+                    value="<%= query['filter.price.$lte'] || '' %>"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Toggle Advanced Filters -->
+            <div style="margin-top: var(--spacing-md);">
+              <button type="button" class="link" onclick="toggleAdvancedFilters()" style="font-size: 0.875rem;">
+                <span id="filterToggleText">⚙️ Advanced Filters</span>
+              </button>
+              <button type="button" class="link" onclick="clearFilters()" style="margin-left: var(--spacing-md); font-size: 0.875rem; color: var(--error);">
+                ✕ Clear Filters
+              </button>
+            </div>
           </form>
-        <% } %>
-      </td>
-    </tr>
-  <% }) %>
-</table>
+        </div>
+      </div>
 
-<!-- ===== PAGINATION ===== -->
-<div>
-  <% if (meta.currentPage > 1) { %>
-    <a href="<%= links.previous %>">Prev</a>
-  <% } %>
+      <!-- Results Info -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+        <p style="color: var(--gray-600); margin: 0;">
+          Showing <strong><%= products.length %></strong> of <strong><%= meta.totalItems %></strong> products
+        </p>
+        <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+          <span style="font-size: 0.875rem; color: var(--gray-600);">Per page:</span>
+          <select onchange="changeLimit(this.value)" class="form-select" style="width: auto; padding: 0.5rem;">
+            <option value="5" <%= meta.itemsPerPage === 5 ? 'selected' : '' %>>5</option>
+            <option value="10" <%= meta.itemsPerPage === 10 ? 'selected' : '' %>>10</option>
+            <option value="20" <%= meta.itemsPerPage === 20 ? 'selected' : '' %>>20</option>
+            <option value="50" <%= meta.itemsPerPage === 50 ? 'selected' : '' %>>50</option>
+          </select>
+        </div>
+      </div>
 
-  Page <%= meta.currentPage %> of <%= meta.totalPages %>
+      <!-- Products Grid -->
+      <% if (products.length === 0) { %>
+        <!-- Empty State -->
+        <div class="card">
+          <div class="card-body empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>No products found</h3>
+            <p style="margin-bottom: var(--spacing-xl);">Try adjusting your search or filters</p>
+            <button onclick="clearFilters()" class="btn btn-primary">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="grid grid-cols-3" style="gap: var(--spacing-xl);">
+          <% products.forEach(product => { %>
+            <div class="card product-card">
+              <!-- Product Image Placeholder -->
+              <div class="product-image">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 220px; display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                  <%= product.category === 'Electronics' ? '📱' : 
+                      product.category === 'Clothing' ? '👕' : 
+                      product.category === 'Home & Garden' ? '🏠' : 
+                      product.category === 'Books' ? '📚' : 
+                      product.category === 'Sports & Outdoors' ? '⚽' : '🛍️' %>
+                </div>
+                
+                <!-- Stock Badge -->
+                <% if (product.stock === 0) { %>
+                  <span class="badge badge-error" style="position: absolute; top: var(--spacing-md); right: var(--spacing-md);">
+                    Out of Stock
+                  </span>
+                <% } else if (product.stock < 10) { %>
+                  <span class="badge badge-warning" style="position: absolute; top: var(--spacing-md); right: var(--spacing-md);">
+                    Only <%= product.stock %> left
+                  </span>
+                <% } %>
 
-  <% if (meta.currentPage < meta.totalPages) { %>
-    <a href="<%= links.next %>">Next</a>
-  <% } %>
-</div>
+                <!-- In Cart Badge -->
+                <% if (product.inCart) { %>
+                  <span class="badge badge-success" style="position: absolute; top: var(--spacing-md); left: var(--spacing-md);">
+                    ✓ In Cart
+                  </span>
+                <% } %>
+              </div>
+
+              <div class="card-body">
+                <!-- Product Info -->
+                <div style="margin-bottom: var(--spacing-md);">
+                  <span class="badge badge-primary" style="font-size: 0.75rem;">
+                    <%= product.category %>
+                  </span>
+                </div>
+
+                <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm); min-height: 2.5rem;">
+                  <a href="/products/<%= product.id %>" style="color: inherit; text-decoration: none;">
+                    <%= product.name %>
+                  </a>
+                </h3>
+
+                <div style="display: flex; align-items: baseline; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+                  <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                    ₹<%= product.price.toLocaleString() %>
+                  </span>
+                </div>
+
+                <!-- Stock Info -->
+                <div style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); font-size: 0.875rem; color: var(--gray-600);">
+                  <span>📦 Stock: <%= product.stock %></span>
+                  <% if (product.orderCount > 0) { %>
+                    <span>| 🔥 <%= product.orderCount %> sold</span>
+                  <% } %>
+                </div>
+
+                <!-- Actions -->
+                <% if (product.inCart) { %>
+                  <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                    <div class="alert alert-success" style="padding: var(--spacing-sm) var(--spacing-md); margin: 0; font-size: 0.875rem;">
+                      <span>✓</span>
+                      <span>Added to cart (Qty: <%= product.cartQuantity %>)</span>
+                    </div>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                      <a href="/cart" class="btn btn-primary btn-sm" style="flex: 1;">
+                        View Cart
+                      </a>
+                      <a href="/products/<%= product.id %>" class="btn btn-outline btn-sm" style="flex: 1;">
+                        Details
+                      </a>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div style="display: flex; gap: var(--spacing-sm);">
+                    <form method="POST" action="/products/<%= product.id %>/cart" style="flex: 1;">
+                      <button type="submit" class="btn btn-primary btn-sm btn-block" <%= product.stock === 0 ? 'disabled' : '' %>>
+                        🛒 Add to Cart
+                      </button>
+                    </form>
+                    <a href="/products/<%= product.id %>" class="btn btn-secondary btn-sm" style="flex: 1;">
+                      View
+                    </a>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- Pagination -->
+      <% if (meta.totalPages > 1) { %>
+        <div class="card mt-xl">
+          <div class="card-body" style="padding: var(--spacing-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <!-- Previous Button -->
+              <% if (meta.currentPage > 1) { %>
+                <a href="<%= links.previous %>" class="btn btn-secondary">
+                  ← Previous
+                </a>
+              <% } else { %>
+                <button class="btn btn-secondary" disabled>
+                  ← Previous
+                </button>
+              <% } %>
+
+              <!-- Page Info -->
+              <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                <% 
+                  const startPage = Math.max(1, meta.currentPage - 2);
+                  const endPage = Math.min(meta.totalPages, meta.currentPage + 2);
+                  
+                  for (let i = startPage; i <= endPage; i++) { 
+                %>
+                  <% if (i === meta.currentPage) { %>
+                    <span class="btn btn-primary" style="pointer-events: none;">
+                      <%= i %>
+                    </span>
+                  <% } else { %>
+                    <%
+                      // Build URL with all current query parameters
+                      const params = new URLSearchParams();
+                      params.set('page', i);
+                      
+                      // Preserve search
+                      if (query.search) params.set('search', query.search);
+                      
+                      // Preserve category filter
+                      if (query['filter.category']) params.set('filter.category', query['filter.category']);
+                      
+                      // Preserve price filters
+                      if (query['filter.price.$gte']) params.set('filter.price.$gte', query['filter.price.$gte']);
+                      if (query['filter.price.$lte']) params.set('filter.price.$lte', query['filter.price.$lte']);
+                      
+                      // Preserve sort
+                      if (query.sortBy) params.set('sortBy', query.sortBy);
+                      
+                      // Preserve limit
+                      if (query.limit) params.set('limit', query.limit);
+                      
+                      const pageLink = '?' + params.toString();
+                    %>
+                    <a href="<%= pageLink %>" class="btn btn-secondary">
+                      <%= i %>
+                    </a>
+                  <% } %>
+                <% } %>
+              </div>
+
+              <!-- Next Button -->
+              <% if (meta.currentPage < meta.totalPages) { %>
+                <a href="<%= links.next %>" class="btn btn-secondary">
+                  Next →
+                </a>
+              <% } else { %>
+                <button class="btn btn-secondary" disabled>
+                  Next →
+                </button>
+              <% } %>
+            </div>
+
+            <p style="text-align: center; margin-top: var(--spacing-md); margin-bottom: 0; color: var(--gray-600); font-size: 0.875rem;">
+              Page <%= meta.currentPage %> of <%= meta.totalPages %> 
+              (Showing <%= (meta.currentPage - 1) * meta.itemsPerPage + 1 %>-<%= Math.min(meta.currentPage * meta.itemsPerPage, meta.totalItems) %> of <%= meta.totalItems %>)
+            </p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <style>
+    .product-card {
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .product-card .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-image {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
+      .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+
+      .grid[style*="grid-template-columns: 1fr auto auto"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      .navbar-nav {
+        flex-wrap: wrap;
+        gap: var(--spacing-sm) !important;
+      }
+    }
+  </style>
+
+  <script>
+    function toggleAdvancedFilters() {
+      const filters = document.getElementById('advancedFilters');
+      const toggleText = document.getElementById('filterToggleText');
+      
+      if (filters.style.display === 'none') {
+        filters.style.display = 'block';
+        toggleText.textContent = '⚙️ Hide Advanced Filters';
+      } else {
+        filters.style.display = 'none';
+        toggleText.textContent = '⚙️ Advanced Filters';
+      }
+    }
+
+    function clearFilters() {
+      window.location.href = '/products';
+    }
+
+    function changeLimit(limit) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('limit', limit);
+      url.searchParams.set('page', '1'); // Reset to first page
+      window.location.href = url.toString();
+    }
+
+    // Auto-expand advanced filters if any advanced filter is active
+    window.addEventListener('DOMContentLoaded', function() {
+      const sortBy = '<%= query.sortBy || "" %>';
+      const minPrice = '<%= query["filter.price.$gte"] || "" %>';
+      const maxPrice = '<%= query["filter.price.$lte"] || "" %>';
+      
+      if (sortBy || minPrice || maxPrice) {
+        toggleAdvancedFilters();
+      }
+    });
+  </script>
+</body>
+</html>

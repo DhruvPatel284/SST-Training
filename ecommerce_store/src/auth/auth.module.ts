@@ -8,7 +8,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 import { UsersModule } from '../users/users.module';
-import { AuthPageController } from './web/auth-page.controller';
+import { AuthPageController } from './web/auth-web.controller';
 
 @Module({
   imports: [

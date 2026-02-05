@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { CartModule } from 'src/cart/cart.module';
 import { Cart } from 'src/cart/cart.entity';
-import { ProductsWebController } from './products.web.controller';
+import { ProductsWebController } from './web/products.web.controller';
 
 @Module({
   imports: [

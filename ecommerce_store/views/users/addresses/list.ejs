@@ -1,14 +1,118 @@
-<h1>My Addresses</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Addresses - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link">Products</a></li>
+        <li><a href="/cart" class="nav-link">Cart</a></li>
+        <li><a href="/orders" class="nav-link">Orders</a></li>
+        <li><a href="/profile" class="nav-link active">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<a href="/profile/addresses/new">+ Add Address</a>
+  <!-- Main Content -->
+  <div class="profile-page">
+    <div class="container container-lg">
+      <!-- Breadcrumb -->
+      <div class="mb-lg" style="display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.875rem;">
+        <a href="/profile" class="link">Profile</a>
+        <span style="color: var(--gray-400);">/</span>
+        <span style="color: var(--gray-600);">Addresses</span>
+      </div>
 
-<ul>
-  <% addresses.forEach(a => { %>
-    <li>
-      <%= a.address %>, <%= a.district %>, <%= a.state %> - <%= a.pincode %>
-      <a href="/profile/addresses/<%= a.id %>/edit">Edit</a>
-    </li>
-  <% }) %>
-</ul>
+      <!-- Page Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+        <div>
+          <h1>My Addresses</h1>
+          <p style="color: var(--gray-600); margin: 0;">Manage your delivery addresses</p>
+        </div>
+        <a href="/profile/addresses/new" class="btn btn-primary">
+          ➕ Add New Address
+        </a>
+      </div>
 
-<a href="/profile">Back to Profile</a>
+      <!-- Addresses Grid -->
+      <% if (addresses.length === 0) { %>
+        <!-- Empty State -->
+        <div class="card">
+          <div class="card-body empty-state">
+            <div class="empty-state-icon">📍</div>
+            <h3>No addresses yet</h3>
+            <p style="margin-bottom: var(--spacing-xl);">Add your first delivery address to get started</p>
+            <a href="/profile/addresses/new" class="btn btn-primary">
+              Add Address
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="grid grid-cols-2">
+          <% addresses.forEach((address, index) => { %>
+            <div class="card">
+              <div class="card-body">
+                <!-- Address Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
+                  <div>
+                    <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-xs);">
+                      Address <%= index + 1 %>
+                    </h3>
+                  </div>
+                  <a href="/profile/addresses/<%= address.id %>/edit" class="btn btn-secondary btn-sm">
+                    ✏️ Edit
+                  </a>
+                </div>
+
+                <!-- Address Details -->
+                <div style="color: var(--gray-700); line-height: 1.8;">
+                  <p style="margin-bottom: var(--spacing-sm);">
+                    <strong><%= address.address %></strong>
+                  </p>
+                  <p style="margin-bottom: 0; font-size: 0.938rem;">
+                    <%= address.district %>, <%= address.state %><br>
+                    PIN: <strong><%= address.pincode %></strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- Back Button -->
+      <div class="mt-xl">
+        <a href="/profile" class="link" style="display: inline-flex; align-items: center; gap: var(--spacing-sm);">
+          ← Back to Profile
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @media (max-width: 768px) {
+      .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      div[style*="justify-content: space-between"] {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: var(--spacing-md);
+      }
+
+      div[style*="justify-content: space-between"] .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</body>
+</html>

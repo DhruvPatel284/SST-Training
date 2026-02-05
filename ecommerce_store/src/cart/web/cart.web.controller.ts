@@ -12,9 +12,9 @@ import {
   Render,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { CartService } from './cart.service';
+import { CartService } from '../cart.service';
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
-import { SkipTransform } from '../decorators/skip-transform.decorator'
+import { SkipTransform } from '../../decorators/skip-transform.decorator'
   
 @Controller('cart')
 @UseGuards   (PassportJwtAuthGuard)

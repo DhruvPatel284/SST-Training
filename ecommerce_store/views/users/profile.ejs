@@ -1,11 +1,138 @@
-<h1>My Profile</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link">Products</a></li>
+        <li><a href="/cart" class="nav-link">Cart</a></li>
+        <li><a href="/orders" class="nav-link">Orders</a></li>
+        <li><a href="/profile" class="nav-link active">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<form method="POST" action="/profile?_method=PATCH">
-  <input name="name" value="<%= user.name || '' %>" />
-  <input name="phone_no" value="<%= user.phone_no || '' %>" />
-  <button>Update</button>
-</form>
+  <!-- Main Content -->
+  <div class="profile-page">
+    <div class="container container-lg">
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1>My Profile</h1>
+        <p style="color: var(--gray-600); margin: 0;">Manage your account information and preferences</p>
+      </div>
 
-<p>Email: <%= user.email %></p>
+      <div class="grid" style="grid-template-columns: 1fr 2fr; gap: var(--spacing-xl); align-items: start;">
+        <!-- Sidebar Navigation -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <nav style="display: flex; flex-direction: column;">
+              <a href="/profile" class="nav-link active" style="padding: var(--spacing-lg); border-radius: 0; justify-content: flex-start;">
+                👤 Personal Information
+              </a>
+              <a href="/profile/addresses" class="nav-link" style="padding: var(--spacing-lg); border-radius: 0; justify-content: flex-start;">
+                📍 Addresses
+              </a>
+              <a href="/orders" class="nav-link" style="padding: var(--spacing-lg); border-radius: 0; justify-content: flex-start;">
+                📦 Order History
+              </a>
+            </nav>
+          </div>
+        </div>
 
-<a href="/profile/addresses">Manage Addresses</a>
+        <!-- Main Profile Content -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Personal Information</h2>
+          </div>
+          <div class="card-body">
+            <form method="POST" action="/profile?_method=PATCH">
+              <div class="grid grid-cols-2">
+                <div class="form-group">
+                  <label for="name" class="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    class="form-input"
+                    value="<%= user.name || '' %>"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone_no" class="form-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone_no"
+                    name="phone_no"
+                    class="form-input"
+                    value="<%= user.phone_no || '' %>"
+                    placeholder="1234567890"
+                    pattern="[0-9]{10}"
+                  />
+                  <span class="form-hint">Must be exactly 10 digits</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input
+                  type="email"
+                  class="form-input"
+                  value="<%= user.email %>"
+                  disabled
+                  style="background: var(--gray-100); cursor: not-allowed;"
+                />
+                <span class="form-hint">Email cannot be changed</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Account Type</label>
+                <div>
+                  <span class="badge <%= user.role === 'admin' ? 'badge-primary' : 'badge-success' %>">
+                    <%= user.role === 'admin' ? '👑 Admin' : '👤 Customer' %>
+                  </span>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: var(--spacing-md); justify-content: flex-end; margin-top: var(--spacing-xl);">
+                <a href="/products" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      
+    </div>
+  </div>
+
+  <style>
+    @media (max-width: 768px) {
+      .grid[style*="grid-template-columns: 1fr 2fr"] {
+        grid-template-columns: 1fr !important;
+      }
+      
+      .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</body>
+</html>

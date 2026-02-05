@@ -7,7 +7,7 @@ import { OrderItem } from './order-item.entity';
 import { UsersModule } from 'src/users/users.module';
 import { CartModule } from 'src/cart/cart.module';
 import { ProductsModule } from 'src/products/products.module';
-import { OrdersWebController } from './orders.web.controller';
+import { OrdersWebController } from './web/orders.web.controller';
 import { AddressesService } from 'src/users/addresses.service';
 
 @Module({

@@ -1,14 +1,143 @@
-<h1>Register</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card card">
+      <div class="card-body">
+        <!-- Logo / Brand -->
+        <div class="text-center mb-xl">
+          <h1 class="navbar-brand" style="display: inline-flex; font-size: 2rem; margin-bottom: var(--spacing-sm);">
+            🛍️ ShopHub
+          </h1>
+          <p style="color: var(--gray-600); margin: 0;">Create your account and start shopping</p>
+        </div>
 
-<% if (error) { %>
-  <p style="color:red;"><%= error %></p>
-<% } %>
+        <!-- Error Alert -->
+        <% if (error) { %>
+          <div class="alert alert-error">
+            <span>⚠️</span>
+            <span><%= error %></span>
+          </div>
+        <% } %>
 
-<form method="POST" action="/auth/register">
-  <input name="name" placeholder="Name" />
-  <input name="email" type="email" placeholder="Email" required />
-  <input name="password" type="password" placeholder="Password" required />
-  <button>Register</button>
-</form>
+        <!-- Register Form -->
+        <form method="POST" action="/auth/register">
+          <div class="form-group">
+            <label for="name" class="form-label">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="form-input"
+              placeholder="John Doe"
+              autofocus
+            />
+            <span class="form-hint">Optional - You can add this later</span>
+          </div>
 
-<a href="/auth/login">Login</a>
+          <div class="form-group">
+            <label for="email" class="form-label required">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-input"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label required">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input"
+              placeholder="••••••••"
+              minlength="6"
+              required
+            />
+            <span class="form-hint">Must be at least 6 characters</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Login Link -->
+        <div class="text-center">
+          <p style="color: var(--gray-600); margin: 0;">
+            Already have an account?
+            <a href="/auth/login" class="link">Sign in instead</a>
+          </p>
+        </div>
+
+        <!-- Trust Indicators -->
+        <div class="text-center mt-xl" style="padding-top: var(--spacing-lg); border-top: 1px solid var(--gray-200);">
+          <p style="font-size: 0.813rem; color: var(--gray-500); margin-bottom: var(--spacing-sm);">
+            🔒 Your information is secure and encrypted
+          </p>
+          <div style="display: flex; justify-content: center; gap: var(--spacing-lg); flex-wrap: wrap;">
+            <span style="font-size: 0.75rem; color: var(--gray-400);">✓ Free Shipping</span>
+            <span style="font-size: 0.75rem; color: var(--gray-400);">✓ Easy Returns</span>
+            <span style="font-size: 0.75rem; color: var(--gray-400);">✓ Secure Checkout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Additional auth-specific styles */
+    .auth-page {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-page::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-20px, 20px) rotate(5deg); }
+    }
+
+    .auth-card {
+      position: relative;
+      z-index: 1;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</body>
+</html>

@@ -5,6 +5,7 @@ import {
     Body,
     Get, 
     Post,
+    Delete,
     Patch, 
     Param
 } from '@nestjs/common';
@@ -64,5 +65,14 @@ export class UsersController {
     @ResponseMessage('Addresses Retrivied Successfully')
     async getAllAddress(@Request() req){
         return await this.addressesService.getAllUserAddresses(req.user.userId);
+    }
+    @Delete('address/:id')
+    @ResponseMessage('Address Deleted Successfully')
+    @Serialize(AddressResponseDto)
+    async deleteAddress(@Param('id') id, @Request() req) {
+    return await this.addressesService.deleteUserAddress(
+        Number(id),
+        req.user.userId,
+    );
     }
 }
