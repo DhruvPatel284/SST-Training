@@ -1,0 +1,25 @@
+<h1>Order #<%= order.id %></h1>
+
+<p>Status: <%= order.status %></p>
+<p>Total: ₹<%= order.total_amount %></p>
+
+<h3>Items</h3>
+<ul>
+  <% order.order_items.forEach(item => { %>
+    <li>
+      <%= item.product.name %>
+      (Qty: <%= item.quantity %>)
+      - ₹<%= item.total_price %>
+    </li>
+  <% }) %>
+</ul>
+
+<h3>Delivery Address</h3>
+<p>
+  <%= order.address.address %>,
+  <%= order.address.district %>,
+  <%= order.address.state %> -
+  <%= order.address.pincode %>
+</p>
+
+<a href="/orders">Back to orders</a>

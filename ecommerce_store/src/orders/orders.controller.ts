@@ -18,7 +18,7 @@ import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { OrderResponseDto } from 'src/common/dtos/order-res.dto';
 import { ResponseMessage } from '../decorators/response-message.decorator';
 
-@Controller('orders')
+@Controller('api/orders')
 @UseGuards(PassportJwtAuthGuard)
 export class OrdersController {
     constructor(

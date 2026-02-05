@@ -14,15 +14,15 @@ import {
 import type { Response } from 'express';
 import { CartService } from './cart.service';
 import { PassportJwtAuthGuard } from 'src/guards/passport-jwt-auth.guard';
-im  port { SkipTransform } from '../decorators/skip-transform.decorator'
+import { SkipTransform } from '../decorators/skip-transform.decorator'
   
-@Controller(' cart')
+@Controller('cart')
 @UseGuards   (PassportJwtAuthGuard)
-@SkipTra  nsform()
+@SkipTransform()
 export class CartWebController {
-  const ructor(
-    pr ivate cartService: CartService,
-  )   {}
+  constructor(
+    private cartService: CartService,
+  ){}
     
   // ===== VIEW CART =====
   @Get()                         

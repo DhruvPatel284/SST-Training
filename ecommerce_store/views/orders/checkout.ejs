@@ -1,0 +1,34 @@
+<h1>Checkout</h1>
+
+<h3>Items</h3>
+<ul>
+  <% cartItems.forEach(item => { %>
+    <li>
+      <%= item.product.name %>
+      × <%= item.quantity %>
+      = ₹<%= item.product.price * item.quantity %>
+    </li>
+  <% }) %>
+</ul>
+
+<h3>Total: ₹<%= total %></h3>
+
+<form method="POST" action="/orders">
+  <label>Select Address</label>
+  <select name="addressId" required>
+    <% addresses.forEach(a => { %>
+      <option value="<%= a.id %>">
+        <%= a.address %>, <%= a.district %>
+      </option>
+    <% }) %>
+  </select>
+
+  <% if (singleItem) { %>
+    <input type="hidden" name="singleItem" value="true" />
+    <input type="hidden" name="cartItemId" value="<%= cartItemId %>" />
+  <% } else { %>
+    <input type="hidden" name="singleItem" value="false" />
+  <% } %>
+
+  <button>Place Order</button>
+</form>

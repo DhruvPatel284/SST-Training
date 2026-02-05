@@ -42,6 +42,12 @@
             <button>Remove</button>
           </form>
         </td>
+        <td>
+           <!-- BUY SINGLE ITEM -->
+          <a href="/orders/checkout?cartItemId=<%= item.id %>">
+            Buy Now
+          </a>
+        </td>
       </tr>
     <% }) %>
   </table>

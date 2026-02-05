@@ -75,7 +75,8 @@ export class CartService {
         const cart_item = await this.cartRepo.findOne({
             where:{id},
             relations:{
-                product:true
+                product:true,
+                user:true
             }
         });
         if(!cart_item){
