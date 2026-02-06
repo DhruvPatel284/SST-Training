@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Products - Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" style="background: var(--gray-900); border-bottom-color: var(--gray-800);">
+    <div class="container navbar-container">
+      <a href="/admin" class="navbar-brand" style="color: white;">👑 Admin Panel</a>
+      <ul class="navbar-nav">
+        <li><a href="/admin" class="nav-link" style="color: var(--gray-300);">Dashboard</a></li>
+        <li><a href="/admin/products" class="nav-link active" style="color: white;">Products</a></li>
+        <li><a href="/admin/orders" class="nav-link" style="color: var(--gray-300);">Orders</a></li>
+        <li><a href="/products" class="nav-link" style="color: var(--gray-300);">← Store</a></li>
+        <li><a href="/auth/logout" class="nav-link" style="color: var(--gray-300);">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container">
+      <!-- Page Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+        <div>
+          <h1>Product Management</h1>
+          <p style="color: var(--gray-600); margin: 0;">Manage your product catalog</p>
+        </div>
+        <a href="/admin/products/new" class="btn btn-primary">
+          ➕ Add New Product
+        </a>
+      </div>
+
+      <!-- Products Table -->
+      <div class="card">
+        <div class="card-body">
+          <table id="productsTable" class="display" style="width:100%">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Orders</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% products.forEach(product => { %>
+                <tr>
+                  <td><%= product.id %></td>
+                  <td><%= product.name %></td>
+                  <td>
+                    <span class="badge badge-primary"><%= product.category %></span>
+                  </td>
+                  <td>₹<%= product.price.toLocaleString() %></td>
+                  <td>
+                    <% if (product.stock === 0) { %>
+                      <span class="badge badge-error"><%= product.stock %></span>
+                    <% } else if (product.stock < 10) { %>
+                      <span class="badge badge-warning"><%= product.stock %></span>
+                    <% } else { %>
+                      <span class="badge badge-success"><%= product.stock %></span>
+                    <% } %>
+                  </td>
+                  <td><%= product.orderCount || 0 %></td>
+                  <td>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                      <a href="/admin/products/<%= product.id %>/edit" class="btn btn-secondary btn-sm">
+                        ✏️ Edit
+                      </a>
+                      <form method="POST" action="/admin/products/<%= product.id %>?_method=DELETE" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                          🗑️ Delete
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery (required for DataTables) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      $('#productsTable').DataTable({
+        order: [[0, 'desc']], // Sort by ID descending
+        pageLength: 10,
+        language: {
+          search: "Search products:",
+          lengthMenu: "Show _MENU_ products per page",
+          info: "Showing _START_ to _END_ of _TOTAL_ products",
+          infoEmpty: "No products available",
+          infoFiltered: "(filtered from _MAX_ total products)",
+          zeroRecords: "No matching products found"
+        },
+        columnDefs: [
+          { orderable: false, targets: 6 } // Disable sorting on Actions column
+        ]
+      });
+    });
+  </script>
+
+  <style>
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* DataTables Custom Styling */
+    .dataTables_wrapper {
+      padding: var(--spacing-md) 0;
+    }
+
+    .dataTables_filter input {
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 1rem;
+      margin-left: var(--spacing-sm);
+    }
+
+    .dataTables_length select {
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      padding: 0.5rem;
+      margin: 0 var(--spacing-sm);
+    }
+
+    table.dataTable thead th {
+      background: var(--gray-100);
+      font-weight: 700;
+      border-bottom: 2px solid var(--gray-300);
+    }
+
+    table.dataTable tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    .dataTables_paginate .paginate_button {
+      padding: 0.5rem 1rem !important;
+      margin: 0 0.25rem !important;
+      border-radius: var(--radius-md) !important;
+    }
+
+    .dataTables_paginate .paginate_button.current {
+      background: var(--primary) !important;
+      color: white !important;
+      border: 1px solid var(--primary) !important;
+    }
+
+    @media (max-width: 768px) {
+      .dataTables_wrapper .dataTables_filter,
+      .dataTables_wrapper .dataTables_length {
+        text-align: left !important;
+        margin-bottom: var(--spacing-md);
+      }
+
+      table.dataTable {
+        font-size: 0.875rem;
+      }
+
+      div[style*="display: flex"] {
+        flex-direction: column;
+      }
+
+      div[style*="display: flex"] .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</body>
+</html>

@@ -265,6 +265,34 @@ export class OrdersService {
     order.status = status;
     return await this.orderRepo.save(order);
   }
-
-
+  async getAllOrders() {
+    return await this.orderRepo.find({
+      relations: {
+        user: true,
+        order_items: {
+          product: true
+        },
+        address: true
+      },
+      order: {
+        id: 'DESC'
+      }
+    });
+  }
+  async getOrderByIdAdmin(id: number) {
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: {
+        user: true,
+        order_items: {
+          product: true
+        },
+        address: true
+      }
+    });
+    if (!order) {
+      throw new NotFoundException('Order Not Found');
+    }
+    return order;
+  }
 }

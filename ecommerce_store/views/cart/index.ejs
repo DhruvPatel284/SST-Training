@@ -1,60 +1,279 @@
-<h1>My Cart</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link">Products</a></li>
+        <li><a href="/cart" class="nav-link active">🛒 Cart</a></li>
+        <li><a href="/orders" class="nav-link">Orders</a></li>
+        <li><a href="/profile" class="nav-link">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<% if (cartItems.length === 0) { %>
-  <p>Your cart is empty</p>
-  <a href="/products">Go to products</a>
-<% } else { %>
-  <table border="1">
-    <tr>
-      <th>Product</th>
-      <th>Price</th>
-      <th>Quantity</th>
-      <th>Subtotal</th>
-      <th>Action</th>
-    </tr>
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container container-lg">
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1>Shopping Cart</h1>
+        <p style="color: var(--gray-600); margin: 0;">
+          <% if (cartItems.length > 0) { %>
+            You have <%= cartItems.length %> item<%= cartItems.length > 1 ? 's' : '' %> in your cart
+          <% } else { %>
+            Your cart is empty
+          <% } %>
+        </p>
+      </div>
 
-    <% cartItems.forEach(item => { %>
-      <tr>
-        <td><%= item.product.name %></td>
-        <td>₹<%= item.product.price %></td>
-        <td>
-          <form
-            method="POST"
-            action="/cart/<%= item.id %>?_method=PATCH"
-          >
-            <input
-              type="number"
-              name="quantity"
-              value="<%= item.quantity %>"
-              min="1"
-            />
-            <button>Update</button>
-          </form>
-        </td>
-        <td>
-          ₹<%= item.product.price * item.quantity %>
-        </td>
-        <td>
-          <form
-            method="POST"
-            action="/cart/<%= item.id %>?_method=DELETE"
-          >
-            <button>Remove</button>
-          </form>
-        </td>
-        <td>
-           <!-- BUY SINGLE ITEM -->
-          <a href="/orders/checkout?cartItemId=<%= item.id %>">
-            Buy Now
-          </a>
-        </td>
-      </tr>
-    <% }) %>
-  </table>
+      <% if (cartItems.length === 0) { %>
+        <!-- Empty Cart State -->
+        <div class="card">
+          <div class="card-body empty-state" style="padding: var(--spacing-2xl);">
+            <div class="empty-state-icon">🛒</div>
+            <h2>Your cart is empty</h2>
+            <p style="margin-bottom: var(--spacing-xl); color: var(--gray-600);">
+              Looks like you haven't added anything to your cart yet.<br>
+              Start shopping to fill it up!
+            </p>
+            <a href="/products" class="btn btn-primary btn-lg">
+              Browse Products
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <!-- Cart Grid -->
+        <div class="grid" style="grid-template-columns: 1fr 400px; gap: var(--spacing-xl); align-items: start;">
+          <!-- Cart Items -->
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Cart Items (<%= cartItems.length %>)</h2>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <div class="list-group" style="box-shadow: none; border-radius: 0;">
+                  <% cartItems.forEach((item, index) => { %>
+                    <div class="list-group-item" style="display: block; padding: var(--spacing-xl);">
+                      <div style="display: grid; grid-template-columns: 100px 1fr auto; gap: var(--spacing-lg); align-items: center;">
+                        <!-- Product Image -->
+                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                          <%= item.product.category === 'Electronics' ? '📱' : 
+                              item.product.category === 'Fashion' ? '👕' : 
+                              item.product.category === 'Home' ? '🏠' : 
+                              item.product.category === 'Books' ? '📚' : 
+                              item.product.category === 'Sports' ? '⚽' : '🛍️' %>
+                        </div>
 
-  <h3>Total: ₹<%= total %></h3>
+                        <!-- Product Info -->
+                        <div>
+                          <div style="margin-bottom: var(--spacing-xs);">
+                            <span class="badge badge-primary" style="font-size: 0.75rem;">
+                              <%= item.product.category %>
+                            </span>
+                          </div>
+                          <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm);">
+                            <a href="/products/<%= item.product.id %>" style="color: inherit; text-decoration: none;">
+                              <%= item.product.name %>
+                            </a>
+                          </h3>
+                          <div style="display: flex; align-items: center; gap: var(--spacing-lg); margin-bottom: var(--spacing-md);">
+                            <span style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">
+                              ₹<%= item.product.price.toLocaleString() %>
+                            </span>
+                            <span style="font-size: 0.875rem; color: var(--gray-500);">
+                              Stock: <%= item.product.stock %>
+                            </span>
+                          </div>
 
-  <a href="/products">Continue shopping</a>
-  <br />
-  <a href="/orders/checkout">Proceed to Checkout</a>
-<% } %>
+                          <!-- Quantity Controls -->
+                          <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">
+                              Quantity:
+                            </span>
+                            <form method="POST" action="/cart/<%= item.id %>?_method=PATCH" style="display: inline-flex; align-items: center; gap: var(--spacing-sm);">
+                              <input
+                                type="number"
+                                id="qty-<%= item.id %>"
+                                name="quantity"
+                                value="<%= item.quantity %>"
+                                min="1"
+                                max="<%= item.product.stock %>"
+                                class="qty-input"
+                                required
+                              />
+                              <button type="submit" class="btn btn-primary btn-sm">
+                                Update
+                              </button>
+                            </form>
+                          </div>
+                          <% if (item.quantity > item.product.stock) { %>
+                            <div style="margin-top: var(--spacing-xs);">
+                              <span class="form-error">Quantity exceeds available stock!</span>
+                            </div>
+                          <% } %>
+
+                          <!-- Subtotal -->
+                          <div style="margin-top: var(--spacing-md);">
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Subtotal: </span>
+                            <span style="font-size: 1.125rem; font-weight: 700; color: var(--gray-900);">
+                              ₹<%= (item.product.price * item.quantity).toLocaleString() %>
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); align-items: flex-end;">
+                          <!-- Remove Button -->
+                          <form method="POST" action="/cart/<%= item.id %>?_method=DELETE" onsubmit="return confirm('Remove this item from cart?');">
+                            <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--error);">
+                              🗑️ Remove
+                            </button>
+                          </form>
+
+                          <!-- Buy Now Button -->
+                          <a href="/orders/checkout?cartItemId=<%= item.id %>" class="btn btn-outline btn-sm">
+                            ⚡ Buy Now
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            <div class="mt-lg">
+              <a href="/products" class="link" style="display: inline-flex; align-items: center; gap: var(--spacing-sm);">
+                ← Continue Shopping
+              </a>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div>
+            <div class="card" style="position: sticky; top: 80px;">
+              <div class="card-header">
+                <h3 class="card-title">Order Summary</h3>
+              </div>
+              <div class="card-body">
+                <!-- Price Breakdown -->
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--gray-600);">Subtotal (<%= cartItems.length %> items)</span>
+                    <span style="font-weight: 600;">₹<%= total.toLocaleString() %></span>
+                  </div>
+                </div>
+
+                <div class="divider" style="margin: var(--spacing-lg) 0;"></div>
+
+                <!-- Total -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-xl);">
+                  <span style="font-size: 1.25rem; font-weight: 700;">Total</span>
+                  <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                    ₹<%=total %>
+                  </span>
+                </div>
+
+                <!-- Checkout Button -->
+                <a href="/orders/checkout" class="btn btn-primary btn-lg btn-block">
+                  Proceed to Checkout
+                </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>        
+      <% } %>
+    </div>
+  </div>
+
+  <style>
+    .qty-input {
+      width: 80px;
+      height: 36px;
+      text-align: center;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      background: white;
+      padding: 0 var(--spacing-sm);
+      font-size: 1rem;
+    }
+
+    .qty-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .grid[style*="grid-template-columns: 1fr 400px"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+
+      .list-group-item > div[style*="grid-template-columns: 100px 1fr auto"] {
+        grid-template-columns: 80px 1fr !important;
+        gap: var(--spacing-md) !important;
+      }
+
+      .list-group-item > div > div:last-child {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: var(--spacing-md);
+      }
+
+      .card[style*="position: sticky"] {
+        position: static !important;
+      }
+    }
+  </style>
+
+  <script>
+    // Add form validation
+    document.querySelectorAll('form[action*="_method=PATCH"]').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const input = this.querySelector('input[name="quantity"]');
+        const qty = parseInt(input.value);
+        const max = parseInt(input.max);
+        
+        if (qty < 1) {
+          e.preventDefault();
+          alert('Quantity must be at least 1');
+          return false;
+        }
+        
+        if (qty > max) {
+          e.preventDefault();
+          alert(`Maximum available quantity is ${max}`);
+          return false;
+        }
+        
+        return true;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,18 +1,210 @@
-<h1>My Orders</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link">Products</a></li>
+        <li><a href="/cart" class="nav-link">🛒 Cart</a></li>
+        <li><a href="/orders" class="nav-link active">Orders</a></li>
+        <li><a href="/profile" class="nav-link">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<% if (!orders.length) { %>
-  <p>No orders yet</p>
-  <a href="/products">Shop now</a>
-<% } else { %>
-  <ul>
-    <% orders.forEach(order => { %>
-      <li>
-        <a href="/orders/<%= order.id %>">
-          Order #<%= order.id %>
-        </a>
-        - ₹<%= order.total_amount %>
-        - <%= order.status %>
-      </li>
-    <% }) %>
-  </ul>
-<% } %>
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container container-lg">
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1>My Orders</h1>
+        <p style="color: var(--gray-600); margin: 0;">
+          <% if (orders.length > 0) { %>
+            Track and manage your orders
+          <% } else { %>
+            No orders yet
+          <% } %>
+        </p>
+      </div>
+
+      <% if (orders.length === 0) { %>
+        <!-- Empty State -->
+        <div class="card">
+          <div class="card-body empty-state" style="padding: var(--spacing-2xl);">
+            <div class="empty-state-icon">📦</div>
+            <h2>No orders yet</h2>
+            <p style="margin-bottom: var(--spacing-xl); color: var(--gray-600);">
+              You haven't placed any orders yet.<br>
+              Start shopping to see your orders here!
+            </p>
+            <a href="/products" class="btn btn-primary btn-lg">
+              Start Shopping
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <!-- Orders List -->
+        <div style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+          <% orders.forEach(order => { %>
+            <div class="card order-card">
+              <div class="card-header" style="background: white; border-bottom: 2px solid var(--gray-200);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md);">
+                  <div>
+                    <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-xs);">
+                      Order #<%= order.id %>
+                    </h3>
+                    <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">
+                      Placed on <%= new Date(order.order_date).toLocaleDateString('en-IN', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      }) %>
+                    </p>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                    <span class="badge 
+                      <%= order.status === 'confirmed' ? 'badge-success' : 
+                          order.status === 'pending' ? 'badge-warning' : 
+                          order.status === 'shipped' ? 'badge-primary' : 
+                          order.status === 'delivered' ? 'badge-success' : 
+                          'badge-error' %>"
+                      style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                      <%= order.status === 'confirmed' ? '✓ Confirmed' : 
+                          order.status === 'pending' ? '⏳ Pending' : 
+                          order.status === 'shipped' ? '🚚 Shipped' : 
+                          order.status === 'delivered' ? '✓ Delivered' : 
+                          '✕ Cancelled' %>
+                    </span>
+                    <a href="/orders/<%= order.id %>" class="btn btn-outline btn-sm">
+                      View Details →
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <!-- Order Items -->
+                <div style="margin-bottom: var(--spacing-lg);">
+                  <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--gray-700); margin-bottom: var(--spacing-md);">
+                    Items (<%= order.order_items.length %>)
+                  </h4>
+                  <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    <% order.order_items.slice(0, 3).forEach(item => { %>
+                      <div style="display: flex; gap: var(--spacing-md); align-items: center;">
+                        <!-- Product Image -->
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                          <%= item.product.category === 'Electronics' ? '📱' : 
+                              item.product.category === 'Fashion' ? '👕' : 
+                              item.product.category === 'Home' ? '🏠' : 
+                              item.product.category === 'Books' ? '📚' : 
+                              item.product.category === 'Sports' ? '⚽' : '🛍️' %>
+                        </div>
+
+                        <!-- Product Info -->
+                        <div style="flex: 1;">
+                          <h5 style="font-size: 0.938rem; margin-bottom: var(--spacing-xs);">
+                            <%= item.product.name %>
+                          </h5>
+                          <p style="font-size: 0.813rem; color: var(--gray-600); margin: 0;">
+                            Qty: <%= item.quantity %> × ₹<%= item.product.price.toLocaleString() %>
+                          </p>
+                        </div>
+
+                        <!-- Item Total -->
+                        <div style="text-align: right;">
+                          <div style="font-weight: 700; color: var(--gray-900);">
+                            ₹<%= item.total_price.toLocaleString() %>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+
+                    <% if (order.order_items.length > 3) { %>
+                      <div style="text-align: center; padding-top: var(--spacing-sm); border-top: 1px solid var(--gray-200);">
+                        <a href="/orders/<%= order.id %>" class="link" style="font-size: 0.875rem;">
+                          + <%= order.order_items.length - 3 %> more item<%= order.order_items.length - 3 > 1 ? 's' : '' %>
+                        </a>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: var(--spacing-lg); border-top: 2px solid var(--gray-200);">
+                  <div>
+                    <span style="font-size: 0.875rem; color: var(--gray-600);">Order Total</span>
+                  </div>
+                  <div>
+                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                      ₹<%= order.total_amount.toLocaleString() %>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Order Actions -->
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+                  <a href="/orders/<%= order.id %>" class="btn btn-primary btn-sm" style="flex: 1;">
+                    Track Order
+                  </a>
+                  <% if (order.status === 'delivered') { %>
+                    <button class="btn btn-outline btn-sm" style="flex: 1;">
+                      Rate Products
+                    </button>
+                  <% } %>
+                  <% if (order.status !== 'cancelled' && order.status !== 'delivered') { %>
+                    <button class="btn btn-secondary btn-sm" onclick="return confirm('Are you sure you want to cancel this order?')">
+                      Cancel Order
+                    </button>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <!-- Continue Shopping -->
+        <div class="mt-xl text-center">
+          <a href="/products" class="btn btn-outline btn-lg">
+            Continue Shopping
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <style>
+    .order-card {
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .order-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    @media (max-width: 768px) {
+      .card-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+
+      div[style*="display: flex; gap: var(--spacing-md); margin-top"] {
+        flex-direction: column;
+      }
+
+      div[style*="display: flex; gap: var(--spacing-md); margin-top"] .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</body>
+</html>

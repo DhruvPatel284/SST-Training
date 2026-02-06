@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= isEdit ? 'Edit Product' : 'Add Product' %> - Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" style="background: var(--gray-900); border-bottom-color: var(--gray-800);">
+    <div class="container navbar-container">
+      <a href="/admin" class="navbar-brand" style="color: white;">👑 Admin Panel</a>
+      <ul class="navbar-nav">
+        <li><a href="/admin" class="nav-link" style="color: var(--gray-300);">Dashboard</a></li>
+        <li><a href="/admin/products" class="nav-link active" style="color: white;">Products</a></li>
+        <li><a href="/admin/orders" class="nav-link" style="color: var(--gray-300);">Orders</a></li>
+        <li><a href="/products" class="nav-link" style="color: var(--gray-300);">← Store</a></li>
+        <li><a href="/auth/logout" class="nav-link" style="color: var(--gray-300);">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container container-md">
+      <!-- Breadcrumb -->
+      <div class="mb-lg" style="display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.875rem;">
+        <a href="/admin" class="link">Dashboard</a>
+        <span style="color: var(--gray-400);">/</span>
+        <a href="/admin/products" class="link">Products</a>
+        <span style="color: var(--gray-400);">/</span>
+        <span style="color: var(--gray-600);"><%= isEdit ? 'Edit' : 'Add New' %></span>
+      </div>
+
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1><%= isEdit ? 'Edit Product' : 'Add New Product' %></h1>
+        <p style="color: var(--gray-600); margin: 0;">
+          <%= isEdit ? 'Update product information' : 'Fill in the product details below' %>
+        </p>
+      </div>
+
+      <!-- Product Form -->
+      <div class="card">
+        <div class="card-body">
+          <form 
+            method="POST" 
+            action="<%= isEdit ? '/admin/products/' + product.id + '?_method=PATCH' : '/admin/products' %>"
+          >
+            <!-- Product Name -->
+            <div class="form-group">
+              <label for="name" class="form-label required">Product Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-input"
+                placeholder="Enter product name"
+                value="<%= isEdit ? product.name : '' %>"
+                required
+                autofocus
+              />
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+              <label for="category" class="form-label required">Category</label>
+              <select id="category" name="category" class="form-select" required>
+                <option value="">Select a category</option>
+                <option value="Electronics" <%= isEdit && product.category === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+                <option value="Fashion" <%= isEdit && product.category === 'Fashion' ? 'selected' : '' %>>Fashion</option>
+                <option value="Home" <%= isEdit && product.category === 'Home' ? 'selected' : '' %>>Home</option>
+                <option value="Books" <%= isEdit && product.category === 'Books' ? 'selected' : '' %>>Books</option>
+                <option value="Sports" <%= isEdit && product.category === 'Sports' ? 'selected' : '' %>>Sports</option>
+              </select>
+            </div>
+
+            <!-- Price and Stock Grid -->
+            <div class="grid grid-cols-2">
+              <!-- Price -->
+              <div class="form-group">
+                <label for="price" class="form-label required">Price (₹)</label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  class="form-input"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  value="<%= isEdit ? product.price : '' %>"
+                  required
+                />
+              </div>
+
+              <!-- Stock -->
+              <div class="form-group">
+                <label for="stock" class="form-label required">Stock Quantity</label>
+                <input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                  value="<%= isEdit ? product.stock : '' %>"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info">
+              <span>💡</span>
+              <div>
+                <strong>Product Tips</strong>
+                <p style="margin: 0; font-size: 0.875rem;">
+                  • Use clear, descriptive product names<br>
+                  • Set competitive prices<br>
+                  • Keep stock quantities updated
+                </p>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div style="display: flex; gap: var(--spacing-md); justify-content: flex-end; margin-top: var(--spacing-xl);">
+              <a href="/admin/products" class="btn btn-secondary">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <%= isEdit ? '💾 Update Product' : '➕ Create Product' %>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    @media (max-width: 768px) {
+      .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      div[style*="justify-content: flex-end"] {
+        flex-direction: column-reverse;
+      }
+
+      div[style*="justify-content: flex-end"] .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</body>
+</html>

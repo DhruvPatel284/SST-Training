@@ -1,25 +1,367 @@
-<h1>Order #<%= order.id %></h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order #<%= order.id %> - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="/products" class="navbar-brand">🛍️ ShopHub</a>
+      <ul class="navbar-nav">
+        <li><a href="/products" class="nav-link">Products</a></li>
+        <li><a href="/cart" class="nav-link">🛒 Cart</a></li>
+        <li><a href="/orders" class="nav-link active">Orders</a></li>
+        <li><a href="/profile" class="nav-link">Profile</a></li>
+        <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<p>Status: <%= order.status %></p>
-<p>Total: ₹<%= order.total_amount %></p>
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container container-lg">
+      <!-- Breadcrumb -->
+      <div class="mb-lg" style="display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.875rem;">
+        <a href="/orders" class="link">My Orders</a>
+        <span style="color: var(--gray-400);">/</span>
+        <span style="color: var(--gray-600);">Order #<%= order.id %></span>
+      </div>
 
-<h3>Items</h3>
-<ul>
-  <% order.order_items.forEach(item => { %>
-    <li>
-      <%= item.product.name %>
-      (Qty: <%= item.quantity %>)
-      - ₹<%= item.total_price %>
-    </li>
-  <% }) %>
-</ul>
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--spacing-md);">
+          <div>
+            <h1 style="margin-bottom: var(--spacing-sm);">Order #<%= order.id %></h1>
+            <p style="color: var(--gray-600); margin: 0;">
+              Placed on <%= new Date(order.order_date).toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) %>
+            </p>
+          </div>
+          <div>
+            <span class="badge 
+              <%= order.status === 'confirmed' ? 'badge-success' : 
+                  order.status === 'pending' ? 'badge-warning' : 
+                  order.status === 'shipped' ? 'badge-primary' : 
+                  order.status === 'delivered' ? 'badge-success' : 
+                  'badge-error' %>"
+              style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+              <%= order.status === 'confirmed' ? '✓ Confirmed' : 
+                  order.status === 'pending' ? '⏳ Pending' : 
+                  order.status === 'shipped' ? '🚚 Shipped' : 
+                  order.status === 'delivered' ? '✓ Delivered' : 
+                  '✕ Cancelled' %>
+            </span>
+          </div>
+        </div>
+      </div>
 
-<h3>Delivery Address</h3>
-<p>
-  <%= order.address.address %>,
-  <%= order.address.district %>,
-  <%= order.address.state %> -
-  <%= order.address.pincode %>
-</p>
+      <!-- Order Timeline -->
+      <div class="card mb-xl">
+        <div class="card-header">
+          <h2 class="card-title">Order Status</h2>
+        </div>
+        <div class="card-body">
+          <div class="order-timeline">
+            <!-- Confirmed -->
+            <div class="timeline-item <%= order.status === 'confirmed' || order.status === 'shipped' || order.status === 'delivered' ? 'active' : '' %>">
+              <div class="timeline-icon">
+                <% if (order.status === 'confirmed' || order.status === 'shipped' || order.status === 'delivered') { %>
+                  ✓
+                <% } else { %>
+                  1
+                <% } %>
+              </div>
+              <div class="timeline-content">
+                <h4>Order Confirmed</h4>
+                <p>Your order has been confirmed</p>
+              </div>
+            </div>
 
-<a href="/orders">Back to orders</a>
+            <!-- Shipped -->
+            <div class="timeline-item <%= order.status === 'shipped' || order.status === 'delivered' ? 'active' : '' %>">
+              <div class="timeline-icon">
+                <% if (order.status === 'shipped' || order.status === 'delivered') { %>
+                  ✓
+                <% } else { %>
+                  2
+                <% } %>
+              </div>
+              <div class="timeline-content">
+                <h4>Shipped</h4>
+                <p>Your order is on the way</p>
+              </div>
+            </div>
+
+            <!-- Delivered -->
+            <div class="timeline-item <%= order.status === 'delivered' ? 'active' : '' %>">
+              <div class="timeline-icon">
+                <% if (order.status === 'delivered') { %>
+                  ✓
+                <% } else { %>
+                  3
+                <% } %>
+              </div>
+              <div class="timeline-content">
+                <h4>Delivered</h4>
+                <p>Order delivered successfully</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 1fr 400px; gap: var(--spacing-xl); align-items: start;">
+        <!-- Left Column -->
+        <div>
+          <!-- Order Items -->
+          <div class="card mb-xl">
+            <div class="card-header">
+              <h2 class="card-title">Order Items (<%= order.order_items.length %>)</h2>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="list-group" style="box-shadow: none; border-radius: 0;">
+                <% order.order_items.forEach(item => { %>
+                  <div class="list-group-item" style="display: block;">
+                    <div style="display: grid; grid-template-columns: 100px 1fr auto; gap: var(--spacing-lg); align-items: center;">
+                      <!-- Product Image -->
+                      <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                        <%= item.product.category === 'Electronics' ? '📱' : 
+                            item.product.category === 'Fashion' ? '👕' : 
+                            item.product.category === 'Home' ? '🏠' : 
+                            item.product.category === 'Books' ? '📚' : 
+                            item.product.category === 'Sports' ? '⚽' : '🛍️' %>
+                      </div>
+
+                      <!-- Product Info -->
+                      <div>
+                        <span class="badge badge-primary" style="font-size: 0.75rem; margin-bottom: var(--spacing-xs);">
+                          <%= item.product.category %>
+                        </span>
+                        <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm);">
+                          <%= item.product.name %>
+                        </h3>
+                        <div style="display: flex; gap: var(--spacing-lg); color: var(--gray-600); font-size: 0.875rem;">
+                          <span>Qty: <%= item.quantity %></span>
+                          <span>Price: ₹<%= item.product.price.toLocaleString() %></span>
+                        </div>
+                        <% if (order.status === 'delivered') { %>
+                          <div style="margin-top: var(--spacing-md);">
+                            <button class="btn btn-outline btn-sm">
+                              ⭐ Rate Product
+                            </button>
+                          </div>
+                        <% } %>
+                      </div>
+
+                      <!-- Item Total -->
+                      <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: var(--gray-900);">
+                          ₹<%= item.total_price.toLocaleString() %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery Address -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Delivery Address</h2>
+            </div>
+            <div class="card-body">
+              <div style="padding: var(--spacing-lg); background: var(--gray-50); border-radius: var(--radius-md); border-left: 4px solid var(--primary);">
+                <p style="margin: 0; color: var(--gray-700); line-height: 1.8;">
+                  <strong><%= order.address.address %></strong><br>
+                  <%= order.address.district %>, <%= order.address.state %><br>
+                  PIN: <strong><%= order.address.pincode %></strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Order Summary -->
+        <div>
+          <div class="card" style="position: sticky; top: 80px;">
+            <div class="card-header">
+              <h3 class="card-title">Order Summary</h3>
+            </div>
+            <div class="card-body">
+              <!-- Price Breakdown -->
+              <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--gray-600);">Subtotal</span>
+                  <span style="font-weight: 600;">₹<%= order.total_amount.toLocaleString() %></span>
+                </div>
+              </div>
+
+              <div class="divider" style="margin: var(--spacing-lg) 0;"></div>
+
+              <!-- Total -->
+              <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-xl);">
+                <span style="font-size: 1.25rem; font-weight: 700;">Total Paid</span>
+                <span style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">
+                  ₹<%= order.total_amount.toLocaleString() %>
+                </span>
+              </div>
+
+              <!-- Actions -->
+              <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <% if (order.status === 'delivered') { %>
+                  <button class="btn btn-primary btn-block">
+                    Download Invoice
+                  </button>
+                  <button class="btn btn-outline btn-block">
+                    Return Order
+                  </button>
+                <% } else if (order.status !== 'cancelled') { %>
+                  <button class="btn btn-outline btn-block">
+                    Track Shipment
+                  </button>
+                  <button class="btn btn-secondary btn-block" onclick="return confirm('Are you sure you want to cancel this order?')">
+                    Cancel Order
+                  </button>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <div class="mt-xl">
+        <a href="/orders" class="link" style="display: inline-flex; align-items: center; gap: var(--spacing-sm);">
+          ← Back to Orders
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .order-timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      padding: var(--spacing-xl) 0;
+    }
+
+    .order-timeline::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gray-300);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-md);
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--gray-300);
+      color: var(--gray-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      border: 4px solid white;
+      transition: all var(--transition-base);
+    }
+
+    .timeline-item.active .timeline-icon {
+      background: var(--primary);
+      color: white;
+    }
+
+    .timeline-content {
+      text-align: center;
+    }
+
+    .timeline-content h4 {
+      font-size: 0.938rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-xs);
+      color: var(--gray-700);
+    }
+
+    .timeline-item.active .timeline-content h4 {
+      color: var(--primary);
+    }
+
+    .timeline-content p {
+      font-size: 0.813rem;
+      color: var(--gray-600);
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .grid[style*="grid-template-columns: 1fr 400px"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      .order-timeline {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+      }
+
+      .order-timeline::before {
+        left: 25px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        height: auto;
+      }
+
+      .timeline-item {
+        flex-direction: row;
+        align-items: start;
+        text-align: left;
+      }
+
+      .timeline-content {
+        text-align: left;
+      }
+
+      .card[style*="position: sticky"] {
+        position: static !important;
+      }
+
+      div[style*="grid-template-columns: 100px 1fr auto"] {
+        grid-template-columns: 80px 1fr !important;
+      }
+
+      div[style*="grid-template-columns: 100px 1fr auto"] > div:last-child {
+        grid-column: 1 / -1;
+        text-align: left;
+        margin-top: var(--spacing-md);
+      }
+    }
+  </style>
+</body>
+</html>

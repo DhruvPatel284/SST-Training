@@ -65,6 +65,30 @@ export class ProductsService {
         }
         return product;
     }
+    async deleteProduct(id: number) {
+        const product = await this.getProduct(id);
+        if (!product) {
+            throw new NotFoundException('Product Not Found');
+        }
+        // Check if product has any orders
+        const productWithOrders = await this.productsRepo.findOne({
+            where: { id },
+            relations: ['order_items']
+        });
+        if (productWithOrders && productWithOrders.order_items && productWithOrders.order_items.length > 0) {
+            throw new BadRequestException('Cannot delete product with existing orders');
+        }
+        return await this.productsRepo.remove(product);
+    }
+    async getAllProductsForAdmin() {
+        return await this.productsRepo
+        .createQueryBuilder('product')
+        .leftJoin('product.order_items', 'order_items')
+        .loadRelationCountAndMap('product.orderCount', 'product.order_items')
+        .orderBy('product.id', 'DESC')
+        .getMany();
+    }
+
 
 async getAllProducts(userId: number, query: PaginateQuery): Promise<Paginated<Product>> {
     const qb = this.productsRepo

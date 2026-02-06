@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - ShopHub</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" style="background: var(--gray-900); border-bottom-color: var(--gray-800);">
+    <div class="container navbar-container">
+      <a href="/admin" class="navbar-brand" style="color: white;">👑 Admin Panel</a>
+      <ul class="navbar-nav">
+        <li><a href="/admin" class="nav-link active" style="color: white;">Dashboard</a></li>
+        <li><a href="/admin/products" class="nav-link" style="color: var(--gray-300);">Products</a></li>
+        <li><a href="/admin/orders" class="nav-link" style="color: var(--gray-300);">Orders</a></li>
+        <li><a href="/products" class="nav-link" style="color: var(--gray-300);">← Store</a></li>
+        <li><a href="/auth/logout" class="nav-link" style="color: var(--gray-300);">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container">
+      <!-- Page Header -->
+      <div class="mb-xl">
+        <h1>Admin Dashboard</h1>
+        <p style="color: var(--gray-600); margin: 0;">Manage your eCommerce store</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-4 mb-2xl">
+        <!-- Total Products -->
+        <div class="card">
+          <div class="card-body text-center">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📦</div>
+            <h3 style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: var(--spacing-sm);">
+              <%= stats.totalProducts %>
+            </h3>
+            <p style="color: var(--gray-600); margin: 0;">Total Products</p>
+          </div>
+        </div>
+
+        <!-- Low Stock -->
+        <div class="card">
+          <div class="card-body text-center">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">⚠️</div>
+            <h3 style="font-size: 2rem; font-weight: 700; color: var(--warning); margin-bottom: var(--spacing-sm);">
+              <%= stats.lowStockProducts %>
+            </h3>
+            <p style="color: var(--gray-600); margin: 0;">Low Stock Items</p>
+          </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="card">
+          <div class="card-body text-center">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">🛒</div>
+            <h3 style="font-size: 2rem; font-weight: 700; color: var(--success); margin-bottom: var(--spacing-sm);">
+              <%= stats.totalOrders %>
+            </h3>
+            <p style="color: var(--gray-600); margin: 0;">Total Orders</p>
+          </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="card">
+          <div class="card-body text-center">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">⏳</div>
+            <h3 style="font-size: 2rem; font-weight: 700; color: var(--error); margin-bottom: var(--spacing-sm);">
+              <%= stats.pendingOrders %>
+            </h3>
+            <p style="color: var(--gray-600); margin: 0;">Pending Orders</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Quick Actions</h2>
+        </div>
+        <div class="card-body">
+          <div class="grid grid-cols-3">
+            <a href="/admin/products/new" class="card" style="text-decoration: none; color: inherit; transition: transform var(--transition-base); display: block;">
+              <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">➕</div>
+                <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm);">Add Product</h3>
+                <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">Create a new product listing</p>
+              </div>
+            </a>
+
+            <a href="/admin/products" class="card" style="text-decoration: none; color: inherit; transition: transform var(--transition-base); display: block;">
+              <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📋</div>
+                <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm);">Manage Products</h3>
+                <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">View and edit all products</p>
+              </div>
+            </a>
+
+            <a href="/admin/orders" class="card" style="text-decoration: none; color: inherit; transition: transform var(--transition-base); display: block;">
+              <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📊</div>
+                <h3 style="font-size: 1.125rem; margin-bottom: var(--spacing-sm);">Manage Orders</h3>
+                <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">Process and track orders</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .grid-cols-4, .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order #<%= order.id %> - Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" style="background: var(--gray-900); border-bottom-color: var(--gray-800);">
+    <div class="container navbar-container">
+      <a href="/admin" class="navbar-brand" style="color: white;">👑 Admin Panel</a>
+      <ul class="navbar-nav">
+        <li><a href="/admin" class="nav-link" style="color: var(--gray-300);">Dashboard</a></li>
+        <li><a href="/admin/products" class="nav-link" style="color: var(--gray-300);">Products</a></li>
+        <li><a href="/admin/orders" class="nav-link active" style="color: white;">Orders</a></li>
+        <li><a href="/products" class="nav-link" style="color: var(--gray-300);">← Store</a></li>
+        <li><a href="/auth/logout" class="nav-link" style="color: var(--gray-300);">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div style="padding: var(--spacing-2xl) 0; background: var(--gray-50); min-height: calc(100vh - 80px);">
+    <div class="container container-lg">
+      <!-- Breadcrumb -->
+      <div class="mb-lg" style="display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.875rem;">
+        <a href="/admin" class="link">Dashboard</a>
+        <span style="color: var(--gray-400);">/</span>
+        <a href="/admin/orders" class="link">Orders</a>
+        <span style="color: var(--gray-400);">/</span>
+        <span style="color: var(--gray-600);">Order #<%= order.id %></span>
+      </div>
+
+      <!-- Page Header -->
+      <div class="mb-xl" style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--spacing-md);">
+        <div>
+          <h1 style="margin-bottom: var(--spacing-sm);">Order #<%= order.id %></h1>
+          <p style="color: var(--gray-600); margin: 0;">
+            Placed on <%= new Date(order.order_date).toLocaleDateString('en-IN', { 
+              day: 'numeric', 
+              month: 'long', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) %>
+          </p>
+        </div>
+        <div>
+          <span class="badge 
+            <%= order.status === 'confirmed' ? 'badge-success' : 
+                order.status === 'pending' ? 'badge-warning' : 
+                order.status === 'shipped' ? 'badge-primary' : 
+                order.status === 'delivered' ? 'badge-success' : 
+                'badge-error' %>"
+            style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+            <%= order.status.toUpperCase() %>
+          </span>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 1fr 400px; gap: var(--spacing-xl); align-items: start;">
+        <!-- Left Column -->
+        <div>
+          <!-- Customer Information -->
+          <div class="card mb-xl">
+            <div class="card-header">
+              <h2 class="card-title">Customer Information</h2>
+            </div>
+            <div class="card-body">
+              <div class="grid grid-cols-2">
+                <div>
+                  <label style="font-size: 0.875rem; color: var(--gray-600); display: block; margin-bottom: var(--spacing-xs);">Name</label>
+                  <p style="font-weight: 600; margin: 0;"><%= order.user.name || 'N/A' %></p>
+                </div>
+                <div>
+                  <label style="font-size: 0.875rem; color: var(--gray-600); display: block; margin-bottom: var(--spacing-xs);">Email</label>
+                  <p style="font-weight: 600; margin: 0;"><%= order.user.email %></p>
+                </div>
+              </div>
+              <% if (order.user.phone_no) { %>
+                <div style="margin-top: var(--spacing-lg);">
+                  <label style="font-size: 0.875rem; color: var(--gray-600); display: block; margin-bottom: var(--spacing-xs);">Phone</label>
+                  <p style="font-weight: 600; margin: 0;"><%= order.user.phone_no %></p>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Order Items -->
+          <div class="card mb-xl">
+            <div class="card-header">
+              <h2 class="card-title">Order Items (<%= order.order_items.length %>)</h2>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="list-group" style="box-shadow: none; border-radius: 0;">
+                <% order.order_items.forEach(item => { %>
+                  <div class="list-group-item" style="display: block;">
+                    <div style="display: grid; grid-template-columns: 80px 1fr auto; gap: var(--spacing-lg); align-items: center;">
+                      <!-- Product Image -->
+                      <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                        <%= item.product.category === 'Electronics' ? '📱' : 
+                            item.product.category === 'Fashion' ? '👕' : 
+                            item.product.category === 'Home' ? '🏠' : 
+                            item.product.category === 'Books' ? '📚' : 
+                            item.product.category === 'Sports' ? '⚽' : '🛍️' %>
+                      </div>
+
+                      <!-- Product Info -->
+                      <div>
+                        <span class="badge badge-primary" style="font-size: 0.75rem; margin-bottom: var(--spacing-xs);">
+                          <%= item.product.category %>
+                        </span>
+                        <h3 style="font-size: 1rem; margin-bottom: var(--spacing-sm);">
+                          <%= item.product.name %>
+                        </h3>
+                        <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">
+                          Qty: <%= item.quantity %> × ₹<%= item.product.price.toLocaleString() %>
+                        </p>
+                      </div>
+
+                      <!-- Item Total -->
+                      <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: var(--gray-900);">
+                          ₹<%= item.total_price.toLocaleString() %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery Address -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Delivery Address</h2>
+            </div>
+            <div class="card-body">
+              <div style="padding: var(--spacing-lg); background: var(--gray-50); border-radius: var(--radius-md); border-left: 4px solid var(--primary);">
+                <p style="margin: 0; color: var(--gray-700); line-height: 1.8;">
+                  <strong><%= order.address.address %></strong><br>
+                  <%= order.address.district %>, <%= order.address.state %><br>
+                  PIN: <strong><%= order.address.pincode %></strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Actions -->
+        <div>
+          <!-- Update Order Status -->
+          <div class="card mb-lg" style="position: sticky; top: 80px;">
+            <div class="card-header">
+              <h3 class="card-title">Update Status</h3>
+            </div>
+            <div class="card-body">
+              <form method="POST" action="/admin/orders/<%= order.id %>/status?_method=PATCH">
+                <div class="form-group">
+                  <label for="status" class="form-label">Change Order Status</label>
+                  <select id="status" name="status" class="form-select" required>
+                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>⏳ Pending</option>
+                    <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>✓ Confirmed</option>
+                    <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>🚚 Shipped</option>
+                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>✓ Delivered</option>
+                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>✕ Cancelled</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                  Update Status
+                </button>
+              </form>
+
+              <!-- Status History (Future Enhancement) -->
+              <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--gray-200);">
+                <h4 style="font-size: 0.875rem; font-weight: 700; margin-bottom: var(--spacing-md);">Status History</h4>
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); font-size: 0.813rem; color: var(--gray-600);">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Confirmed</span>
+                    <span><%= new Date(order.order_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Order Summary</h3>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--gray-600);">Subtotal</span>
+                  <span style="font-weight: 600;">₹<%= order.total_amount.toLocaleString() %></span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--gray-600);">Shipping</span>
+                  <span style="font-weight: 600; color: var(--success);">FREE</span>
+                </div>
+              </div>
+
+              <div class="divider" style="margin: var(--spacing-lg) 0;"></div>
+
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 1.125rem; font-weight: 700;">Total</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                  ₹<%= order.total_amount.toLocaleString() %>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <div class="mt-xl">
+        <a href="/admin/orders" class="link" style="display: inline-flex; align-items: center; gap: var(--spacing-sm);">
+          ← Back to Orders
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    @media (max-width: 768px) {
+      .grid[style*="grid-template-columns: 1fr 400px"],
+      .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      .card[style*="position: sticky"] {
+        position: static !important;
+      }
+
+      div[style*="grid-template-columns: 80px 1fr auto"] {
+        grid-template-columns: 60px 1fr !important;
+      }
+
+      div[style*="grid-template-columns: 80px 1fr auto"] > div:last-child {
+        grid-column: 1 / -1;
+        text-align: left;
+        margin-top: var(--spacing-md);
+      }
+    }
+  </style>
+</body>
+</html>
