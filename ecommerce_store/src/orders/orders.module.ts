@@ -13,9 +13,9 @@ import { AddressesService } from 'src/users/addresses.service';
 @Module({
   imports:[
     TypeOrmModule.forFeature([Order,OrderItem]),
-    forwardRef(()=>UsersModule),
-    CartModule,
-    ProductsModule,
+    forwardRef(() => UsersModule),      
+    forwardRef(() => CartModule),       
+    forwardRef(() => ProductsModule),
   ],
   controllers: [OrdersController,OrdersWebController],
   providers: [OrdersService,  AddressesService],

@@ -17,6 +17,7 @@ export class ProductsService {
 
     async addProduct(body: AddProductDto) {
         const { name, price, stock, category } = body;
+        console.log(typeof price)
         if (!name || !price || !stock || !category) {
             throw new BadRequestException('Please provide all details of product');
         }

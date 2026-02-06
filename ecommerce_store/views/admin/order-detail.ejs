@@ -175,17 +175,6 @@
                   Update Status
                 </button>
               </form>
-
-              <!-- Status History (Future Enhancement) -->
-              <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--gray-200);">
-                <h4 style="font-size: 0.875rem; font-weight: 700; margin-bottom: var(--spacing-md);">Status History</h4>
-                <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); font-size: 0.813rem; color: var(--gray-600);">
-                  <div style="display: flex; justify-content: space-between;">
-                    <span>Confirmed</span>
-                    <span><%= new Date(order.order_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) %></span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -199,10 +188,6 @@
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--gray-600);">Subtotal</span>
                   <span style="font-weight: 600;">₹<%= order.total_amount.toLocaleString() %></span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: var(--gray-600);">Shipping</span>
-                  <span style="font-weight: 600; color: var(--success);">FREE</span>
                 </div>
               </div>
 

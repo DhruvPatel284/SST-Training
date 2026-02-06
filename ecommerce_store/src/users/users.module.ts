@@ -15,8 +15,8 @@ import { AdminWebController } from './web/admin.web.controllers';
 @Module({
  imports : [
     TypeOrmModule.forFeature([User,Address]),
-    forwardRef(()=>ProductsModule),
-    forwardRef(()=>OrdersModule)
+    forwardRef(() => ProductsModule),  // ✅ Already has forwardRef
+    forwardRef(() => OrdersModule),
   ],
   controllers: [UsersController,UsersWebController,AdminWebController],
   providers: [UsersService,AddressesService,ProductsService,OrdersService],

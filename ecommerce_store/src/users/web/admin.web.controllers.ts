@@ -65,6 +65,7 @@ export class AdminWebController {
     @Body() body: AddProductDto,
     @Res() res: Response,
   ) {
+    console.log("hii")
     await this.productsService.addProduct(body);
     return res.redirect('/admin/products');
   }

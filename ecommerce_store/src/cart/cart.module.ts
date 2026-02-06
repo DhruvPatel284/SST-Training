@@ -10,7 +10,7 @@ import { CartWebController } from './web/cart.web.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Cart]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => ProductsModule)
   ],
   controllers: [CartController,CartWebController],

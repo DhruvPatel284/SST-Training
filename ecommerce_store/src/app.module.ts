@@ -43,6 +43,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
       provide: APP_PIPE,
       useValue: new ValidationPipe({
         whitelist: true,
+        transform: true,
       }),
     },
     {

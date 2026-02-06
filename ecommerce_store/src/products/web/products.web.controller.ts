@@ -34,7 +34,6 @@ export class ProductsWebController {
     @Request() req,
     @Paginate() query: PaginateQuery,
   ) {
-    console.log(query)
     const result = await this.productsService.getAllProducts(
       req.user.userId,
       query,
