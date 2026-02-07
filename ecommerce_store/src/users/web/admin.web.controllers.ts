@@ -45,7 +45,6 @@ export class AdminWebController {
 
     return { stats };
   }
-
   // ===== PRODUCTS MANAGEMENT =====
   @Get('products')
   @Render('admin/products')
@@ -65,7 +64,6 @@ export class AdminWebController {
     @Body() body: AddProductDto,
     @Res() res: Response,
   ) {
-    console.log("hii")
     await this.productsService.addProduct(body);
     return res.redirect('/admin/products');
   }
