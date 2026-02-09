@@ -17,6 +17,7 @@ import { OauthAccessTokenModule } from '../oauth-access-token/oauth-access-token
 import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ProductsModule } from '../products/products.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AppService } from './app.service';
     AuthModule,
     UsersModule,
     OauthAccessTokenModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [

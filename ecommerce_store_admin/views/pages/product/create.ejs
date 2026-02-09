@@ -1,0 +1,108 @@
+<%- contentFor('HeaderCss') %>
+<%- contentFor('body') %>
+<div class="">
+  <div class="row w-50">
+    <div class="">
+      <div class="card">
+        <div class="card-header align-items-center d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Create Product Form</h4>
+        </div>
+
+        <div class="card-body">
+          <div class="live-preview">
+            <form
+              class="needs-validation"
+              id="create-product-form"
+              action="/products"
+              method="POST"
+              novalidate
+            >
+              <div class="row">
+                <div class="">
+                  <div class="mb-3">
+                    <label for="name" class="form-label">Product Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="name"
+                      value="<%- old ? old.name : '' %>"
+                      placeholder="Enter product name"
+                      id="name"
+                      required
+                    />
+                    <% if (errors && errors.name) { %>
+                    <div class="text-danger"><%= errors.name[0] %></div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="">
+                <div class="mb-3">
+                  <label for="price" class="form-label">Price</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="price"
+                    value="<%- old ? old.price : '' %>"
+                    placeholder="0.00"
+                    id="price"
+                    step="0.01"
+                    min="0"
+                    required
+                  />
+                  <% if (errors && errors.price) { %>
+                  <div class="text-danger"><%= errors.price[0] %></div>
+                  <% } %>
+                </div>
+
+                <div class="mb-3">
+                  <label for="stock" class="form-label">Stock Quantity</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="stock"
+                    value="<%- old ? old.stock : '' %>"
+                    placeholder="0"
+                    id="stock"
+                    min="0"
+                    required
+                  />
+                  <% if (errors && errors.stock) { %>
+                  <div class="text-danger"><%= errors.stock[0] %></div>
+                  <% } %>
+                </div>
+
+                <div class="mb-3">
+                  <label for="category" class="form-label">Category</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="category"
+                    value="<%- old ? old.category : '' %>"
+                    placeholder="Enter category"
+                    id="category"
+                    required
+                  />
+                  <% if (errors && errors.category) { %>
+                  <div class="text-danger"><%= errors.category[0] %></div>
+                  <% } %>
+                </div>
+
+                <div class="row">
+                  <div class="col">
+                    <button type="submit" class="btn btn-primary">
+                      Create Product
+                    </button>
+                    <a href="/products" class="btn btn-secondary">Cancel</a>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- contentFor('FooterJs') %>
+</div>

@@ -1,0 +1,108 @@
+<%- contentFor('HeaderCss') %>
+
+<%- contentFor('body') %>
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Product Details</h5>
+        <div>
+          <a href="/products/<%- product.id %>/edit" class="btn btn-success">
+            <i class="ri-edit-box-line align-bottom me-1"></i>
+            Edit Product
+          </a>
+          <a href="/products" class="btn btn-secondary">
+            <i class="ri-arrow-left-line align-bottom me-1"></i>
+            Back to List
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-xxl-6">
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="flex-grow-1">
+                    <h5 class="card-title mb-1">Product Information</h5>
+                  </div>
+                  <% if (product.stock > 0) { %>
+                  <span class="badge bg-success-subtle text-success fw-semibold">In Stock</span>
+                  <% } else { %>
+                  <span class="badge bg-danger-subtle text-danger fw-semibold">Out of Stock</span>
+                  <% } %>
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-price-tag-3-line text-primary me-2"></i>
+                    <span><strong>Product ID:</strong> <%= product.id %></span>
+                  </li>
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-shopping-bag-line text-info me-2"></i>
+                    <span><strong>Name:</strong> <%= product.name %></span>
+                  </li>
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-money-dollar-circle-line text-success me-2"></i>
+                    <span><strong>Price:</strong> $<%= product.price.toFixed(2) %></span>
+                  </li>
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-stock-line text-warning me-2"></i>
+                    <span><strong>Stock:</strong> <%= product.stock %> units</span>
+                  </li>
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-folder-line text-danger me-2"></i>
+                    <span><strong>Category:</strong> <%= product.category %></span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h6 class="text-uppercase fw-semibold text-muted mb-3">
+                  Product Stats
+                </h6>
+                <div class="d-flex flex-wrap gap-3">
+                  <div>
+                    <p class="text-muted mb-1">Total Orders</p>
+                    <h4 class="mb-0"><%= product.orderCount || 0 %></h4>
+                  </div>
+                  <div>
+                    <p class="text-muted mb-1">In Cart</p>
+                    <h4 class="mb-0"><%= product.cartQuantity || 0 %></h4>
+                  </div>
+                  <div>
+                    <p class="text-muted mb-1">Stock Status</p>
+                    <% if (product.stock > 10) { %>
+                    <span class="badge bg-success-subtle text-success">Good Stock</span>
+                    <% } else if (product.stock > 0) { %>
+                    <span class="badge bg-warning-subtle text-warning">Low Stock</span>
+                    <% } else { %>
+                    <span class="badge bg-danger-subtle text-danger">Out of Stock</span>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xxl-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h6 class="text-uppercase fw-semibold text-muted mb-3">
+                  Product Image Preview
+                </h6>
+                <div class="text-center p-4 bg-light rounded">
+                  <i class="ri-image-line" style="font-size: 120px; color: #ccc;"></i>
+                  <p class="text-muted mt-3">Product image placeholder</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>

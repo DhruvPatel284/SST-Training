@@ -1,0 +1,116 @@
+<%- contentFor('HeaderCss') %>
+
+<style>
+  #product-table_filter {
+    float: right;
+  }
+</style>
+<link
+  href="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.css"
+  rel="stylesheet"
+  integrity="sha384-gHXDcDG7W/rTkgig/12fBHatPdy5debiyIVvOpgCMzKoC8COxjNcm33NyY19XbPC"
+  crossorigin="anonymous"
+/>
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <h5 class="card-title mb-0">Products DataTable</h5>
+        <a href="/products/create" class="btn btn-primary">Add Product</a>
+      </div>
+      <div class="card-body">
+        <table
+          id="product-table"
+          class="table table-bordered dt-responsive nowrap table-striped align-middle"
+          style="width: 100%"
+        ></table>
+        <div
+          id="deleteConfirmationModal"
+          class="modal fade zoomIn"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                  id="deleteConfirmationModal-close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                <form id="delete-form" method="POST">
+                  <div class="mt-2 text-center">
+                    <lord-icon
+                      src="https://cdn.lordicon.com/gsqxdxog.json"
+                      trigger="loop"
+                      colors="primary:#f7b84b,secondary:#f06548"
+                      style="width: 100px; height: 100px"
+                    ></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                      <h4>Are you sure ?</h4>
+                      <p class="text-muted mx-4 mb-0">
+                        Are you sure you want to remove this Product ?
+                      </p>
+                      <input type="hidden" id="modal-row-id" />
+                    </div>
+                  </div>
+                  <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button
+                      type="button"
+                      class="btn w-sm btn-light"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn w-sm btn-danger"
+                      data-bs-dismiss="modal"
+                      id="delete-confirmation"
+                    >
+                      Yes, Delete It!
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"
+  integrity="sha384-VFQrHzqBh5qiJIU0uGU5CIW3+OWpdGGJM9LBnGbuIH2mkICcFZ7lPd/AAtI7SNf7"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"
+  integrity="sha384-/RlQG9uf0M2vcTw3CX7fbqgbj/h8wKxw7C3zu9/GxcBPRKOEcESxaxufwRXqzq6n"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.js"
+  integrity="sha384-EO08psVcLyX54tIlein7GJuWRT/5Y+R8UmjGGrRvzeETg9fLADlsAMA5T3j4pd2R"
+  crossorigin="anonymous"
+></script>
+
+<script src="/assets/js/product/product-list-datatable.js"></script>
