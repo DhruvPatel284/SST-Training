@@ -14,6 +14,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { log } from './common/utils/logger';
 import { ResponseUtil } from './common/utils/response.util';
 import { AppModule } from './modules/app/app.module';
+import { DataSource } from 'typeorm';
+import { seedDatabase } from './database/seed';
+import { AuthService } from './modules/auth/auth.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fileUpload = require('express-fileupload');
@@ -69,6 +72,14 @@ async function bootstrap() {
       },
     }),
   );
+    //   const dataSource = app.get(DataSource);
+    // const authService = app.get(AuthService);
+
+    // if (!dataSource.isInitialized) {
+    //   await dataSource.initialize();
+    // }
+
+    // await seedDatabase(dataSource, authService);
 
   await app.listen(process.env.PORT ?? 9000);
 }

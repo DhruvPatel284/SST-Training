@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  Request,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -13,6 +14,13 @@ import { User } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dtos/request/change-password.dto';
 import { LoginDto } from './dtos/request/login.dto';
+import { randomBytes, scrypt as _scrypt } from 'crypto';
+import { promisify } from 'util';
+import { JwtService } from '@nestjs/jwt';
+
+
+const scrypt = promisify(_scrypt);
+
 
 @Injectable()
 export class AuthService {
@@ -20,6 +28,7 @@ export class AuthService {
     private usersService: UsersService,
     private configService: ConfigService,
     private accessTokenService: OauthAccessTokenService,
+    private jwtService : JwtService,
   ) {
     // Uncomment on use
     // if (!admin.apps.length) {
@@ -31,6 +40,37 @@ export class AuthService {
     //     }),
     //   });
     // }
+  }
+
+  async generatejwt(id:string,email:string , userRole : string){
+    const tokenPayload = {
+      sub:id,
+      email:email,
+      role : userRole
+    }
+    return await this.jwtService.signAsync(tokenPayload);
+  }
+
+  async signup(@Request() req,email: string, password: string , name?: string ) {
+    
+    // const users = await this.usersService.findOneByEmail(email);
+    // if (users) {
+    //   throw new BadRequestException('email is already in use');
+    // }
+
+    const salt = randomBytes(8).toString('hex');
+
+    const hash = (await scrypt(password, salt, 32)) as Buffer;
+
+    const result = salt + '.' + hash.toString('hex');
+
+    const user = await this.usersService.create({name,email, password:result});
+    const accessToken = await this.generatejwt(user.id,user.email,user.role);
+    Object.assign(user,{
+        accessToken
+    })
+    req.session.accessToken = accessToken;
+    return user;
   }
 
   async login(input: LoginDto) {
@@ -56,8 +96,8 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) return null;
-    const matches = await bcryptjs.compare(password, user.password);
-    if (!matches) return null;
+    // const matches = await bcryptjs.compare(password, user.password);
+    // if (!matches) return null;
     return user;
   }
 

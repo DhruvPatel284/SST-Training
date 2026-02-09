@@ -17,19 +17,14 @@ import { Cart } from './cart/cart.entity';
 import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
-
+import { AppDataSource } from './data-source'
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env`,
     }),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'db.sqlite',
-      entities: [User,Address,Product,Order,OrderItem,Cart],
-      synchronize: true,
-    }),
+    TypeOrmModule.forRoot(AppDataSource.options),
     UsersModule, 
     AuthModule, 
     OrdersModule, 

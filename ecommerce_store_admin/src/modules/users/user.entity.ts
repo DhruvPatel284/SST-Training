@@ -9,13 +9,16 @@ import {
 } from 'typeorm';
 
 import { OAuthAccessToken } from '../oauth-access-token/oauth-access-token.entity';
+import { Address } from './address.entity';
+import { Order } from '../orders/order.entity'
+import { Cart } from '../cart/cart.entity';
 
 export enum UserRole {
   User = 'user',
   Admin = 'admin',
 }
 
-@Entity('users')
+@Entity()
 export class User {
   /* ----------------------Structure---------------------- */
 
@@ -25,8 +28,8 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
-  phoneNumber: string;
+  @Column({ nullable: true })
+  phoneNumber?: string;
 
   @Column({ nullable: true })
   firebaseUid: string;
@@ -53,4 +56,13 @@ export class User {
 
   @OneToMany(() => OAuthAccessToken, (accessToken) => accessToken.user)
   accessTokens: OAuthAccessToken[];
+
+  @OneToMany(()=>Address ,(address)=>address.user)
+  addresses : Address[]
+    
+  @OneToMany(()=>Order ,(order)=>order.user)
+  orders : Order[]
+
+  @OneToMany(()=>Cart ,(cart)=>cart.user)
+  cart_items : Cart[]
 }
