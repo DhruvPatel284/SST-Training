@@ -1,0 +1,82 @@
+<%- contentFor('HeaderCss') %>
+<%- contentFor('body') %>
+<div class="">
+  <div class="row w-50">
+    <div class="">
+      <div class="card">
+        <div class="card-header align-items-center d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Create User Form</h4>
+          <div class="flex-shrink-0">
+            <!-- <div class="form-check form-switch form-switch-right form-switch-md">
+         <label for="form-grid-showcode" class="form-label text-muted">Show Code</label>
+         <input class="form-check-input code-switcher" type="checkbox" id="form-grid-showcode">
+        </div> -->
+          </div>
+        </div>
+        <!-- end card header -->
+
+        <div class="card-body">
+          <!-- <p class="text-muted">More complex forms can be built using our grid classes. Use these for form layouts that
+        require multiple columns, varied widths, and additional alignment options. <span class="fw-medium">Requires the
+         <code>$enable-grid-classes</code> Sass variable to be enabled</span> (on by default).
+        </p> -->
+          <div class="live-preview">
+            <form
+              class="needs-validation"
+              id="create-user-form"
+              action="/users"
+              method="POST"
+              novalidate
+            >
+              <div class="row">
+                <div class="">
+                  <div class="mb-3">
+                    <%- include('../../partials/input', {name: 'name', type:
+                    'text', placeholder: 'Enter your name', required: true}) %>
+                  </div>
+                </div>
+              </div>
+              <!--end col-->
+              <div class="">
+                <div class="mb-3">
+                  <%- include('../../partials/input', {name: 'phoneNumber',
+                  type: 'tel', label: 'Phone Number', placeholder:
+                  '+(245)45145123', required: true}) %>
+                </div>
+                <!--end col-->
+                <div class="">
+                  <div class="mb-3">
+                    <%- include('../../partials/input', {name: 'email', type:
+                    'email', label: 'Email Address', placeholder:
+                    'example@gmail.com', required: true}) %>
+                  </div>
+                </div>
+                <!--end col-->
+                <div class="">
+                  <div class="mb-3">
+                    <%- include('../../partials/input', {name: 'password', type:
+                    'password', placeholder: 'Enter your password', required:
+                    true}) %>
+                  </div>
+                </div>
+                <!--end col-->
+                <div class="row">
+                  <div class="col">
+                    <button type="submit" class="btn btn-primary">
+                      Create
+                    </button>
+                  </div>
+                </div>
+                <!--end col-->
+              </div>
+              <!--end row-->
+            </form>
+          </div>
+          <div class="d-none code-view"></div>
+        </div>
+      </div>
+    </div>
+    <!-- end col -->
+  </div>
+  <%- contentFor('FooterJs') %>
+</div>

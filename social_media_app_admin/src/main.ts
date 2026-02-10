@@ -1,0 +1,75 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { join } from 'path';
+
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+
+import * as flash from 'connect-flash';
+import * as session from 'express-session';
+import * as methodOverride from 'method-override';
+import { Logger } from 'winston';
+
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { log } from './common/utils/logger';
+import { ResponseUtil } from './common/utils/response.util';
+import { AppModule } from './modules/app/app.module';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fileUpload = require('express-fileupload');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const expressLayouts = require('express-ejs-layouts');
+declare global {
+  // Add this to make log available everywhere
+  var log: Logger;
+}
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(methodOverride('_method'));
+
+  // Set up view engine
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+  app.setViewEngine('ejs');
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.set('layout', 'layouts/layout');
+  app.use(expressLayouts);
+  app.use(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    session({
+      secret: process.env.SESSION_SECRET || 'nodedemo',
+      resave: false,
+      saveUninitialized: true,
+    }),
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  (global as any).log = log;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(flash());
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(fileUpload());
+
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      exceptionFactory: (errors) => {
+        const formattedErrors = ResponseUtil.formatErrors(errors);
+        const message = Object.values(formattedErrors)[0]?.[0];
+        return new BadRequestException(
+          ResponseUtil.validationError(formattedErrors, message),
+        );
+      },
+    }),
+  );
+
+  await app.listen(process.env.PORT ?? 9000);
+}
+void bootstrap();
