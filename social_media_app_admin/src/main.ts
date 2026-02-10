@@ -81,6 +81,6 @@ async function bootstrap() {
 
     // await seedDatabase(dataSource, authService);
 
-  await app.listen(process.env.PORT ?? 9000);
+  await app.listen(process.env.PORT ?? 3001);
 }
 void bootstrap();

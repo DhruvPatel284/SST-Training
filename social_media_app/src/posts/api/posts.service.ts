@@ -79,7 +79,7 @@ export class PostsService {
             .createQueryBuilder('post')
             .leftJoin('post.user', 'user')
             //.where('post.userId = :userId', { userId })
-
+            .where('post.Reviewed = true')
             .loadRelationCountAndMap(
                 'post.commentCount',
                 'post.comments',
