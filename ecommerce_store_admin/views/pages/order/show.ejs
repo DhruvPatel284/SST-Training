@@ -1,0 +1,342 @@
+<%- contentFor('HeaderCss') %>
+
+<style>
+  .status-timeline {
+    position: relative;
+    padding: 0;
+    list-style: none;
+  }
+  .status-timeline li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+  }
+  .status-timeline li::before {
+    content: '';
+    position: absolute;
+    left: 0.35rem;
+    top: 1.4rem;
+    bottom: -1rem;
+    width: 2px;
+    background: #e9ebec;
+  }
+  .status-timeline li:last-child::before { display: none; }
+  .status-dot {
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #e9ebec;
+    border: 2px solid #e9ebec;
+  }
+  .status-dot.active  { background: #0ab39c; border-color: #0ab39c; }
+  .status-dot.done    { background: #405189; border-color: #405189; }
+  .status-dot.cancelled { background: #f06548; border-color: #f06548; }
+</style>
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <!-- ── Flash messages ─────────────────────────────────── -->
+  <% if (successMessage) { %>
+  <div class="col-12">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="ri-checkbox-circle-line me-1"></i> <%= successMessage %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+  <% } %>
+  <% if (errorMessage) { %>
+  <div class="col-12">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="ri-error-warning-line me-1"></i> <%= errorMessage %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- ── Order header card ──────────────────────────────── -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h5 class="card-title mb-0">Order #<%= order.id %></h5>
+          <small class="text-muted">Placed on <%= new Date(order.order_date).toLocaleString() %></small>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <%
+            const badgeMap = {
+              pending:   'warning',
+              confirmed: 'info',
+              shipped:   'primary',
+              delivered: 'success',
+              cancelled: 'danger',
+            };
+            const badge = badgeMap[order.status] || 'secondary';
+          %>
+          <span class="badge bg-<%= badge %>-subtle text-<%= badge %> fs-12 px-3 py-2 text-capitalize">
+            <%= order.status %>
+          </span>
+          <a href="/orders" class="btn btn-secondary btn-sm">
+            <i class="ri-arrow-left-line align-bottom me-1"></i> Back
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Left column ────────────────────────────────────── -->
+  <div class="col-xl-8">
+
+    <!-- Order items table -->
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-shopping-bag-line me-1 text-primary"></i> Order Items
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th class="text-center">Qty</th>
+                <th class="text-end">Unit Price</th>
+                <th class="text-end">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% order.order_items.forEach((item, index) => { %>
+              <tr>
+                <td class="text-muted"><%= index + 1 %></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="avatar-xs bg-primary-subtle rounded d-flex align-items-center justify-content-center">
+                      <i class="ri-shopping-bag-line text-primary"></i>
+                    </div>
+                    <div>
+                      <p class="mb-0 fw-medium">
+                        <% if (item.product) { %>
+                          <a href="/products/<%= item.product.id %>" class="text-body">
+                            <%= item.product.name %>
+                          </a>
+                        <% } else { %>
+                          <span class="text-muted">Product removed</span>
+                        <% } %>
+                      </p>
+                      <% if (item.product) { %>
+                      <small class="text-muted"><%= item.product.category %></small>
+                      <% } %>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-secondary-subtle text-secondary"><%= item.quantity %></span>
+                </td>
+                <td class="text-end">
+                  $<%= item.product ? item.product.price.toFixed(2) : '–' %>
+                </td>
+                <td class="text-end fw-medium">
+                  $<%= item.total_price.toFixed(2) %>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td colspan="4" class="text-end fw-semibold">Order Total</td>
+                <td class="text-end fw-bold text-primary fs-15">
+                  $<%= order.total_amount.toFixed(2) %>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer info -->
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-user-line me-1 text-info"></i> Customer Information
+        </h6>
+      </div>
+      <div class="card-body">
+        <% if (order.user) { %>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="avatar-sm bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
+            <% const initials = (order.user.name || '').trim().split(/\s+/).map(n => n.charAt(0)).join('').slice(0,2).toUpperCase(); %>
+            <span class="text-primary fw-bold"><%= initials || 'U' %></span>
+          </div>
+          <div>
+            <a href="/users/<%= order.user.id %>" class="fw-semibold text-body">
+              <%= order.user.name %>
+            </a>
+            <p class="text-muted mb-0 small"><%= order.user.email %></p>
+          </div>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Phone</span>
+            <span><%= order.user.phoneNumber || '–' %></span>
+          </li>
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Customer ID</span>
+            <span class="text-truncate ms-3" style="max-width:200px;"><%= order.user.id %></span>
+          </li>
+        </ul>
+        <% } else { %>
+        <p class="text-muted mb-0">Customer information not available.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Shipping address -->
+    <% if (order.address) { %>
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-map-pin-line me-1 text-warning"></i> Shipping Address
+        </h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-1 fw-medium"><%= order.address.name || order.user?.name %></p>
+        <p class="text-muted mb-0">
+          <%= order.address.street || '' %><br>
+          <%= order.address.city || '' %><% if (order.address.state) { %>, <%= order.address.state %><% } %><br>
+          <%= order.address.country || '' %> <%= order.address.zipCode || '' %>
+        </p>
+      </div>
+    </div>
+    <% } %>
+
+  </div>
+  <!-- ── Right column ───────────────────────────────────── -->
+  <div class="col-xl-4">
+
+    <!-- Status update -->
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-refresh-line me-1 text-success"></i> Update Status
+        </h6>
+      </div>
+      <div class="card-body">
+        <% if (nextStatuses.length > 0) { %>
+          <p class="text-muted mb-3 small">
+            Current status: <strong class="text-capitalize"><%= order.status %></strong>
+          </p>
+          <form action="/orders/<%= order.id %>/status" method="POST">
+            <div class="mb-3">
+              <label for="status" class="form-label">Move to</label>
+              <select name="status" id="status" class="form-select">
+                <option value="" disabled selected>Select new status…</option>
+                <% nextStatuses.forEach(s => { %>
+                  <option value="<%= s %>"><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
+                <% }) %>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="ri-check-line align-bottom me-1"></i> Update Status
+            </button>
+          </form>
+        <% } else { %>
+          <div class="text-center py-3">
+            <% if (order.status === 'delivered') { %>
+              <i class="ri-checkbox-circle-line text-success" style="font-size:2rem;"></i>
+              <p class="text-success mt-2 mb-0 fw-medium">Order Delivered</p>
+              <small class="text-muted">No further actions available.</small>
+            <% } else if (order.status === 'cancelled') { %>
+              <i class="ri-close-circle-line text-danger" style="font-size:2rem;"></i>
+              <p class="text-danger mt-2 mb-0 fw-medium">Order Cancelled</p>
+              <small class="text-muted">No further actions available.</small>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Status timeline -->
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-timeline-view me-1 text-primary"></i> Status Timeline
+        </h6>
+      </div>
+      <div class="card-body">
+        <%
+          const allStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
+          const statusIndex = allStatuses.indexOf(order.status);
+          const isCancelled = order.status === 'cancelled';
+        %>
+        <ul class="status-timeline">
+          <% allStatuses.forEach((s, i) => {
+            let dotClass = '';
+            if (isCancelled && i === 0) dotClass = 'cancelled';
+            else if (i < statusIndex) dotClass = 'done';
+            else if (i === statusIndex) dotClass = 'active';
+          %>
+          <li>
+            <span class="status-dot <%= dotClass %>"></span>
+            <p class="mb-0 fw-medium text-capitalize <%= i > statusIndex && !isCancelled ? 'text-muted' : '' %>">
+              <%= s %>
+            </p>
+            <% if (i === statusIndex && !isCancelled) { %>
+            <small class="text-muted"><%= new Date(order.updatedAt).toLocaleString() %></small>
+            <% } %>
+          </li>
+          <% }) %>
+
+          <% if (isCancelled) { %>
+          <li>
+            <span class="status-dot cancelled"></span>
+            <p class="mb-0 fw-medium text-danger">Cancelled</p>
+            <small class="text-muted"><%= new Date(order.updatedAt).toLocaleString() %></small>
+          </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="card">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i class="ri-file-list-3-line me-1 text-secondary"></i> Order Summary
+        </h6>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Order ID</span>
+            <span class="fw-medium">#<%= order.id %></span>
+          </li>
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Items</span>
+            <span class="fw-medium"><%= order.order_items.length %></span>
+          </li>
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Order Date</span>
+            <span class="fw-medium"><%= new Date(order.order_date).toLocaleDateString() %></span>
+          </li>
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Last Updated</span>
+            <span class="fw-medium"><%= new Date(order.updatedAt).toLocaleDateString() %></span>
+          </li>
+          <li class="list-group-item px-0 d-flex justify-content-between">
+            <span class="text-muted">Total Amount</span>
+            <span class="fw-bold text-primary">$<%= order.total_amount.toFixed(2) %></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>

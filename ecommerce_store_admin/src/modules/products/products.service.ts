@@ -11,20 +11,11 @@ export class ProductsService {
 
   async getProductsPaginate(query: PaginateQuery): Promise<Paginated<Product>> {
     const results = await paginate(query, this.repo, {
-      sortableColumns: [
-        'id',
-        'name',
-        'price',
-        'stock',
-        'category',
-      ],
-      searchableColumns: [
-        'name',
-        'category',
-      ],
+      sortableColumns: ['id', 'name', 'price', 'stock', 'category'],
+      searchableColumns: ['name', 'category'],
       defaultSortBy: [['id', 'DESC']],
       defaultLimit: 10,
-      maxLimit: 100,
+      maxLimit: 1000,        // ← allow DataTables to fetch all at once
       filterableColumns: {
         category: true,
       },
@@ -61,9 +52,7 @@ export class ProductsService {
 
   async decrementStock(id: number, quantity: number) {
     const product = await this.findOne(id);
-    if (product.stock < quantity) {
-      throw new NotFoundException('Insufficient stock');
-    }
+    if (product.stock < quantity) throw new NotFoundException('Insufficient stock');
     product.stock -= quantity;
     return this.repo.save(product);
   }

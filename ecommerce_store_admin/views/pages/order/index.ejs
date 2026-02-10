@@ -1,0 +1,53 @@
+<%- contentFor('HeaderCss') %>
+
+<style>
+  #order-table_filter { float: right; }
+</style>
+<link
+  href="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.css"
+  rel="stylesheet"
+  integrity="sha384-gHXDcDG7W/rTkgig/12fBHatPdy5debiyIVvOpgCMzKoC8COxjNcm33NyY19XbPC"
+  crossorigin="anonymous"
+/>
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Orders DataTable</h5>
+      </div>
+      <div class="card-body">
+        <table
+          id="order-table"
+          class="table table-bordered dt-responsive nowrap table-striped align-middle"
+          style="width: 100%"
+        ></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"
+  integrity="sha384-VFQrHzqBh5qiJIU0uGU5CIW3+OWpdGGJM9LBnGbuIH2mkICcFZ7lPd/AAtI7SNf7"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"
+  integrity="sha384-/RlQG9uf0M2vcTw3CX7fbqgbj/h8wKxw7C3zu9/GxcBPRKOEcESxaxufwRXqzq6n"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.js"
+  integrity="sha384-EO08psVcLyX54tIlein7GJuWRT/5Y+R8UmjGGrRvzeETg9fLADlsAMA5T3j4pd2R"
+  crossorigin="anonymous"
+></script>
+<script src="/assets/js/order/order-list-datatable.js"></script>
