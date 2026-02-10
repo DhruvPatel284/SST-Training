@@ -3,11 +3,15 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Post } from '../posts/post.entity'
+import { Comment } from '../comments/comment.entity';
 import { OAuthAccessToken } from '../oauth-access-token/oauth-access-token.entity';
 
 export enum UserRole {
@@ -15,7 +19,7 @@ export enum UserRole {
   Admin = 'admin',
 }
 
-@Entity('users')
+@Entity()
 export class User {
   /* ----------------------Structure---------------------- */
 
@@ -25,8 +29,8 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
-  phoneNumber: string;
+  @Column({ nullable : true})
+  phoneNumber?: string;
 
   @Column({ nullable: true })
   firebaseUid: string;
@@ -53,4 +57,18 @@ export class User {
 
   @OneToMany(() => OAuthAccessToken, (accessToken) => accessToken.user)
   accessTokens: OAuthAccessToken[];
+
+  @OneToMany(()=>Post,(post)=>post.user)
+  posts:Post[]
+
+  @OneToMany(()=>Comment,(comment)=>comment.user)
+  comments:Comment[]
+
+  @ManyToMany(()=>Post,(post)=>post.likedBy)
+  @JoinTable({
+    name: 'user_likes_post', 
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'post_id', referencedColumnName: 'id' },
+  })
+  likes:Post[]
 }

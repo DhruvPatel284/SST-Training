@@ -13,6 +13,7 @@ import { Comment } from './comments/comment.entity';
 import { CommentsModule } from './comments/comments.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LikesModule } from './likes/likes.module';
+import { AppDataSource } from './data-source'
 
 @Module({
   imports: [
@@ -20,12 +21,7 @@ import { LikesModule } from './likes/likes.module';
       isGlobal: true,
       envFilePath: `.env`,
     }),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'db.sqlite',
-      entities: [User,Post,Comment],
-      synchronize: true,
-    }),
+    TypeOrmModule.forRoot(AppDataSource.options),
     UsersModule, 
     AuthModule, PostsModule, CommentsModule, LikesModule
   ],

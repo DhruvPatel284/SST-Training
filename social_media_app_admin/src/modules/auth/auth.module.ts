@@ -10,10 +10,17 @@ import { AuthWebController } from './controllers/web/auth.controller';
 import { LoginController } from './controllers/web/login.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   controllers: [AuthWebController, AuthApiController, LoginController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  imports: [ConfigModule, UsersModule, PassportModule, OauthAccessTokenModule],
+  imports: [ConfigModule, UsersModule, PassportModule, OauthAccessTokenModule,
+    JwtModule.register({
+      global: true,
+      secret: 'hi' ,
+      signOptions: { expiresIn: '2d' },
+    }),
+  ],
 })
 export class AuthModule {}
