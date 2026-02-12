@@ -55,7 +55,7 @@ async function bootstrap() {
   app.use(flash());
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  app.use(fileUpload());
+  //app.use(fileUpload());
 
   app.useGlobalFilters(new AllExceptionsFilter());
 

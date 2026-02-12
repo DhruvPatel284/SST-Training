@@ -1,109 +1,295 @@
 <%- contentFor('HeaderCss') %>
+<style>
+  .image-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  .image-preview-item {
+    position: relative;
+    border: 2px solid #e9ebec;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+  }
+  .image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .image-delete-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(240, 101, 72, 0.9);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+  .image-delete-btn:hover {
+    background: rgba(240, 101, 72, 1);
+  }
+  .upload-zone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .upload-zone:hover {
+    border-color: #0ab39c;
+    background: #f0fdf4;
+  }
+  .upload-zone.drag-over {
+    border-color: #0ab39c;
+    background: #e0f2fe;
+  }
+</style>
 
 <%- contentFor('body') %>
-<div class="">
-  <div class="row w-50">
-    <div class="">
-      <div class="card">
-        <div class="card-header align-items-center d-flex">
-          <h4 class="card-title mb-0 flex-grow-1">Edit Product Form</h4>
-        </div>
 
-        <div class="card-body">
-          <div class="live-preview">
-            <form
-              action="/products/<%- product.id %>?_method=put"
-              method="POST"
-              class="needs-validation"
-              id="edit-product-form"
-              novalidate
-            >
-              <div class="row">
-                <div class="">
-                  <div class="mb-3">
-                    <label for="name" class="form-label">Product Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="name"
-                      value="<%- old ? old.name : product.name %>"
-                      placeholder="Enter product name"
-                      id="name"
-                      required
-                    />
-                    <% if (errors && errors.name) { %>
-                    <div class="text-danger"><%= errors.name[0] %></div>
-                    <% } %>
-                  </div>
-                </div>
-              </div>
+<div class="row">
+  <% const successFlash = typeof success !== 'undefined' ? success : null; %>
+  <% const errorFlash = typeof error !== 'undefined' ? error : null; %>
+  
+  <% if (successFlash) { %>
+  <div class="col-12">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="ri-checkbox-circle-line me-1"></i> <%= successFlash %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+  <% } %>
+  <% if (errorFlash) { %>
+  <div class="col-12">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="ri-error-warning-line me-1"></i> <%= errorFlash %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+  <% } %>
 
-              <div class="">
-                <div class="mb-3">
-                  <label for="price" class="form-label">Price</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="price"
-                    value="<%- old ? old.price : product.price %>"
-                    placeholder="0.00"
-                    id="price"
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                  <% if (errors && errors.price) { %>
-                  <div class="text-danger"><%= errors.price[0] %></div>
-                  <% } %>
-                </div>
-
-                <div class="mb-3">
-                  <label for="stock" class="form-label">Stock Quantity</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="stock"
-                    value="<%- old ? old.stock : product.stock %>"
-                    placeholder="0"
-                    id="stock"
-                    min="0"
-                    required
-                  />
-                  <% if (errors && errors.stock) { %>
-                  <div class="text-danger"><%= errors.stock[0] %></div>
-                  <% } %>
-                </div>
-
-                <div class="mb-3">
-                  <label for="category" class="form-label">Category</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    name="category"
-                    value="<%- old ? old.category : product.category %>"
-                    placeholder="Enter category"
-                    id="category"
-                    required
-                  />
-                  <% if (errors && errors.category) { %>
-                  <div class="text-danger"><%= errors.category[0] %></div>
-                  <% } %>
-                </div>
-
-                <div class="row">
-                  <div class="col">
-                    <button type="submit" class="btn btn-primary">
-                      Update Product
-                    </button>
-                    <a href="/products/<%- product.id %>" class="btn btn-secondary">Cancel</a>
-                  </div>
-                </div>
-              </div>
-            </form>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header align-items-center d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">Product Details</h4>
+      </div>
+      <div class="card-body">
+        <form
+          action="/products/<%- product.id %>?_method=put"
+          method="POST"
+          class="needs-validation"
+          id="edit-product-form"
+          novalidate
+        >
+          <div class="mb-3">
+            <label for="name" class="form-label">Product Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="name"
+              value="<%- old ? old.name : product.name %>"
+              placeholder="Enter product name"
+              id="name"
+              required
+            />
+            <% if (errors && errors.name) { %>
+            <div class="text-danger"><%= errors.name[0] %></div>
+            <% } %>
           </div>
-        </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  name="price"
+                  value="<%- old ? old.price : product.price %>"
+                  placeholder="0.00"
+                  id="price"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+                <% if (errors && errors.price) { %>
+                <div class="text-danger"><%= errors.price[0] %></div>
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="stock" class="form-label">Stock Quantity</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  name="stock"
+                  value="<%- old ? old.stock : product.stock %>"
+                  placeholder="0"
+                  id="stock"
+                  min="0"
+                  required
+                />
+                <% if (errors && errors.stock) { %>
+                <div class="text-danger"><%= errors.stock[0] %></div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <input
+              type="text"
+              class="form-control"
+              name="category"
+              value="<%- old ? old.category : product.category %>"
+              placeholder="Enter category"
+              id="category"
+              required
+            />
+            <% if (errors && errors.category) { %>
+            <div class="text-danger"><%= errors.category[0] %></div>
+            <% } %>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="ri-save-line align-bottom me-1"></i> Update Product
+            </button>
+            <a href="/products/<%- product.id %>" class="btn btn-secondary">
+              Cancel
+            </a>
+          </div>
+        </form>
       </div>
     </div>
   </div>
-  <%- contentFor('FooterJs') %>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ri-image-line me-1"></i>
+          Product Images
+          <span class="badge bg-primary-subtle text-primary ms-2">
+            <%= product.images ? product.images.length : 0 %> / 5
+          </span>
+        </h5>
+      </div>
+      <div class="card-body">
+        <% if (product.images && product.images.length > 0) { %>
+        <div class="image-preview-container mb-3">
+          <% product.images.forEach((image, index) => { %>
+          <div class="image-preview-item">
+            <img
+              src="/uploads/products/<%= image.filename %>"
+              alt="Product image <%= index + 1 %>"
+            />
+            <form
+              action="/products/<%= product.id %>/images/<%= image.id %>?_method=DELETE"
+              method="POST"
+              style="display: inline"
+              onsubmit="return confirm('Delete this image?')"
+            >
+              <input type="hidden" name="_method" value="DELETE" />
+              <button type="submit" class="image-delete-btn">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </form>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <p class="text-muted text-center mb-3">No images uploaded yet</p>
+        <% } %>
+
+        <% if (!product.images || product.images.length < 5) { %>
+        <% const remainingSlots = 5 - (product.images ? product.images.length : 0); %>
+        <form
+          action="/products/<%= product.id %>/images"
+          method="POST"
+          enctype="multipart/form-data"
+          id="upload-form"
+        >
+          <div class="mb-3">
+            <label for="image-input" class="form-label">Select Images</label>
+            <input
+              type="file"
+              name="images"
+              id="image-input"
+              class="form-control"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              multiple
+              required
+            />
+            <small class="text-muted">
+              Max <%= remainingSlots %> image(s), 5MB each. JPEG, PNG, GIF, WebP only.
+            </small>
+          </div>
+          <div id="selected-files"></div>
+          <button type="submit" class="btn btn-success w-100">
+            <i class="ri-upload-line align-bottom me-1"></i>
+            Upload Images
+          </button>
+        </form>
+        <% } else { %>
+        <div class="alert alert-info mb-0">
+          <i class="ri-information-line me-1"></i>
+          Maximum of 5 images reached. Delete an image to upload more.
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
 </div>
+
+<%- contentFor('FooterJs') %>
+<script>
+  var uploadForm = document.getElementById('upload-form');
+  var imageInput = document.getElementById('image-input');
+  
+  if (imageInput) {
+    imageInput.addEventListener('change', function() {
+      var files = this.files;
+      var selectedDiv = document.getElementById('selected-files');
+      
+      if (files.length > 0) {
+        var names = Array.from(files).map(f => f.name).join(', ');
+        selectedDiv.innerHTML = '<div class="alert alert-success mt-2"><i class="ri-checkbox-circle-line me-1"></i>' + 
+          files.length + ' file(s) selected: ' + names + '</div>';
+      } else {
+        selectedDiv.innerHTML = '';
+      }
+    });
+  }
+  
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', function(e) {
+      var files = imageInput.files;
+      
+      if (files.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one image');
+        return false;
+      }
+      
+      for (var i = 0; i < files.length; i++) {
+        if (files[i].size > 5 * 1024 * 1024) {
+          e.preventDefault();
+          alert('File "' + files[i].name + '" exceeds 5MB');
+          return false;
+        }
+      }
+      
+      console.log('Submitting to:', this.action, 'with', files.length, 'files');
+      return true;
+    });
+  }
+</script>
