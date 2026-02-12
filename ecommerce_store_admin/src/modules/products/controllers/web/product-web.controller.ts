@@ -10,8 +10,11 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
-
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
 import { Paginate, PaginateQuery } from 'nestjs-paginate';
@@ -20,6 +23,7 @@ import { AuthGuard } from '../../../../common/guards/auth.guard';
 import { CreateProductDto, UpdateProductDto } from '../../dtos/request/product.dto';
 import { ProductDto } from '../../dtos/response/product.dto';
 import { ProductsService } from '../../products.service';
+import { multerConfig } from '../../config/multer.config';
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -39,7 +43,6 @@ export class ProductsWebController {
 
     if (isAjax) {
       const result = await this.productsService.getProductsPaginate(query);
-      console.log(result)
       return res.json(result);
     }
 
@@ -92,6 +95,8 @@ export class ProductsWebController {
       product: plainToInstance(ProductDto, product),
       errors: req.flash('errors')[0] || {},
       old: req.flash('old')[0] || null,
+      success: req.flash('success')[0] || null,
+      error: req.flash('error')[0] || null,
     });
   }
 
@@ -112,7 +117,7 @@ export class ProductsWebController {
     if (!body.name || body.name.trim() === '') {
       errors.name = ['Name is required'];
     }
-    if (!body.price || isNaN(Number(body.price)) || Number(body.price) <= 0) {
+    if (!body.price || isNaN(Number(body.price)) || Number(body.price) < 0) {
       errors.price = ['Valid price is required'];
     }
     if (!body.stock || isNaN(Number(body.stock)) || Number(body.stock) < 0) {
@@ -135,8 +140,8 @@ export class ProductsWebController {
       category: body.category,
     };
 
-    await this.productsService.create(data);
-    return res.redirect('/products');
+    const product = await this.productsService.create(data);
+    return res.redirect(`/products/${product.id}/edit`);
   }
 
   @Put('/:id')
@@ -158,10 +163,16 @@ export class ProductsWebController {
       if (body.name !== undefined && body.name.trim() === '') {
         errors.name = ['Name should not be empty'];
       }
-      if (body.price !== undefined && (isNaN(Number(body.price)) || Number(body.price) < 0)) {
+      if (
+        body.price !== undefined &&
+        (isNaN(Number(body.price)) || Number(body.price) < 0)
+      ) {
         errors.price = ['Valid price is required'];
       }
-      if (body.stock !== undefined && (isNaN(Number(body.stock)) || Number(body.stock) < 0)) {
+      if (
+        body.stock !== undefined &&
+        (isNaN(Number(body.stock)) || Number(body.stock) < 0)
+      ) {
         errors.stock = ['Valid stock quantity is required'];
       }
       if (body.category !== undefined && body.category.trim() === '') {
@@ -198,5 +209,62 @@ export class ProductsWebController {
   async deleteProduct(@Param('id') id: number, @Res() res: Response) {
     await this.productsService.remove(id);
     return res.redirect('/products');
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Image Upload Endpoints
+  // ────────────────────────────────────────────────────────────────────
+
+  @Post('/:id/images')
+  @UseInterceptors(FilesInterceptor('images', 5, multerConfig))
+  async uploadImages(
+    @Param('id') id: number,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    console.log("Hiii _________________________________________________")
+    try {
+      console.log('Upload endpoint hit for product:', id);
+      console.log('Files received:', files ? files.length : 0);
+      console.log('Files array:', files);
+      
+      if (!files || files.length === 0) {
+        console.log('No files uploaded');
+        req.flash('error', 'No files uploaded');
+        return res.redirect(`/products/${id}/edit`);
+      }
+
+      console.log('Calling addImages service...');
+      await this.productsService.addImages(id, files);
+      console.log('Images added successfully');
+      
+      req.flash('success', `${files.length} image(s) uploaded successfully`);
+      return res.redirect(`/products/${id}/edit`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      if (error instanceof BadRequestException) {
+        req.flash('error', error.message);
+      } else {
+        req.flash('error', 'Failed to upload images: ' + error.message);
+      }
+      return res.redirect(`/products/${id}/edit`);
+    }
+  }
+
+  @Delete('/:productId/images/:imageId')
+  async deleteImage(
+    @Param('productId') productId: number,
+    @Param('imageId') imageId: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      await this.productsService.deleteImage(imageId);
+      req.flash('success', 'Image deleted successfully');
+    } catch (error) {
+      req.flash('error', 'Failed to delete image');
+    }
+    return res.redirect(`/products/${productId}/edit`);
   }
 }

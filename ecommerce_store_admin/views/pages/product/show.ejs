@@ -19,6 +19,81 @@
       </div>
       <div class="card-body">
         <div class="row">
+          <!-- Product Images -->
+          <div class="col-xxl-6">
+            <% if (product.images && product.images.length > 0) { %>
+            <div id="productImageCarousel" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-indicators">
+                <% product.images.forEach((image, index) => { %>
+                <button
+                  type="button"
+                  data-bs-target="#productImageCarousel"
+                  data-bs-slide-to="<%= index %>"
+                  class="<%= index === 0 ? 'active' : '' %>"
+                  aria-label="Slide <%= index + 1 %>"
+                ></button>
+                <% }) %>
+              </div>
+              <div class="carousel-inner">
+                <% product.images.forEach((image, index) => { %>
+                <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                  <img
+                    src="/uploads/products/<%= image.filename %>"
+                    class="d-block w-100 rounded"
+                    alt="Product image <%= index + 1 %>"
+                    style="max-height: 500px; object-fit: contain; background: #f8f9fa;"
+                  />
+                </div>
+                <% }) %>
+              </div>
+              <% if (product.images.length > 1) { %>
+              <button
+                class="carousel-control-prev"
+                type="button"
+                data-bs-target="#productImageCarousel"
+                data-bs-slide="prev"
+              >
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button
+                class="carousel-control-next"
+                type="button"
+                data-bs-target="#productImageCarousel"
+                data-bs-slide="next"
+              >
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+              <% } %>
+            </div>
+            <!-- Thumbnail Row -->
+            <% if (product.images.length > 1) { %>
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+              <% product.images.forEach((image, index) => { %>
+              <img
+                src="/uploads/products/<%= image.filename %>"
+                alt="Thumbnail <%= index + 1 %>"
+                class="border rounded cursor-pointer"
+                style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                data-bs-target="#productImageCarousel"
+                data-bs-slide-to="<%= index %>"
+              />
+              <% }) %>
+            </div>
+            <% } %>
+            <% } else { %>
+            <div class="text-center p-5 bg-light rounded">
+              <i class="ri-image-line" style="font-size: 120px; color: #ccc;"></i>
+              <p class="text-muted mt-3">No images available</p>
+              <a href="/products/<%- product.id %>/edit" class="btn btn-primary btn-sm">
+                Upload Images
+              </a>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Product Info -->
           <div class="col-xxl-6">
             <div class="card shadow-sm mb-4">
               <div class="card-body">
@@ -53,6 +128,10 @@
                     <i class="ri-folder-line text-danger me-2"></i>
                     <span><strong>Category:</strong> <%= product.category %></span>
                   </li>
+                  <li class="list-group-item px-0 d-flex align-items-center">
+                    <i class="ri-image-line text-secondary me-2"></i>
+                    <span><strong>Images:</strong> <%= product.images ? product.images.length : 0 %> / 5</span>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -81,20 +160,6 @@
                     <span class="badge bg-danger-subtle text-danger">Out of Stock</span>
                     <% } %>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-xxl-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <h6 class="text-uppercase fw-semibold text-muted mb-3">
-                  Product Image Preview
-                </h6>
-                <div class="text-center p-4 bg-light rounded">
-                  <i class="ri-image-line" style="font-size: 120px; color: #ccc;"></i>
-                  <p class="text-muted mt-3">Product image placeholder</p>
                 </div>
               </div>
             </div>
