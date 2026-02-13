@@ -30,12 +30,12 @@ $(document).ready(function () {
           <li><a href="/users/${row.id}" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
           <li><a href="/users/${row.id}/edit" class="dropdown-item edit-item-btn"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
           <li>
-            <form action="/users/${row.id}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
-              <input type="hidden" name="_method" value="DELETE">
-              <button type="submit" class="dropdown-item remove-item-btn">
-                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
-              </button>
-            </form>
+              <a href="#" class="dropdown-item text-danger remove-item-btn"
+                data-user-id="${row.id}"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteConfirmationModal">
+                <i class="ri-delete-bin-fill align-bottom me-2"></i> Delete
+              </a>
           </li>
         </ul>
       </div>
@@ -44,4 +44,30 @@ $(document).ready(function () {
    }
   ]
  });
+  // ── Delete via modal ────────────────────────────────────────────────
+ $(document).on('click', '.remove-item-btn', function (e) {
+    e.preventDefault();
+    const userId = $(this).data('user-id');
+    $('#modal-row-id').val(userId);
+  });
+
+ $('#delete-form').on('submit', function (e) {
+    e.preventDefault();
+    const userId = $('#modal-row-id').val();
+    if (!userId) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/users/${userId}?_method=DELETE`;
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = '_method';
+    input.value = 'DELETE';
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+  });
+
 });

@@ -14,6 +14,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { log } from './common/utils/logger';
 import { ResponseUtil } from './common/utils/response.util';
 import { AppModule } from './modules/app/app.module';
+import * as express from 'express';
 import { DataSource } from 'typeorm';
 import { seedDatabase } from './database/seed';
 import { AuthService } from './modules/auth/auth.service';
@@ -29,13 +30,13 @@ declare global {
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  app.use(methodOverride('_method'));
-
   // Set up view engine
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
+
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.set('layout', 'layouts/layout');
@@ -56,6 +57,18 @@ async function bootstrap() {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   //app.use(fileUpload());
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(
+  methodOverride(function (req: any, res: any) {
+    if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+      const method = req.body._method;
+      delete req.body._method;
+      return method;
+    }
+  }),
+);
+
 
   app.useGlobalFilters(new AllExceptionsFilter());
 

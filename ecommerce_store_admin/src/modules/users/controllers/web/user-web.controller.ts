@@ -183,6 +183,7 @@ export class UsersWebController {
 
   @Delete('/:id')
   async deleteUser(@Param('id') id: string, @Res() res: Response) {
+    console.log("DELETE")
     await this.usersService.remove(id);
     return res.redirect('/users');
   }
