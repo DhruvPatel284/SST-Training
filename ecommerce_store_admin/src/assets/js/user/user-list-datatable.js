@@ -82,10 +82,10 @@ $(document).ready(function () {
                   </a>
                 </li>
                 <li>
-                  <a href="javascript:void(0);" 
-                     class="dropdown-item text-danger remove-item-btn" 
-                     data-user-id="${row.id}"
-                     data-user-name="${row.name}">
+                  <a href="#" class="dropdown-item text-danger remove-item-btn"
+                    data-user-id="${row.id}"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteConfirmationModal">
                     <i class="ri-delete-bin-fill align-bottom me-2"></i> Delete
                   </a>
                 </li>
@@ -121,48 +121,29 @@ $(document).ready(function () {
   console.log('DataTable initialized:', table);
 
   // Delete user with SweetAlert2
-  $(document).on('click', '.remove-item-btn', function(e) {
-    e.preventDefault();
-    var userId = $(this).data('user-id');
-    var userName = $(this).data('user-name');
-
-    console.log('Delete clicked for user:', userId, userName);
-
-    Swal.fire({
-      title: 'Are you sure?',
-      html: 'You are about to delete user: <strong>' + userName + '</strong>',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#f06548',
-      cancelButtonColor: '#74788d',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Show loading
-        Swal.fire({
-          title: 'Deleting...',
-          text: 'Please wait',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-
-        // Create and submit delete form
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/users/' + userId + '?_method=DELETE';
-
-        var methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-
-        document.body.appendChild(form);
-        form.submit();
-      }
-    });
+  // ── Delete via modal ────────────────────────────────────────────────
+  $(document).on('click', '.remove-item-btn', function (e) {
+      e.preventDefault();
+      const userId = $(this).data('user-id');
+      $('#modal-row-id').val(userId);
   });
+
+  $('#delete-form').on('submit', function (e) {
+      e.preventDefault();
+      const userId = $('#modal-row-id').val();
+      if (!userId) return;
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/users/${userId}?_method=DELETE`;
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = '_method';
+      input.value = 'DELETE';
+      form.appendChild(input);
+
+      document.body.appendChild(form);
+      form.submit();
+   });
 });

@@ -46,11 +46,12 @@ export class LoginController {
     }
 
     try {
+      console.log("user :",body.email)
       const user = await this.authService.validateUser(
         body.email,
         body.password,
       );
-
+      console.log(user)
       if (user && user.role === UserRole.Admin) {
         session.userId = user.id;
         req.flash('toast', {
