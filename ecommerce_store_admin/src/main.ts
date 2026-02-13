@@ -58,6 +58,7 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   //app.use(fileUpload());
 
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(
   methodOverride(function (req: any, res: any) {
@@ -68,7 +69,6 @@ async function bootstrap() {
     }
   }),
 );
-
 
   app.useGlobalFilters(new AllExceptionsFilter());
 

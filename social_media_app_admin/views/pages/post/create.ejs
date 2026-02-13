@@ -1,0 +1,165 @@
+<%- contentFor('HeaderCss') %>
+
+<%- contentFor('body') %>
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card">
+      <div class="card-header align-items-center d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">Create Post</h4>
+        <a href="/posts" class="btn btn-sm btn-outline-secondary">
+          <i class="ri-arrow-left-line me-1"></i> Back to List
+        </a>
+      </div>
+
+      <div class="card-body">
+        <% if (errors && errors.general) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= errors.general[0] %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% } %>
+
+        <form
+          action="/posts"
+          method="POST"
+          enctype="multipart/form-data"
+          class="needs-validation"
+          novalidate
+        >
+          <!-- Content -->
+          <div class="mb-3">
+            <label for="content" class="form-label">Post Content *</label>
+            <textarea
+              class="form-control"
+              name="content"
+              id="content"
+              rows="5"
+              placeholder="What's on your mind?"
+              required
+            ><%= old ? old.content : '' %></textarea>
+            <% if (errors && errors.content) { %>
+            <div class="text-danger"><%= errors.content[0] %></div>
+            <% } %>
+          </div>
+
+          <!-- Images Upload -->
+          <div class="mb-3">
+            <label for="images" class="form-label">
+              Images <small class="text-muted">(Max 5 MB each, up to 10 images)</small>
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              name="images"
+              id="images"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              multiple
+            />
+            <div class="form-text">
+              Allowed formats: JPEG, PNG, GIF, WebP
+            </div>
+            <% if (errors && errors.images) { %>
+            <div class="text-danger"><%= errors.images[0] %></div>
+            <% } %>
+          </div>
+
+          <!-- Videos Upload -->
+          <div class="mb-3">
+            <label for="videos" class="form-label">
+              Videos <small class="text-muted">(Max 15 MB each, up to 5 videos)</small>
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              name="videos"
+              id="videos"
+              accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo"
+              multiple
+            />
+            <div class="form-text">
+              Allowed formats: MP4, MPEG, QuickTime, AVI
+            </div>
+            <% if (errors && errors.videos) { %>
+            <div class="text-danger"><%= errors.videos[0] %></div>
+            <% } %>
+          </div>
+
+          <!-- Preview Section -->
+          <div id="image-preview" class="mb-3"></div>
+          <div id="video-preview" class="mb-3"></div>
+
+          <!-- Submit -->
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="ri-send-plane-line me-1"></i> Create Post
+            </button>
+            <a href="/posts" class="btn btn-light">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+  // Image preview
+  document.getElementById('images').addEventListener('change', function (e) {
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+    
+    if (this.files.length > 0) {
+      const title = document.createElement('h6');
+      title.className = 'mb-2';
+      title.textContent = 'Image Previews:';
+      preview.appendChild(title);
+      
+      const row = document.createElement('div');
+      row.className = 'd-flex flex-wrap gap-2';
+      
+      Array.from(this.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const img = document.createElement('img');
+          img.src = event.target.result;
+          img.className = 'img-thumbnail';
+          img.style.maxWidth = '150px';
+          img.style.maxHeight = '150px';
+          img.style.objectFit = 'cover';
+          row.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      preview.appendChild(row);
+    }
+  });
+
+  // Video preview
+  document.getElementById('videos').addEventListener('change', function (e) {
+    const preview = document.getElementById('video-preview');
+    preview.innerHTML = '';
+    
+    if (this.files.length > 0) {
+      const title = document.createElement('h6');
+      title.className = 'mb-2';
+      title.textContent = 'Video Previews:';
+      preview.appendChild(title);
+      
+      const row = document.createElement('div');
+      row.className = 'd-flex flex-wrap gap-2';
+      
+      Array.from(this.files).forEach(file => {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.className = 'border rounded';
+        video.style.maxWidth = '200px';
+        video.style.maxHeight = '150px';
+        video.controls = true;
+        row.appendChild(video);
+      });
+      
+      preview.appendChild(row);
+    }
+  });
+</script>
