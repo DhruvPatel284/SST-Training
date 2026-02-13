@@ -7,11 +7,14 @@ import {
   Param,
   Post,
   Put,
-  Query,
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
@@ -21,9 +24,10 @@ import { AuthGuard } from '../../../../common/guards/auth.guard';
 import { UpdateUserDto } from '../../dtos/request/update-user.dto';
 import { UserDto } from '../../dtos/response/user.dto';
 import { UsersService } from '../../users.service';
+import { userProfileImageConfig } from '../../config/multer.config';
 
 @Controller('users')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 export class UsersWebController {
   constructor(private usersService: UsersService) {}
 
@@ -40,7 +44,6 @@ export class UsersWebController {
 
     if (isAjax) {
       const result = await this.usersService.getUsersPaginate(query);
-      // make sure to do serialize the data before sending it
       return res.json(result);
     }
 
@@ -86,19 +89,15 @@ export class UsersWebController {
 
     if (!user) throw new NotFoundException('User not found!');
 
-    console.log('edit user ', user);
-    console.log('flash errors ', req.flash('errors'));
-    console.log('flash old ', req.flash('old'));
-
     return res.render('pages/user/edit', {
       title: 'Edit User',
       page_title: 'Edit User',
       folder: 'User',
       user: plainToInstance(UserDto, user),
-
       errors: req.flash('errors')[0] || {},
-
       old: req.flash('old')[0] || null,
+      success: req.flash('success')[0] || null,
+      error: req.flash('error')[0] || null,
     });
   }
 
@@ -184,7 +183,58 @@ export class UsersWebController {
 
   @Delete('/:id')
   async deleteUser(@Param('id') id: string, @Res() res: Response) {
+    console.log("DELETE_---------------------------------------------")
     await this.usersService.remove(id);
     return res.redirect('/users');
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Profile Image Endpoints
+  // ────────────────────────────────────────────────────────────────────
+
+  @Post('/:id/profile-image')
+  @UseInterceptors(FileInterceptor('profile_image', userProfileImageConfig))
+  async uploadProfileImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      console.log('Profile image upload for user:', id);
+      console.log('File received:', file);
+
+      if (!file) {
+        req.flash('error', 'No file uploaded');
+        return res.redirect(`/users/${id}/edit`);
+      }
+
+      await this.usersService.updateProfileImage(id, file);
+      req.flash('success', 'Profile image updated successfully');
+      return res.redirect(`/users/${id}/edit`);
+    } catch (error) {
+      console.error('Profile image upload error:', error);
+      if (error instanceof BadRequestException) {
+        req.flash('error', error.message);
+      } else {
+        req.flash('error', 'Failed to upload profile image');
+      }
+      return res.redirect(`/users/${id}/edit`);
+    }
+  }
+
+  @Delete('/:id/profile-image')
+  async deleteProfileImage(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      await this.usersService.deleteProfileImage(id);
+      req.flash('success', 'Profile image deleted successfully');
+    } catch (error) {
+      req.flash('error', 'Failed to delete profile image');
+    }
+    return res.redirect(`/users/${id}/edit`);
   }
 }

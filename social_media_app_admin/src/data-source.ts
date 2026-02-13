@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { OAuthAccessToken } from './modules/oauth-access-token/oauth-access-token.entity';
 import { User } from './modules/users/user.entity';
 import { Post } from './modules/posts/post.entity';
+import { PostMedia } from './modules/posts/post-media.entity';
 import { Comment } from './modules/comments/comment.entity';
 
 // we can't access configService directly here because this file is loaded before the AppModule
@@ -18,7 +19,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User, OAuthAccessToken, Post, Comment], // or __dirname + '/database/migrations/*.ts'
+  entities: [User, OAuthAccessToken, Post, PostMedia, Comment],
   migrations: [__dirname + '/database/migrations/*.ts'],
   // ssl: {  // this ssl config is needed when connecting to some cloud db providers with https
   //   rejectUnauthorized: false,

@@ -1,26 +1,131 @@
 <%- contentFor('HeaderCss') %>
 
+<style>
+  .profile-image-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e9ebec;
+  }
+  .profile-image-container {
+    position: relative;
+    display: inline-block;
+  }
+  .profile-image-delete {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #f06548;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+  }
+  .profile-image-delete:hover {
+    background: #d63031;
+  }
+</style>
+
 <%- contentFor('body') %>
 <div class="">
-  <div class="row w-50">
-    <div class="">
+  <div class="row">
+    <!-- Flash Messages -->
+    <% const successFlash = typeof success !== 'undefined' ? success : null; %>
+    <% const errorFlash = typeof error !== 'undefined' ? error : null; %>
+    
+    <% if (successFlash) { %>
+    <div class="col-12">
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-checkbox-circle-line me-1"></i> <%= successFlash %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+    <% } %>
+    <% if (errorFlash) { %>
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-1"></i> <%= errorFlash %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Profile Image Section -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="ri-user-line me-1"></i> Profile Image
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <% if (user.profile_image) { %>
+          <div class="profile-image-container mb-3">
+            <img
+              src="/uploads/users/<%= user.profile_image %>"
+              alt="Profile"
+              class="profile-image-preview"
+            />
+            <form
+              action="/users/<%= user.id %>/profile-image?_method=DELETE"
+              method="POST"
+              style="display: inline"
+              onsubmit="return confirm('Delete profile image?')"
+            >
+              <input type="hidden" name="_method" value="DELETE" />
+              <button type="submit" class="profile-image-delete">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </form>
+          </div>
+          <% } else { %>
+          <div class="mb-3">
+            <% const initials = (user.name || '').trim().split(/\s+/).map(n => n.charAt(0)).join('').slice(0,2).toUpperCase(); %>
+            <div class="avatar-xl mx-auto">
+              <div class="avatar-title rounded-circle bg-primary-subtle text-primary fs-1">
+                <%= initials || 'U' %>
+              </div>
+            </div>
+          </div>
+          <% } %>
+
+          <form
+            action="/users/<%= user.id %>/profile-image"
+            method="POST"
+            enctype="multipart/form-data"
+            id="profile-image-form"
+          >
+            <div class="mb-3">
+              <input
+                type="file"
+                name="profile_image"
+                id="profile-image-input"
+                class="form-control"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                required
+              />
+              <small class="text-muted">Max 2MB. JPEG, PNG, GIF, WebP only.</small>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="ri-upload-line me-1"></i>
+              <%= user.profile_image ? 'Change' : 'Upload' %> Image
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Details Form -->
+    <div class="col-md-8">
       <div class="card">
         <div class="card-header align-items-center d-flex">
           <h4 class="card-title mb-0 flex-grow-1">User Edit Form</h4>
-          <div class="flex-shrink-0">
-            <!-- <div class="form-check form-switch form-switch-right form-switch-md">
-         <label for="form-grid-showcode" class="form-label text-muted">Show Code</label>
-         <input class="form-check-input code-switcher" type="checkbox" id="form-grid-showcode">
-        </div> -->
-          </div>
         </div>
-        <!-- end card header -->
 
         <div class="card-body">
-          <!-- <p class="text-muted">More complex forms can be built using our grid classes. Use these for form layouts that
-        require multiple columns, varied widths, and additional alignment options. <span class="fw-medium">Requires the
-         <code>$enable-grid-classes</code> Sass variable to be enabled</span> (on by default).
-        </p> -->
           <div class="live-preview">
             <form
               action="/users/<%- user.id %>?_method=put"
@@ -48,26 +153,11 @@
                     <% } %>
                   </div>
                 </div>
-                <!--end col-->
-                <!-- <div class="col-md-6">
-           <div class="mb-3">
-            <label for="lastNameinput" class="form-label">Last Name</label>
-            <input type="text" class="form-control" placeholder="Enter your lastname" id="lastNameinput">
-           </div>
-          </div> -->
-                <!--end col-->
-                <!-- <div class="col-md-12">
-           <div class="mb-3">
-            <label for="compnayNameinput" class="form-label">Company Name</label>
-            <input type="text" class="form-control" placeholder="Enter company name" id="compnayNameinput">
-           </div>-->
               </div>
-              <!--end col-->
+
               <div class="">
                 <div class="mb-3">
-                  <label for="phoneNumber" class="form-label"
-                    >Phone Number</label
-                  >
+                  <label for="phoneNumber" class="form-label">Phone Number</label>
                   <input
                     type="tel"
                     class="form-control"
@@ -81,7 +171,7 @@
                   <div class="text-danger"><%= errors.phoneNumber[0] %></div>
                   <% } %>
                 </div>
-                <!--end col-->
+
                 <div class="">
                   <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
@@ -99,51 +189,38 @@
                     <% } %>
                   </div>
                 </div>
-                <!--end col-->
-                <!-- <div class="col-md-12">
-           <div class="mb-3">
-            <label for="address1ControlTextarea" class="form-label">Address</label>
-            <input type="text" class="form-control" placeholder="Address 1" id="address1ControlTextarea">
-           </div>
-          </div> -->
-                <!--end col-->
-                <!-- <div class="col-md-6">
-           <div class="mb-3">
-            <label for="citynameInput" class="form-label">City</label>
-            <input type="email" class="form-control" placeholder="Enter your city" id="citynameInput">
-           </div>
-          </div> -->
-                <!--end col-->
-                <!-- <div class="col-md-6">
-           <div class="mb-3">
-            <label for="ForminputState" class="form-label">State</label>
-            <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true">
-             <option selected>Choose...</option>
-             <option>...</option>
-            </select>
-           </div>
-          </div> -->
-                <!--end col-->
+
                 <div class="row">
                   <div class="col">
                     <button type="submit" class="btn btn-primary">
                       Update
                     </button>
+                    <a href="/users/<%- user.id %>" class="btn btn-secondary">
+                      Cancel
+                    </a>
                   </div>
                 </div>
-                <!--end col-->
               </div>
-              <!--end row-->
             </form>
           </div>
-          <div class="d-none code-view"></div>
         </div>
       </div>
     </div>
-    <!-- end col -->
   </div>
-  <%- contentFor('FooterJs') %>
-
-  <!-- prismjs plugin -->
-  <script src="/assets/libs/prismjs/prism.js"></script>
 </div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/prismjs/prism.js"></script>
+<script>
+  // Preview image before upload
+  var profileImageInput = document.getElementById('profile-image-input');
+  if (profileImageInput) {
+    profileImageInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (file && file.size > 2 * 1024 * 1024) {
+        alert('File size exceeds 2MB');
+        this.value = '';
+      }
+    });
+  }
+</script>

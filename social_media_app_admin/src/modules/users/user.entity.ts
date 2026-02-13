@@ -44,6 +44,9 @@ export class User {
   @Column({ type: 'varchar', default: UserRole.User })
   role: UserRole;
 
+  @Column({ nullable: true })
+  profile_image?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

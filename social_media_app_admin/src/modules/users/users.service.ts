@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { User } from './user.entity';
 
@@ -77,5 +79,52 @@ export class UsersService {
     const user = await this.findOne(id);
 
     return this.repo.softRemove(user);
+  }
+// ────────────────────────────────────────────────────────────────────
+  // Profile Image Management
+  // ────────────────────────────────────────────────────────────────────
+
+  async updateProfileImage(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<User> {
+    const user = await this.findOne(userId);
+
+    // Delete old profile image if exists
+    if (user.profile_image) {
+      this.deleteProfileImageFile(user.profile_image);
+    }
+
+    // Update with new image filename
+    user.profile_image = file.filename;
+    return this.repo.save(user);
+  }
+
+  async deleteProfileImage(userId: string): Promise<User> {
+    const user = await this.findOne(userId);
+
+    if (!user.profile_image) {
+      throw new NotFoundException('No profile image to delete');
+    }
+
+    // Delete from filesystem
+    this.deleteProfileImageFile(user.profile_image);
+
+    // Remove from database
+    user.profile_image = "";
+    return this.repo.save(user);
+  }
+
+  private deleteProfileImageFile(filename: string): void {
+    const filePath = path.join(
+      process.cwd(),
+      'public',
+      'uploads',
+      'users',
+      filename,
+    );
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
   }
 }
