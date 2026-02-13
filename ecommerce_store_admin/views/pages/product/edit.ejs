@@ -32,23 +32,6 @@
   .image-delete-btn:hover {
     background: rgba(240, 101, 72, 1);
   }
-  .upload-zone {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    background: #f8f9fa;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  .upload-zone:hover {
-    border-color: #0ab39c;
-    background: #f0fdf4;
-  }
-  .upload-zone.drag-over {
-    border-color: #0ab39c;
-    background: #e0f2fe;
-  }
 </style>
 
 <%- contentFor('body') %>
@@ -192,17 +175,15 @@
               src="/uploads/products/<%= image.filename %>"
               alt="Product image <%= index + 1 %>"
             />
-            <form
-              action="/products/<%= product.id %>/images/<%= image.id %>?_method=DELETE"
-              method="POST"
-              style="display: inline"
-              onsubmit="return confirm('Delete this image?')"
-            >
-              <input type="hidden" name="_method" value="DELETE" />
-              <button type="submit" class="image-delete-btn">
-                <i class="ri-delete-bin-line"></i>
-              </button>
-            </form>
+            <button 
+              type="button"
+              class="image-delete-btn remove-image-btn"
+              data-product-id="<%= product.id %>"
+              data-image-id="<%= image.id %>"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteImageModal">
+              <i class="ri-delete-bin-line"></i>
+            </button>
           </div>
           <% }) %>
         </div>
@@ -250,8 +231,69 @@
   </div>
 </div>
 
+<!-- Delete Image Confirmation Modal -->
+<div
+  id="deleteImageModal"
+  class="modal fade zoomIn"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mt-2 text-center">
+          <lord-icon
+            src="https://cdn.lordicon.com/gsqxdxog.json"
+            trigger="loop"
+            colors="primary:#f7b84b,secondary:#f06548"
+            style="width: 100px; height: 100px"
+          ></lord-icon>
+          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h4>Are you sure?</h4>
+            <p class="text-muted mx-4 mb-0">
+              Are you sure you want to remove this image?
+            </p>
+            <input type="hidden" id="modal-product-id" />
+            <input type="hidden" id="modal-image-id" />
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button
+            type="button"
+            class="btn w-sm btn-light"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            class="btn w-sm btn-danger"
+            id="confirm-delete-image"
+          >
+            Yes, Delete It!
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
 <script>
+(function() {
+  console.log('=== Product Edit Page Script Loaded ===');
+  console.log('jQuery loaded:', typeof jQuery !== 'undefined');
+  console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
+
+  // ── File selection preview ──────────────────────────────────────────
   var uploadForm = document.getElementById('upload-form');
   var imageInput = document.getElementById('image-input');
   
@@ -261,7 +303,7 @@
       var selectedDiv = document.getElementById('selected-files');
       
       if (files.length > 0) {
-        var names = Array.from(files).map(f => f.name).join(', ');
+        var names = Array.from(files).map(function(f) { return f.name; }).join(', ');
         selectedDiv.innerHTML = '<div class="alert alert-success mt-2"><i class="ri-checkbox-circle-line me-1"></i>' + 
           files.length + ' file(s) selected: ' + names + '</div>';
       } else {
@@ -270,6 +312,7 @@
     });
   }
   
+  // ── Upload form validation ──────────────────────────────────────────
   if (uploadForm) {
     uploadForm.addEventListener('submit', function(e) {
       var files = imageInput.files;
@@ -292,4 +335,64 @@
       return true;
     });
   }
+
+  // ── Delete image - store IDs when modal opens ──────────────────────
+  var removeButtons = document.querySelectorAll('.remove-image-btn');
+  console.log('Found delete buttons:', removeButtons.length);
+  
+  removeButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var productId = this.getAttribute('data-product-id');
+      var imageId = this.getAttribute('data-image-id');
+      console.log('Delete button clicked - Product:', productId, 'Image:', imageId);
+      document.getElementById('modal-product-id').value = productId;
+      document.getElementById('modal-image-id').value = imageId;
+    });
+  });
+
+  // ── Confirm delete button handler ──────────────────────────────────
+  var confirmBtn = document.getElementById('confirm-delete-image');
+  console.log('Confirm button found:', confirmBtn !== null);
+  
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function() {
+      console.log('Confirm delete clicked');
+      
+      var productId = document.getElementById('modal-product-id').value;
+      var imageId = document.getElementById('modal-image-id').value;
+      
+      console.log('Deleting - Product:', productId, 'Image:', imageId);
+      
+      if (!productId || !imageId) {
+        console.error('Missing IDs!');
+        alert('Error: Missing product or image ID');
+        return;
+      }
+
+      // Close modal
+      var modal = document.getElementById('deleteImageModal');
+      var bsModal = bootstrap.Modal.getInstance(modal);
+      if (bsModal) {
+        bsModal.hide();
+      }
+
+      // Create and submit form
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/products/' + productId + '/images/' + imageId + '?_method=DELETE';
+
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = '_method';
+      input.value = 'DELETE';
+      form.appendChild(input);
+
+      document.body.appendChild(form);
+      console.log('Submitting form to:', form.action);
+      form.submit();
+    });
+  } else {
+    console.error('Confirm button not found!');
+  }
+})();
 </script>

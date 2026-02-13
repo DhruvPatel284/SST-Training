@@ -58,15 +58,7 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   //app.use(fileUpload());
 
-    app.use(
-    methodOverride(function (req: any, res: any) {
-      if (req.body && typeof req.body === 'object' && '_method' in req.body) {
-        const method = req.body._method;
-        delete req.body._method;
-        return method;
-      }
-    }),
-  );
+  app.use(methodOverride('_method'));
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
