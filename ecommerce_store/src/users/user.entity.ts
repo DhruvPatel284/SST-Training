@@ -28,7 +28,7 @@ export class User{
     password:string
 
     @Column({ nullable: true })
-    phone_no?:string
+    phoneNumber?:string
 
     @OneToMany(()=>Address ,(address)=>address.user)
     addresses : Address[]

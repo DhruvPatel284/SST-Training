@@ -6,10 +6,11 @@ import { Product } from './product.entity';
 import { CartModule } from 'src/cart/cart.module';
 import { Cart } from 'src/cart/cart.entity';
 import { ProductsWebController } from './web/products.web.controller';
+import { ProductImage } from './product-image.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product,Cart]),
+    TypeOrmModule.forFeature([Product,Cart,ProductImage]),
      forwardRef(() => CartModule),
   ],
   controllers: [ProductsController,ProductsWebController],

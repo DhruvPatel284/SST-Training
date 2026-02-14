@@ -60,7 +60,14 @@ export class ProductsService {
     }
 
     async getProduct(id: number) {
-        const product = await this.productsRepo.findOne({ where: { id } });
+        const product = await this.productsRepo.findOne(
+            { 
+                where: { id },
+                relations: {
+                    images:true
+                }
+            }
+        );
         if (!product) {
             throw new NotFoundException('Product not found');
         }

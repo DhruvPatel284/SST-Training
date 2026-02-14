@@ -9,6 +9,7 @@ import { Product } from './products/product.entity';
 import { Cart } from './cart/cart.entity';
 import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
+import { ProductImage } from './products/product-image.entity';
 
 // we can't access configService directly here because this file is loaded before the AppModule
 dotenv.config();
@@ -21,7 +22,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User,Address,Product,Cart,Order,OrderItem], // or __dirname + '/database/migrations/*.ts'
+  entities: [User,Address,Product,ProductImage,Cart,Order,OrderItem], // or __dirname + '/database/migrations/*.ts'
   migrations: [__dirname + '/database/migrations/*.ts'],
   // ssl: {  // this ssl config is needed when connecting to some cloud db providers with https
   //   rejectUnauthorized: false,

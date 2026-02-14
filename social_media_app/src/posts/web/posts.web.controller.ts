@@ -138,7 +138,6 @@ export class PostsWebController {
     @Param('mediaId') mediaId: string,
     @Res() res: Response,
   ) {
-    console.log("DELETE .>>>>>>>")
     await this.postsService.deletePostMedia(
       req.user.userId,
       Number(postId),

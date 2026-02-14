@@ -19,6 +19,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProductsModule } from '../products/products.module';
 import { OrdersModule } from '../orders/orders.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -29,6 +31,10 @@ import { OrdersModule } from '../orders/orders.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, passportConfig],
+    }),
+     ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
     }),
     TypeOrmModule.forRoot(AppDataSource.options),
     AuthModule,

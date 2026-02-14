@@ -25,7 +25,7 @@ export const multerPostMediaConfig = {
       const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
       cb(null, filename);
     },
-  }),
+  }), 
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'images') {
       // Validate image type

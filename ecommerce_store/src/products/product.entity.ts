@@ -8,6 +8,7 @@ import {
   ManyToMany,
   ManyToOne,
 } from 'typeorm';
+import { ProductImage } from './product-image.entity';
 
 @Entity()
 export class Product{
@@ -35,6 +36,11 @@ export class Product{
 
     @OneToMany(()=>OrderItem , (order_item)=>order_item.product)
     order_items : OrderItem[]
+
+    @OneToMany(() => ProductImage, (image) => image.product, {
+      cascade: true,
+    })
+    images: ProductImage[];
 
     orderCount?: number
     inCart?: boolean;
