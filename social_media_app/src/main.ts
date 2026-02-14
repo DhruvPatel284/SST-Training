@@ -8,7 +8,6 @@ import methodOverride from 'method-override';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.use(methodOverride('_method'));
 
   // ===== View Engine =====
   app.setViewEngine('ejs');
@@ -18,8 +17,11 @@ async function bootstrap() {
 
   // ===== Middleware =====
   app.use(cookieParser()); // for JWT cookies
+  
   app.use(express.urlencoded({ extended: true })); // form data
   app.use(express.json());
+
+  app.use(methodOverride('_method'));
 
   // ===== Static Files (optional) =====
   app.useStaticAssets(join(process.cwd(), 'public'));

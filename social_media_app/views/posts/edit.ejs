@@ -708,15 +708,15 @@
       if (!confirm('Are you sure you want to delete this media?')) {
         return;
       }
-
+      console.log("post id : ",postId,"media id : ",mediaId);
       try {
         const response = await fetch(`/posts/${postId}/media/${mediaId}?_method=DELETE`, {
-          method: 'POST',
+          method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-
+        console.log("response : ",response);
         if (response.ok) {
           // Remove the media item from the DOM
           const mediaElement = document.getElementById(`media-${mediaId}`);

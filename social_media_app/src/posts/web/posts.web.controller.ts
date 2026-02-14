@@ -131,7 +131,7 @@ export class PostsWebController {
   }
 
   // ===== DELETE MEDIA =====
-  @Post(':postId/media/:mediaId')
+  @Delete(':postId/media/:mediaId')
   async deleteMedia(
     @Request() req,
     @Param('postId') postId: string,
