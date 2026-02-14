@@ -1,14 +1,32 @@
-import { Injectable, Session } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import databaseConfig from '../../common/config/database.config';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/user.entity';
+import { Post } from '../posts/post.entity';
+
 @Injectable()
 export class AppService {
-  constructor(private configService: ConfigService) {}
-  getHello(): string {
-    console.log(this.configService);
-    console.log('database Config file', databaseConfig);
-    console.log('databaseConfig', this.configService.get('database.host'));
+  constructor(
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Post) private postRepo: Repository<Post>,
+  ) {}
 
-    return 'Hello World!';
+  async getAnalytics() {
+    // Get total counts
+    const totalUsers = await this.userRepo.count();
+    const totalPosts = await this.postRepo.count();
+
+    // Get reviewed vs unreviewed posts
+    const reviewedPosts = await this.postRepo.count({
+      where: { Reviewed: true },
+    });
+    const unreviewedPosts = totalPosts - reviewedPosts;
+
+    return {
+      totalUsers,
+      totalPosts,
+      reviewedPosts,
+      unreviewedPosts,
+    };
   }
 }

@@ -75,4 +75,9 @@ export class OrdersService {
     };
     return flow[currentStatus] ?? [];
   }
+
+  async findAll() {
+    return this.repo.find();
+  }
+
 }

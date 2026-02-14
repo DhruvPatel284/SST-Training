@@ -86,6 +86,10 @@ export class UsersService {
     return this.repo.remove(user);
   }
 
+  async findAll() {
+    return this.repo.find();
+  }
+
   // ────────────────────────────────────────────────────────────────────
   // Profile Image Management
   // ────────────────────────────────────────────────────────────────────

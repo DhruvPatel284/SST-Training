@@ -2,4 +2,256 @@
 
 <%- contentFor('body') %>
 
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Dashboard</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+          <li class="breadcrumb-item active">Home</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Analytics Cards -->
+<div class="row">
+  <!-- Users Card -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="fw-medium text-muted mb-0">Total Users</p>
+            <h2 class="mt-4 ff-secondary fw-semibold">
+              <span class="counter-value" data-target="<%= analytics.usersCount %>">0</span>
+            </h2>
+            <p class="mb-0 text-muted">
+              <a href="/users" class="text-decoration-underline">View all users</a>
+            </p>
+          </div>
+          <div>
+            <div class="avatar-sm flex-shrink-0">
+              <span class="avatar-title bg-primary-subtle rounded-circle fs-2">
+                <i class="ri-user-line text-primary"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Card -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="fw-medium text-muted mb-0">Total Products</p>
+            <h2 class="mt-4 ff-secondary fw-semibold">
+              <span class="counter-value" data-target="<%= analytics.productsCount %>">0</span>
+            </h2>
+            <p class="mb-0 text-muted">
+              <a href="/products" class="text-decoration-underline">View all products</a>
+            </p>
+          </div>
+          <div>
+            <div class="avatar-sm flex-shrink-0">
+              <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                <i class="ri-shopping-bag-line text-success"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Card -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p class="fw-medium text-muted mb-0">Total Orders</p>
+            <h2 class="mt-4 ff-secondary fw-semibold">
+              <span class="counter-value" data-target="<%= analytics.ordersCount %>">0</span>
+            </h2>
+            <p class="mb-0 text-muted">
+              <a href="/orders" class="text-decoration-underline">View all orders</a>
+            </p>
+          </div>
+          <div>
+            <div class="avatar-sm flex-shrink-0">
+              <span class="avatar-title bg-warning-subtle rounded-circle fs-2">
+                <i class="ri-shopping-cart-line text-warning"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">
+          <i class="ri-dashboard-line me-1"></i>
+          Quick Actions
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-xl-3 col-md-6">
+            <a href="/users" class="text-decoration-none">
+              <div class="card border card-hover mb-0">
+                <div class="card-body text-center">
+                  <div class="avatar-sm mx-auto mb-3">
+                    <div class="avatar-title bg-primary-subtle rounded-circle fs-1">
+                      <i class="ri-user-settings-line text-primary"></i>
+                    </div>
+                  </div>
+                  <h5 class="mb-1">Manage Users</h5>
+                  <p class="text-muted mb-0 small">View and edit user accounts</p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <a href="/products" class="text-decoration-none">
+              <div class="card border card-hover mb-0">
+                <div class="card-body text-center">
+                  <div class="avatar-sm mx-auto mb-3">
+                    <div class="avatar-title bg-success-subtle rounded-circle fs-1">
+                      <i class="ri-store-2-line text-success"></i>
+                    </div>
+                  </div>
+                  <h5 class="mb-1">Manage Products</h5>
+                  <p class="text-muted mb-0 small">Add, edit, or remove products</p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <a href="/orders" class="text-decoration-none">
+              <div class="card border card-hover mb-0">
+                <div class="card-body text-center">
+                  <div class="avatar-sm mx-auto mb-3">
+                    <div class="avatar-title bg-warning-subtle rounded-circle fs-1">
+                      <i class="ri-file-list-3-line text-warning"></i>
+                    </div>
+                  </div>
+                  <h5 class="mb-1">Manage Orders</h5>
+                  <p class="text-muted mb-0 small">Track and update orders</p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <a href="/products/create" class="text-decoration-none">
+              <div class="card border card-hover mb-0">
+                <div class="card-body text-center">
+                  <div class="avatar-sm mx-auto mb-3">
+                    <div class="avatar-title bg-info-subtle rounded-circle fs-1">
+                      <i class="ri-add-box-line text-info"></i>
+                    </div>
+                  </div>
+                  <h5 class="mb-1">Add Product</h5>
+                  <p class="text-muted mb-0 small">Create a new product</p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Message -->
+<div class="row">
+  <div class="col-12">
+    <div class="card bg-primary-subtle">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h4 class="text-primary mb-2">
+              <i class="ri-hand-heart-line me-1"></i>
+              Welcome to Your E-Commerce Admin!
+            </h4>
+            <p class="text-muted mb-0">
+              Manage your store efficiently from this dashboard. Use the quick actions above to navigate to different sections.
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <lord-icon
+              src="https://cdn.lordicon.com/dxjqoygy.json"
+              trigger="loop"
+              colors="primary:#405189,secondary:#0ab39c"
+              style="width:100px;height:100px">
+            </lord-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
+<!-- Counter Up -->
+<script src="/assets/libs/countup.js/dist/countUp.umd.js"></script>
+
+<script>
+  // Counter animation
+  document.addEventListener('DOMContentLoaded', function() {
+    var counters = document.querySelectorAll('.counter-value');
+    counters.forEach(function(counter) {
+      var target = parseFloat(counter.getAttribute('data-target'));
+      var countUp = new CountUp(counter, target, {
+        duration: 2,
+        separator: ',',
+        decimal: '.',
+      });
+      if (!countUp.error) {
+        countUp.start();
+      } else {
+        console.error(countUp.error);
+        counter.textContent = target;
+      }
+    });
+  });
+</script>
+
+<style>
+  .card-hover {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .card-hover:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+  }
+  .card-animate {
+    animation: fadeInUp 0.6s ease-out;
+  }
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

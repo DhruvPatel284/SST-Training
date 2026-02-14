@@ -18,6 +18,8 @@ import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from '../posts/posts.module';
+import { Post } from '../posts/post.entity';
+import { User } from '../users/user.entity';
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { PostsModule } from '../posts/posts.module';
       load: [databaseConfig, passportConfig],
     }),
     TypeOrmModule.forRoot(AppDataSource.options),
+    TypeOrmModule.forFeature([User, Post]),
     AuthModule,
     UsersModule,
     OauthAccessTokenModule,
