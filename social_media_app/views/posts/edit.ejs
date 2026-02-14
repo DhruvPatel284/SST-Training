@@ -24,6 +24,7 @@
       --text-secondary: #94a3b8;
       --border: #334155;
       --shadow: rgba(0, 0, 0, 0.3);
+      --error: #ef4444;
     }
 
     body {
@@ -195,6 +196,215 @@
       margin-top: 8px;
     }
 
+    /* ===== EXISTING MEDIA ===== */
+    .existing-media {
+      margin-bottom: 24px;
+    }
+
+    .media-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .media-section-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--primary-light);
+    }
+
+    .existing-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      padding: 16px;
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .existing-media-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface-light);
+      border: 2px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .existing-media-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .existing-media-item img,
+    .existing-media-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .existing-media-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      background: rgba(239, 68, 68, 0.95);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .existing-media-delete:hover {
+      background: #dc2626;
+      transform: scale(1.1);
+    }
+
+    .existing-media-delete svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .media-type-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      padding: 4px 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--primary-light);
+      letter-spacing: 0.5px;
+    }
+
+    .empty-media-message {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      background: var(--background);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+
+    /* ===== FILE UPLOAD ===== */
+    .file-upload-section {
+      margin-bottom: 24px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--background);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-label:hover {
+      border-color: var(--primary);
+      background: var(--surface-light);
+    }
+
+    .file-label svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+
+    .file-label-text {
+      flex: 1;
+    }
+
+    .file-label-title {
+      font-size: 15px;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .file-label-hint {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .file-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--background);
+      border: 1px solid var(--border);
+    }
+
+    .preview-item img,
+    .preview-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      background: rgba(239, 68, 68, 0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .preview-remove:hover {
+      background: #ef4444;
+      transform: scale(1.1);
+    }
+
+    .preview-remove svg {
+      width: 14px;
+      height: 14px;
+    }
+
     .actions {
       display: flex;
       gap: 12px;
@@ -296,6 +506,11 @@
       .actions {
         flex-direction: column;
       }
+
+      .existing-media-grid,
+      .file-preview {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
     }
   </style>
 </head>
@@ -334,7 +549,54 @@
         <p>Update your thoughts and save changes</p>
       </div>
 
-      <form method="POST" action="/posts/<%= post.id %>?_method=PATCH" id="editForm">
+      <!-- ===== EXISTING MEDIA ===== -->
+      <% if (post.media && post.media.length > 0) { %>
+        <div class="existing-media">
+          <div class="media-section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Current Media (Click X to delete)
+          </div>
+          <div class="existing-media-grid">
+            <% post.media.forEach(media => { %>
+              <div class="existing-media-item" id="media-<%= media.id %>">
+                <% if (media.type === 'image') { %>
+                  <img src="/uploads/posts/<%= media.filename %>" alt="Post image">
+                  <div class="media-type-badge">Image</div>
+                <% } else if (media.type === 'video') { %>
+                  <video src="/uploads/posts/<%= media.filename %>"></video>
+                  <div class="media-type-badge">Video</div>
+                <% } %>
+                <button 
+                  type="button" 
+                  class="existing-media-delete" 
+                  onclick="deleteMedia(<%= post.id %>, <%= media.id %>)"
+                  title="Delete this media"
+                >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="existing-media">
+          <div class="media-section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Current Media
+          </div>
+          <div class="empty-media-message">
+            No media attached to this post yet
+          </div>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/posts/<%= post.id %>?_method=PATCH" id="editForm" enctype="multipart/form-data">
         <div class="form-group">
           <label for="content">Post Content</label>
           <textarea 
@@ -345,6 +607,54 @@
           ><%= post.content %></textarea>
           <div class="char-count">
             <span id="charCount"><%= post.content.length %></span> / 5000 characters
+          </div>
+        </div>
+
+        <!-- ===== ADD NEW IMAGES ===== -->
+        <div class="file-upload-section">
+          <div class="file-input-wrapper">
+            <input 
+              type="file" 
+              id="images" 
+              name="images" 
+              class="file-input" 
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              multiple
+            />
+            <label for="images" class="file-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <div class="file-label-text">
+                <div class="file-label-title">Add New Images</div>
+                <div class="file-label-hint">JPEG, PNG, GIF, WebP - Max 5 MB each</div>
+              </div>
+            </label>
+            <div id="imagePreview" class="file-preview"></div>
+          </div>
+        </div>
+
+        <!-- ===== ADD NEW VIDEOS ===== -->
+        <div class="file-upload-section">
+          <div class="file-input-wrapper">
+            <input 
+              type="file" 
+              id="videos" 
+              name="videos" 
+              class="file-input" 
+              accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo"
+              multiple
+            />
+            <label for="videos" class="file-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              <div class="file-label-text">
+                <div class="file-label-title">Add New Videos</div>
+                <div class="file-label-hint">MP4, MPEG, QuickTime, AVI - Max 15 MB each</div>
+              </div>
+            </label>
+            <div id="videoPreview" class="file-preview"></div>
           </div>
         </div>
 
@@ -369,7 +679,7 @@
           <span>Editing Tips</span>
         </div>
         <div class="info-box-content">
-          Make sure your updated post is clear and engaging. Your changes will be visible to everyone who can see this post.
+          You can delete existing media by clicking the X button. Add new images or videos using the upload sections above. Your changes will be saved when you click "Save Changes".
         </div>
       </div>
     </div>
@@ -392,6 +702,159 @@
 
     // Set initial height
     textarea.style.height = Math.max(200, textarea.scrollHeight) + 'px';
+
+    // Delete existing media
+    async function deleteMedia(postId, mediaId) {
+      if (!confirm('Are you sure you want to delete this media?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/posts/${postId}/media/${mediaId}?_method=DELETE`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          // Remove the media item from the DOM
+          const mediaElement = document.getElementById(`media-${mediaId}`);
+          if (mediaElement) {
+            mediaElement.style.opacity = '0';
+            mediaElement.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+              mediaElement.remove();
+              
+              // Check if there are any media items left
+              const mediaGrid = document.querySelector('.existing-media-grid');
+              if (mediaGrid && mediaGrid.children.length === 0) {
+                // Show empty state
+                const existingMedia = document.querySelector('.existing-media');
+                existingMedia.innerHTML = `
+                  <div class="media-section-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Current Media
+                  </div>
+                  <div class="empty-media-message">
+                    No media attached to this post yet
+                  </div>
+                `;
+              }
+            }, 300);
+          }
+        } else {
+          alert('Failed to delete media. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error deleting media:', error);
+        alert('An error occurred while deleting media.');
+      }
+    }
+
+    // Image preview
+    const imageInput = document.getElementById('images');
+    const imagePreview = document.getElementById('imagePreview');
+    let imageFiles = [];
+
+    imageInput.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      
+      files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`Image ${file.name} exceeds 5 MB limit`);
+          return;
+        }
+        imageFiles.push(file);
+      });
+
+      updateImagePreview();
+    });
+
+    function updateImagePreview() {
+      imagePreview.innerHTML = '';
+      
+      imageFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `
+            <img src="${e.target.result}" alt="Preview">
+            <button type="button" class="preview-remove" onclick="removeImage(${index})">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          `;
+          imagePreview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Update file input
+      const dataTransfer = new DataTransfer();
+      imageFiles.forEach(file => dataTransfer.items.add(file));
+      imageInput.files = dataTransfer.files;
+    }
+
+    function removeImage(index) {
+      imageFiles.splice(index, 1);
+      updateImagePreview();
+    }
+
+    // Video preview
+    const videoInput = document.getElementById('videos');
+    const videoPreview = document.getElementById('videoPreview');
+    let videoFiles = [];
+
+    videoInput.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      
+      files.forEach(file => {
+        if (file.size > 15 * 1024 * 1024) {
+          alert(`Video ${file.name} exceeds 15 MB limit`);
+          return;
+        }
+        videoFiles.push(file);
+      });
+
+      updateVideoPreview();
+    });
+
+    function updateVideoPreview() {
+      videoPreview.innerHTML = '';
+      
+      videoFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `
+            <video src="${e.target.result}" controls></video>
+            <button type="button" class="preview-remove" onclick="removeVideo(${index})">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          `;
+          videoPreview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Update file input
+      const dataTransfer = new DataTransfer();
+      videoFiles.forEach(file => dataTransfer.items.add(file));
+      videoInput.files = dataTransfer.files;
+    }
+
+    function removeVideo(index) {
+      videoFiles.splice(index, 1);
+      updateVideoPreview();
+    }
   </script>
 </body>
 </html>

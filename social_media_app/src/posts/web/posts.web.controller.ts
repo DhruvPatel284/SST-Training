@@ -3,17 +3,22 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Render,
   Request,
   Res,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
-import type{ Response } from 'express';
+import type { Response } from 'express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { PostsService } from '../api/posts.service';
 import { CreateAndUpdatePostDto } from '../api/dtos/create-update-post.dto';
 import { PassportJwtAuthGuard } from '../../guards/passport-jwt-auth.guard';
+import { multerPostMediaConfig } from '../config/multer.config';
 
 @Controller('posts')
 @UseGuards(PassportJwtAuthGuard)
@@ -44,9 +49,9 @@ export class PostsWebController {
       meta: data.meta,
       links: data.links,
       query: req.query,
+      user: req.user,
     };
   }
-
 
   // ===== CREATE PAGE =====
   @Get('new')
@@ -57,12 +62,22 @@ export class PostsWebController {
 
   // ===== CREATE POST =====
   @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'images', maxCount: 10 },
+        { name: 'videos', maxCount: 5 },
+      ],
+      multerPostMediaConfig,
+    ),
+  )
   async create(
     @Request() req,
     @Body() body: CreateAndUpdatePostDto,
+    @UploadedFiles() files: { images?: Express.Multer.File[], videos?: Express.Multer.File[] },
     @Res() res: Response,
   ) {
-    await this.postsService.createPost(req.user.userId, body);
+    await this.postsService.createPost(req.user.userId, body, files);
     return res.redirect('/posts');
   }
 
@@ -74,14 +89,13 @@ export class PostsWebController {
       req.user.userId,
       Number(id),
     );
-    return { post,user:req.user };
+    return { post, user: req.user };
   }
 
   // ===== EDIT PAGE =====
   @Get(':id/edit')
   @Render('posts/edit')
   async editPage(@Request() req, @Param('id') id: string) {
-
     const post = await this.postsService.getPostByid(
       req.user.userId,
       Number(id),
@@ -91,17 +105,46 @@ export class PostsWebController {
 
   // ===== UPDATE POST =====
   @Patch(':id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'images', maxCount: 10 },
+        { name: 'videos', maxCount: 5 },
+      ],
+      multerPostMediaConfig,
+    ),
+  )
   async update(
     @Request() req,
     @Param('id') id: string,
     @Body() body: CreateAndUpdatePostDto,
+    @UploadedFiles() files: { images?: Express.Multer.File[], videos?: Express.Multer.File[] },
     @Res() res: Response,
   ) {
     await this.postsService.updatePost(
       req.user.userId,
       Number(id),
       body,
+      files,
     );
     return res.redirect(`/posts/${id}`);
+  }
+
+  // ===== DELETE MEDIA =====
+  @Post(':postId/media/:mediaId')
+  async deleteMedia(
+    @Request() req,
+    @Param('postId') postId: string,
+    @Param('mediaId') mediaId: string,
+    @Res() res: Response,
+  ) {
+    console.log("DELETE .>>>>>>>")
+    await this.postsService.deletePostMedia(
+      req.user.userId,
+      Number(postId),
+      Number(mediaId),
+    );
+    
+    return res.json({ success: true, message: 'Media deleted successfully' });
   }
 }

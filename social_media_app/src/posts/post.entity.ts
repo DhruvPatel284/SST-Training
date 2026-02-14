@@ -1,4 +1,4 @@
-import { User } from 'src/users/user.entity';
+import { User } from '../users/user.entity';
 import {
   Entity,
   Column,
@@ -7,34 +7,53 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToMany
+  ManyToMany,
 } from 'typeorm';
 import { Comment } from '../comments/comment.entity';
+import { PostMedia } from './post-media.entity';
 
 @Entity()
-export class Post{
-    @PrimaryGeneratedColumn()
-    id: number
+export class Post {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    content: string
+  @Column()
+  content: string;
 
-    @ManyToOne(() => User, (user) => user.posts)
-    user:User
+  @Column({ default: true })
+  Reviewed: boolean;
 
-    @OneToMany(()=>Comment,(comment)=>comment.post)
-    comments:Comment[]
+  @ManyToOne(() => User, (user) => user.posts)
+  user: User;
 
-    @ManyToMany(()=>User,(user)=>user.likes)
-    likedBy:User[]
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @ManyToMany(() => User, (user) => user.likes)
+  likedBy: User[];
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @OneToMany(() => PostMedia, (media) => media.post, {
+    cascade: true,
+  })
+  media: PostMedia[];
 
-    commentCount?: number;
-    likeCount?: number;
-    isLikedByCurrentUser?: boolean;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  // Virtual fields
+  commentCount?: number;
+  likeCount?: number;
+  isLikedByCurrentUser?: boolean;
+  
+  // Helper getters for filtering media by type
+  get images(): PostMedia[] {
+    return this.media?.filter(m => m.type === 'image') || [];
+  }
+  
+  get videos(): PostMedia[] {
+    return this.media?.filter(m => m.type === 'video') || [];
+  }
 }

@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { User } from './users/user.entity';
 import { Post } from './posts/post.entity';
 import { Comment } from './comments/comment.entity';
+import { PostMedia } from './posts/post-media.entity';
 
 // we can't access configService directly here because this file is loaded before the AppModule
 dotenv.config();
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User, Post, Comment], // or __dirname + '/database/migrations/*.ts'
+  entities: [User, Post, Comment, PostMedia], // or __dirname + '/database/migrations/*.ts'
   migrations: [__dirname + '/database/migrations/*.ts'],
   // ssl: {  // this ssl config is needed when connecting to some cloud db providers with https
   //   rejectUnauthorized: false,

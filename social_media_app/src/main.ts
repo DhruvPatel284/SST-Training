@@ -22,7 +22,7 @@ async function bootstrap() {
   app.use(express.json());
 
   // ===== Static Files (optional) =====
-  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.useStaticAssets(join(process.cwd(), 'public'));
 
   await app.listen(3000);
 }

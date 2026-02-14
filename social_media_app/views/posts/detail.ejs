@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Post Details - Social Connect</title>
   <style>
+    /* Copy all styles from document 5, then add media display styles */
     * {
       margin: 0;
       padding: 0;
@@ -34,7 +35,7 @@
       color: var(--text-primary);
     }
 
-    /* ===== NAVIGATION ===== */
+    /* ===== NAVIGATION (same as before) ===== */
     .navbar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -170,6 +171,51 @@
       white-space: pre-wrap;
     }
 
+    /* ===== MEDIA GALLERY ===== */
+    .post-media {
+      margin-bottom: 24px;
+    }
+
+    .media-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .media-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .media-grid.double {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .media-item {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--background);
+      aspect-ratio: 4/3;
+    }
+
+    .media-item img,
+    .media-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .media-item:hover img,
+    .media-item:hover video {
+      transform: scale(1.05);
+    }
+
+    .media-item video {
+      cursor: pointer;
+    }
+
     .post-actions {
       display: flex;
       gap: 12px;
@@ -241,7 +287,7 @@
       height: 18px;
     }
 
-    /* ===== COMMENTS SECTION ===== */
+    /* ===== COMMENTS (same as before) ===== */
     .comments-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -494,6 +540,10 @@
       .btn-edit-post {
         justify-content: center;
       }
+
+      .media-grid {
+        grid-template-columns: 1fr !important;
+      }
     }
   </style>
 </head>
@@ -543,6 +593,23 @@
 
       <div class="post-content"><%= post.content %></div>
 
+      <!-- ===== MEDIA GALLERY ===== -->
+      <% if (post.media && post.media.length > 0) { %>
+        <div class="post-media">
+          <div class="media-grid <%= post.media.length === 1 ? 'single' : post.media.length === 2 ? 'double' : '' %>">
+            <% post.media.forEach(media => { %>
+              <div class="media-item">
+                <% if (media.type === 'image') { %>
+                  <img src="/uploads/posts/<%= media.filename %>" alt="Post image" loading="lazy">
+                <% } else if (media.type === 'video') { %>
+                  <video src="/uploads/posts/<%= media.filename %>" controls></video>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
       <div class="post-actions">
         <form method="POST" action="/posts/<%= post.id %>/likes" class="like-form">
           <button type="submit" class="btn-like <%= post.isLikedByCurrentUser ? 'liked' : '' %>">
@@ -559,7 +626,6 @@
           </button>
         </form>
 
-        <!-- ===== EDIT POST BUTTON (ONLY FOR OWNER) ===== -->
         <% if (post.user && post.user.id === user.userId) { %>
           <a href="/posts/<%= post.id %>/edit" class="btn-edit-post">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -571,14 +637,13 @@
       </div>
     </div>
 
-    <!-- ===== COMMENTS SECTION ===== -->
+    <!-- ===== COMMENTS SECTION (same as before) ===== -->
     <div class="comments-section">
       <div class="section-header">
         <h2>Comments</h2>
         <span class="comment-count"><%= post.comments.length %></span>
       </div>
 
-      <!-- ===== ADD COMMENT ===== -->
       <div class="add-comment">
         <h3>
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -601,7 +666,6 @@
         </form>
       </div>
 
-      <!-- ===== COMMENTS LIST ===== -->
       <% if (post.comments.length === 0) { %>
         <div class="empty-state">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,7 +698,6 @@
 
               <div class="comment-content"><%= c.comment %></div>
 
-              <!-- ===== EDIT COMMENT (ONLY OWNER) ===== -->
               <% if (c.user && c.user.id === user.userId) { %>
                 <div class="comment-actions">
                   <form

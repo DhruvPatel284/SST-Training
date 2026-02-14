@@ -29,6 +29,9 @@ export class User{
     @OneToMany(()=>Comment,(comment)=>comment.user)
     comments:Comment[]
 
+    @Column({ nullable: true })
+    profile_image?: string;
+
     @ManyToMany(()=>Post,(post)=>post.likedBy)
     @JoinTable({
       name: 'user_likes_post', 

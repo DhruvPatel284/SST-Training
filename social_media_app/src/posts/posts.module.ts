@@ -5,11 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './post.entity';
 import { UsersModule } from 'src/users/users.module';
 import { PostsWebController } from './web/posts.web.controller';
+import { PostMedia } from './post-media.entity';
 
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post,PostMedia]),
   ],
   controllers: [
     PostsController,     // API

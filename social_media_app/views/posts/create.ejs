@@ -195,6 +195,110 @@
       margin-top: 8px;
     }
 
+    /* ===== FILE UPLOAD ===== */
+    .file-upload-section {
+      margin-bottom: 24px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--background);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-label:hover {
+      border-color: var(--primary);
+      background: var(--surface-light);
+    }
+
+    .file-label svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+
+    .file-label-text {
+      flex: 1;
+    }
+
+    .file-label-title {
+      font-size: 15px;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .file-label-hint {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .file-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--background);
+      border: 1px solid var(--border);
+    }
+
+    .preview-item img,
+    .preview-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      background: rgba(239, 68, 68, 0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .preview-remove:hover {
+      background: #ef4444;
+      transform: scale(1.1);
+    }
+
+    .preview-remove svg {
+      width: 14px;
+      height: 14px;
+    }
+
     .actions {
       display: flex;
       gap: 12px;
@@ -303,6 +407,10 @@
       .actions {
         flex-direction: column;
       }
+
+      .file-preview {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
     }
   </style>
 </head>
@@ -341,7 +449,7 @@
         <p>Share your thoughts with the community</p>
       </div>
 
-      <form method="POST" action="/posts" id="postForm">
+      <form method="POST" action="/posts" id="postForm" enctype="multipart/form-data">
         <div class="form-group">
           <label for="content">What's on your mind?</label>
           <textarea 
@@ -353,6 +461,54 @@
           ></textarea>
           <div class="char-count">
             <span id="charCount">0</span> / 5000 characters
+          </div>
+        </div>
+
+        <!-- ===== IMAGE UPLOAD ===== -->
+        <div class="file-upload-section">
+          <div class="file-input-wrapper">
+            <input 
+              type="file" 
+              id="images" 
+              name="images" 
+              class="file-input" 
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              multiple
+            />
+            <label for="images" class="file-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <div class="file-label-text">
+                <div class="file-label-title">Add Images</div>
+                <div class="file-label-hint">JPEG, PNG, GIF, WebP - Max 5 MB each</div>
+              </div>
+            </label>
+            <div id="imagePreview" class="file-preview"></div>
+          </div>
+        </div>
+
+        <!-- ===== VIDEO UPLOAD ===== -->
+        <div class="file-upload-section">
+          <div class="file-input-wrapper">
+            <input 
+              type="file" 
+              id="videos" 
+              name="videos" 
+              class="file-input" 
+              accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo"
+              multiple
+            />
+            <label for="videos" class="file-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              <div class="file-label-text">
+                <div class="file-label-title">Add Videos</div>
+                <div class="file-label-hint">MP4, MPEG, QuickTime, AVI - Max 15 MB each</div>
+              </div>
+            </label>
+            <div id="videoPreview" class="file-preview"></div>
           </div>
         </div>
 
@@ -381,6 +537,7 @@
           <li>Keep it concise and engaging</li>
           <li>Add value to your community</li>
           <li>Be respectful and considerate</li>
+          <li>Images should be under 5 MB, videos under 15 MB</li>
         </ul>
       </div>
     </div>
@@ -400,6 +557,108 @@
       this.style.height = 'auto';
       this.style.height = Math.max(180, this.scrollHeight) + 'px';
     });
+
+    // Image preview
+    const imageInput = document.getElementById('images');
+    const imagePreview = document.getElementById('imagePreview');
+    let imageFiles = [];
+
+    imageInput.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      
+      files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`Image ${file.name} exceeds 5 MB limit`);
+          return;
+        }
+        imageFiles.push(file);
+      });
+
+      updateImagePreview();
+    });
+
+    function updateImagePreview() {
+      imagePreview.innerHTML = '';
+      
+      imageFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `
+            <img src="${e.target.result}" alt="Preview">
+            <button type="button" class="preview-remove" onclick="removeImage(${index})">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          `;
+          imagePreview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Update file input
+      const dataTransfer = new DataTransfer();
+      imageFiles.forEach(file => dataTransfer.items.add(file));
+      imageInput.files = dataTransfer.files;
+    }
+
+    function removeImage(index) {
+      imageFiles.splice(index, 1);
+      updateImagePreview();
+    }
+
+    // Video preview
+    const videoInput = document.getElementById('videos');
+    const videoPreview = document.getElementById('videoPreview');
+    let videoFiles = [];
+
+    videoInput.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      
+      files.forEach(file => {
+        if (file.size > 15 * 1024 * 1024) {
+          alert(`Video ${file.name} exceeds 15 MB limit`);
+          return;
+        }
+        videoFiles.push(file);
+      });
+
+      updateVideoPreview();
+    });
+
+    function updateVideoPreview() {
+      videoPreview.innerHTML = '';
+      
+      videoFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `
+            <video src="${e.target.result}" controls></video>
+            <button type="button" class="preview-remove" onclick="removeVideo(${index})">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          `;
+          videoPreview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Update file input
+      const dataTransfer = new DataTransfer();
+      videoFiles.forEach(file => dataTransfer.items.add(file));
+      videoInput.files = dataTransfer.files;
+    }
+
+    function removeVideo(index) {
+      videoFiles.splice(index, 1);
+      updateVideoPreview();
+    }
   </script>
 </body>
 </html>
