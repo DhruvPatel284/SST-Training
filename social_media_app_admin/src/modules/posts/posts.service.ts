@@ -139,7 +139,7 @@ export class PostsService {
       await this.mediaRepo.delete({ 
         post: { id },
         type: MediaType.VIDEO 
-      });
+      });    
 
       // Add new videos
       if (videoFilenames.length > 0) {
@@ -157,7 +157,7 @@ export class PostsService {
 
     return this.findOne(id);
   }
-
+                        
   async remove(id: number): Promise<Post> {
     const post = await this.findOne(id);
     // Media will cascade delete

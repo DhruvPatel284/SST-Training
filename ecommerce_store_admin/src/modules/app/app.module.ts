@@ -21,6 +21,7 @@ import { ProductsModule } from '../products/products.module';
 import { OrdersModule } from '../orders/orders.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middleware';
 
 @Module({
   imports: [
@@ -60,5 +61,6 @@ export class AppModule {
       .forRoutes('*');
 
     consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(CurrentPathMiddleware).forRoutes('*');
   }
 }

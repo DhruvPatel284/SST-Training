@@ -34,9 +34,11 @@ import { User } from '../users/user.entity';
     TypeOrmModule.forRoot(AppDataSource.options),
     TypeOrmModule.forFeature([User, Post]),
     AuthModule,
-    UsersModule,
     OauthAccessTokenModule,
-    PostsModule
+    UsersModule,
+    PostsModule,
+    // CommentsModule, 
+    // LikesModule,
   ],
   controllers: [AppController],
   providers: [
