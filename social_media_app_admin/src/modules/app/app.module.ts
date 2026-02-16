@@ -20,6 +20,7 @@ import { AppService } from './app.service';
 import { PostsModule } from '../posts/posts.module';
 import { Post } from '../posts/post.entity';
 import { User } from '../users/user.entity';
+import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middleware';
 
 @Module({
   imports: [
@@ -57,5 +58,6 @@ export class AppModule {
       .forRoutes('*');
 
     consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(CurrentPathMiddleware).forRoutes('*');
   }
 }

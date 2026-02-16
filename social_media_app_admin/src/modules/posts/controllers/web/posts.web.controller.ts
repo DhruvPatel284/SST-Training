@@ -153,10 +153,22 @@ export class PostsWebController {
     try {
       // Validate file sizes
       if (files?.images) {
-        files.images.forEach(validateFileSize);
+        files.images.forEach((file) => {
+          try {
+            validateFileSize(file);
+          } catch (error) {
+            throw new Error(`Image "${file.originalname}": ${error.message}`);
+          }
+        });
       }
       if (files?.videos) {
-        files.videos.forEach(validateFileSize);
+        files.videos.forEach((file) => {
+          try {
+            validateFileSize(file);
+          } catch (error) {
+            throw new Error(`Video "${file.originalname}": ${error.message}`);
+          }
+        });
       }
 
       // Validate content
@@ -189,7 +201,14 @@ export class PostsWebController {
       return res.redirect('/posts');
     } catch (error) {
       console.error('Create post error:', error);
-      req.flash('errors', { general: [error.message || 'Failed to create post'] });
+      
+      // Check if it's a file validation error
+      if (error.message && (error.message.includes('Image') || error.message.includes('Video'))) {
+        req.flash('errors', { media: [error.message] });
+      } else {
+        req.flash('errors', { general: [error.message || 'Failed to create post'] });
+      }
+      
       req.flash('old', body);
       return res.redirect('/posts/create');
     }
@@ -241,7 +260,6 @@ export class PostsWebController {
     @Res() res: Response,
   ) {
     try {
-      console.log("PUT Post")
       const post = await this.postsService.findOne(id);
 
       // Validate file sizes
