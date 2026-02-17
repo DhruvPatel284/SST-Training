@@ -1,4 +1,6 @@
 <%- contentFor('HeaderCss') %>
+<!-- Sweet Alert css -->
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 
 <style>
   .profile-image-preview {
@@ -68,21 +70,22 @@
               src="/uploads/users/<%= user.profile_image %>"
               alt="Profile"
               class="profile-image-preview"
+              id="current-profile-image"
             />
             <form
               action="/users/<%= user.id %>/profile-image?_method=DELETE"
               method="POST"
+              id="delete-profile-form"
               style="display: inline"
-              onsubmit="return confirm('Delete profile image?')"
             >
               <input type="hidden" name="_method" value="DELETE" />
-              <button type="submit" class="profile-image-delete">
+              <button type="button" class="profile-image-delete" id="delete-profile-btn">
                 <i class="ri-delete-bin-line"></i>
               </button>
             </form>
           </div>
           <% } else { %>
-          <div class="mb-3">
+          <div class="mb-3" id="avatar-placeholder">
             <% const initials = (user.name || '').trim().split(/\s+/).map(n => n.charAt(0)).join('').slice(0,2).toUpperCase(); %>
             <div class="avatar-xl mx-auto">
               <div class="avatar-title rounded-circle bg-primary-subtle text-primary fs-1">
@@ -91,6 +94,11 @@
             </div>
           </div>
           <% } %>
+
+          <!-- Preview for new upload -->
+          <div id="new-image-preview" class="mb-3" style="display: none;">
+            <img src="" alt="Preview" class="profile-image-preview" id="preview-img" />
+          </div>
 
           <form
             action="/users/<%= user.id %>/profile-image"
@@ -105,7 +113,6 @@
                 id="profile-image-input"
                 class="form-control"
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                required
               />
               <small class="text-muted">Max 2MB. JPEG, PNG, GIF, WebP only.</small>
             </div>
@@ -124,7 +131,6 @@
         <div class="card-header align-items-center d-flex">
           <h4 class="card-title mb-0 flex-grow-1">User Edit Form</h4>
         </div>
-
         <div class="card-body">
           <div class="live-preview">
             <form
@@ -133,73 +139,58 @@
               class="needs-validation"
               id="edit-user-form"
               novalidate
-              data-toast-text="Successfully Updated User!"
             >
-              <div class="row">
-                <div class="">
-                  <div class="mb-3">
-                    <label for="name" class="form-label">Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="name"
-                      value="<%- old ? old.name : user.name %>"
-                      placeholder="Enter your name"
-                      id="name"
-                      required
-                    />
-                    <% if (errors && errors.name) { %>
-                    <div class="text-danger"><%= errors.name[0] %></div>
-                    <% } %>
-                  </div>
-                </div>
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="name"
+                  value="<%- old ? old.name : user.name %>"
+                  placeholder="Enter your name"
+                  id="name"
+                  required
+                />
+                <% if (errors && errors.name) { %>
+                <div class="text-danger"><%= errors.name[0] %></div>
+                <% } %>
               </div>
 
-              <div class="">
-                <div class="mb-3">
-                  <label for="phoneNumber" class="form-label">Phone Number</label>
-                  <input
-                    type="tel"
-                    class="form-control"
-                    name="phoneNumber"
-                    value="<%- old ? old.phoneNumber : user.phoneNumber %>"
-                    placeholder="+(245) 451 45123"
-                    id="phoneNumber"
-                    required
-                  />
-                  <% if (errors && errors.phoneNumber) { %>
-                  <div class="text-danger"><%= errors.phoneNumber[0] %></div>
-                  <% } %>
-                </div>
+              <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  name="phoneNumber"
+                  value="<%- old ? old.phoneNumber : user.phoneNumber %>"
+                  placeholder="+(245) 451 45123"
+                  id="phoneNumber"
+                  required
+                />
+                <% if (errors && errors.phoneNumber) { %>
+                <div class="text-danger"><%= errors.phoneNumber[0] %></div>
+                <% } %>
+              </div>
 
-                <div class="">
-                  <div class="mb-3">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input
-                      type="email"
-                      class="form-control"
-                      name="email"
-                      value="<%- old ? old.email : user.email %>"
-                      placeholder="example@gamil.com"
-                      id="email"
-                      required
-                    />
-                    <% if (errors && errors.email) { %>
-                    <div class="text-danger"><%= errors.email[0] %></div>
-                    <% } %>
-                  </div>
-                </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  name="email"
+                  value="<%- old ? old.email : user.email %>"
+                  placeholder="example@gmail.com"
+                  id="email"
+                  required
+                />
+                <% if (errors && errors.email) { %>
+                <div class="text-danger"><%= errors.email[0] %></div>
+                <% } %>
+              </div>
 
-                <div class="row">
-                  <div class="col">
-                    <button type="submit" class="btn btn-primary">
-                      Update
-                    </button>
-                    <a href="/users/<%- user.id %>" class="btn btn-secondary">
-                      Cancel
-                    </a>
-                  </div>
-                </div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="/users/<%- user.id %>" class="btn btn-secondary">Cancel</a>
               </div>
             </form>
           </div>
@@ -211,16 +202,90 @@
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/prismjs/prism.js"></script>
+<!-- Sweet Alerts js -->
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
 <script>
-  // Preview image before upload
-  var profileImageInput = document.getElementById('profile-image-input');
-  if (profileImageInput) {
-    profileImageInput.addEventListener('change', function() {
+(function () {
+  var validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  var maxSize = 2 * 1024 * 1024; // 2MB
+
+  var profileInput = document.getElementById('profile-image-input');
+  var previewContainer = document.getElementById('new-image-preview');
+  var previewImg = document.getElementById('preview-img');
+
+  // ── File type & size validation on selection ───────────────────────
+  if (profileInput) {
+    profileInput.addEventListener('change', function () {
       var file = this.files[0];
-      if (file && file.size > 2 * 1024 * 1024) {
-        alert('File size exceeds 2MB');
+
+      if (!file) {
+        if (previewContainer) previewContainer.style.display = 'none';
+        return;
+      }
+
+      // Invalid file type
+      if (!validTypes.includes(file.type)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid File Type',
+          html: '<b>' + file.name + '</b> is not a valid image.<br>Please upload JPEG, PNG, GIF, or WebP only.',
+          confirmButtonColor: '#f06548',
+        });
         this.value = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+        return;
+      }
+
+      // File too large
+      if (file.size > maxSize) {
+        Swal.fire({
+          icon: 'error',
+          title: 'File Too Large',
+          html: '<b>' + file.name + '</b> exceeds the 2MB limit.<br>Please choose a smaller image.',
+          confirmButtonColor: '#f06548',
+        });
+        this.value = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+        return;
+      }
+
+      // Valid - show preview
+      if (previewImg && previewContainer) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          previewImg.src = e.target.result;
+          previewContainer.style.display = 'block';
+          // Hide current image or avatar
+          var currentImg = document.getElementById('current-profile-image');
+          var avatar = document.getElementById('avatar-placeholder');
+          if (currentImg) currentImg.style.display = 'none';
+          if (avatar) avatar.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
       }
     });
   }
+
+  // ── Delete profile image with SweetAlert confirm ───────────────────
+  var deleteBtn = document.getElementById('delete-profile-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function () {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to delete your profile image?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f06548',
+        cancelButtonColor: '#74788d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+      }).then(function (result) {
+        if (result.isConfirmed) {
+          document.getElementById('delete-profile-form').submit();
+        }
+      });
+    });
+  }
+})();
 </script>

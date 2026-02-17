@@ -24,12 +24,18 @@ import { AuthGuard } from '../../../../common/guards/auth.guard';
 import { UpdateUserDto } from '../../dtos/request/update-user.dto';
 import { UserDto } from '../../dtos/response/user.dto';
 import { UsersService } from '../../users.service';
+import { MailService } from '../../../mail/mail.service';
 import { userProfileImageConfig } from '../../config/multer.config';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersWebController {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private mailService: MailService,
+  ) {}
+
+  // ─── LIST ────────────────────────────────────────────────────────────────────
 
   @Get()
   async getUserList(
@@ -51,8 +57,12 @@ export class UsersWebController {
       title: 'User List',
       page_title: 'User DataTable',
       folder: 'User',
+      success: request.flash('success')[0] || null,
+      emailWarning: request.flash('emailWarning')[0] || null,
     });
   }
+
+  // ─── CREATE VIEW ─────────────────────────────────────────────────────────────
 
   @Get('/create')
   createUserView(@Req() req: Request, @Res() res: Response) {
@@ -60,15 +70,16 @@ export class UsersWebController {
       title: 'Create User',
       page_title: 'Create User',
       folder: 'User',
-      errors: {},
-      old: null,
+      errors: req.flash('errors')[0] || {},
+      old: req.flash('old')[0] || null,
     });
   }
+
+  // ─── SHOW ────────────────────────────────────────────────────────────────────
 
   @Get('/:id')
   async getUserById(@Param('id') id: string, @Res() res: Response) {
     const user = await this.usersService.findOne(id);
-
     if (!user) return res.redirect('/users');
 
     return res.render('pages/user/show', {
@@ -79,6 +90,8 @@ export class UsersWebController {
     });
   }
 
+  // ─── EDIT VIEW ───────────────────────────────────────────────────────────────
+
   @Get('/:id/edit')
   async editUserById(
     @Param('id') id: string,
@@ -86,7 +99,6 @@ export class UsersWebController {
     @Res() res: Response,
   ) {
     const user = await this.usersService.findOne(id);
-
     if (!user) throw new NotFoundException('User not found!');
 
     return res.render('pages/user/edit', {
@@ -101,6 +113,83 @@ export class UsersWebController {
     });
   }
 
+  // ─── CREATE ──────────────────────────────────────────────────────────────────
+
+  @Post()
+  @UseInterceptors(FileInterceptor('profile_image', userProfileImageConfig))
+  async createUser(
+    @Body()
+    body: {
+      name: string | undefined;
+      email: string | undefined;
+      phoneNumber: string | undefined;
+      password: string | undefined;
+    },
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    // ── 1. Validate required fields ──────────────────────────────────────────
+    const errors: Record<string, string[]> = {};
+
+    if (!body.name || body.name.trim() === '')
+      errors.name = ['Name is required'];
+    if (!body.email || body.email.trim() === '')
+      errors.email = ['Email is required'];
+    if (!body.phoneNumber || body.phoneNumber.trim() === '')
+      errors.phoneNumber = ['Phone number is required'];
+    if (!body.password || body.password.trim() === '')
+      errors.password = ['Password is required'];
+
+    // ── 2. Validate email format (before hitting DB or sending mail) ─────────
+    if (body.email && body.email.trim() !== '') {
+      const emailCheck = this.mailService.validateEmail(body.email);
+      if (!emailCheck.valid) {
+        errors.email = [emailCheck.message!];
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      req.flash('errors', errors);
+      req.flash('old', body);
+      return res.redirect('/users/create');
+    }
+
+    // ── 3. Persist the new user ──────────────────────────────────────────────
+    const data = {
+      name: body.name!.trim(),
+      email: body.email!.trim(),
+      phoneNumber: body.phoneNumber!.trim(),
+      password: body.password!,
+      profile_image: file?.filename,
+    };
+
+    await this.usersService.create(data);
+
+    // ── 4. Send welcome email (non-blocking — warn admin, don't fail) ────────
+    const mailResult = await this.mailService.sendWelcomeEmail({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    });
+
+    if (!mailResult.success) {
+      req.flash(
+        'emailWarning',
+        `User was created, but the welcome email could not be delivered: ${mailResult.error}`,
+      );
+    } else {
+      req.flash(
+        'success',
+        `User created and welcome email sent to ${data.email}.`,
+      );
+    }
+
+    return res.redirect('/users');
+  }
+
+  // ─── UPDATE (web form) ────────────────────────────────────────────────────────
+
   @Put('/:id/update')
   async updateUserById(
     @Param('id') id: string,
@@ -114,83 +203,59 @@ export class UsersWebController {
     @Res() res: Response,
   ) {
     try {
-      const errors: Array<object> = [];
-      if (body.name === '') {
-        errors.push({ name: 'Name should not be empty' });
+      const errors: Record<string, string[]> = {};
+
+      if (!body.name || body.name === '')
+        errors.name = ['Name should not be empty'];
+      if (!body.email || body.email === '')
+        errors.email = ['Email should not be empty'];
+      if (!body.phoneNumber || body.phoneNumber === '')
+        errors.phoneNumber = ['Phone Number should not be empty'];
+
+      if (Object.keys(errors).length > 0) {
+        req.flash('errors', errors);
+        req.flash('old', body);
+        return res.redirect(`/users/${id}/edit`);
       }
-      if (body.email === '') {
-        errors.push({ email: 'Email should not be empty' });
-      }
-      if (body.phoneNumber === '') {
-        errors.push({ phoneNumber: 'Phone Number should not be empty' });
-      }
-      const user = await this.usersService.update(id, {
+
+      await this.usersService.update(id, {
         name: body.name,
         email: body.email,
         phoneNumber: body.phoneNumber,
       });
 
-      if (!user) {
-        console.error('User not found');
-      }
+      req.flash('success', 'User updated successfully!');
       return res.redirect('/users/' + id);
     } catch (error) {
       console.error(error);
+      req.flash('errors', { general: ['Failed to update user'] });
+      return res.redirect(`/users/${id}/edit`);
     }
   }
 
-  @Post()
-  async createUser(
-    @Body()
-    body: {
-      name: string | undefined;
-      email: string | undefined;
-      phoneNumber: string | undefined;
-      password: string | undefined;
-    },
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
-    if (!body.name || !body.email || !body.phoneNumber || !body.password) {
-      const errors: Array<object> = [];
-
-      req.flash('errors', errors);
-      req.flash('old', body);
-      return res.redirect('/users/create');
-    }
-    const data = {
-      name: body.name,
-      email: body.email,
-      phoneNumber: body.phoneNumber,
-      password: body.password,
-    };
-    await this.usersService.create(data);
-    return res.redirect('/users');
-  }
+  // ─── UPDATE (API PUT) ─────────────────────────────────────────────────────────
 
   @Put('/:id')
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const data = {
+    return this.usersService.update(id, {
       email: updateUserDto.email,
       phoneNumber: updateUserDto.phoneNumber,
       name: updateUserDto.name,
-    };
-    return this.usersService.update(id, data);
+    });
   }
+
+  // ─── DELETE ───────────────────────────────────────────────────────────────────
 
   @Delete('/:id')
   async deleteUser(@Param('id') id: string, @Res() res: Response) {
-    console.log("DELETE")
     await this.usersService.remove(id);
     return res.redirect('/users');
   }
 
-  // ────────────────────────────────────────────────────────────────────
-  // Profile Image Endpoints
-  // ────────────────────────────────────────────────────────────────────
+  // ─── PROFILE IMAGE UPLOAD ─────────────────────────────────────────────────────
 
   @Post('/:id/profile-image')
   @UseInterceptors(FileInterceptor('profile_image', userProfileImageConfig))
@@ -201,27 +266,26 @@ export class UsersWebController {
     @Res() res: Response,
   ) {
     try {
-      console.log('Profile image upload for user:', id);
-      console.log('File received:', file);
-
       if (!file) {
         req.flash('error', 'No file uploaded');
         return res.redirect(`/users/${id}/edit`);
       }
-
       await this.usersService.updateProfileImage(id, file);
       req.flash('success', 'Profile image updated successfully');
       return res.redirect(`/users/${id}/edit`);
     } catch (error) {
       console.error('Profile image upload error:', error);
-      if (error instanceof BadRequestException) {
-        req.flash('error', error.message);
-      } else {
-        req.flash('error', 'Failed to upload profile image');
-      }
+      req.flash(
+        'error',
+        error instanceof BadRequestException
+          ? error.message
+          : 'Failed to upload profile image',
+      );
       return res.redirect(`/users/${id}/edit`);
     }
   }
+
+  // ─── PROFILE IMAGE DELETE ─────────────────────────────────────────────────────
 
   @Delete('/:id/profile-image')
   async deleteProfileImage(

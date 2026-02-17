@@ -1,4 +1,7 @@
 <%- contentFor('HeaderCss') %>
+<!-- Sweet Alert css -->
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 <style>
   .image-preview-container {
     display: grid;
@@ -208,7 +211,6 @@
               class="form-control"
               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
               multiple
-              required
             />
             <small class="text-muted">
               Max <%= remainingSlots %> image(s), 5MB each. JPEG, PNG, GIF, WebP only.
@@ -232,21 +234,11 @@
 </div>
 
 <!-- Delete Image Confirmation Modal -->
-<div
-  id="deleteImageModal"
-  class="modal fade zoomIn"
-  tabindex="-1"
-  aria-hidden="true"
->
+<div id="deleteImageModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <div class="mt-2 text-center">
@@ -258,28 +250,14 @@
           ></lord-icon>
           <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
             <h4>Are you sure?</h4>
-            <p class="text-muted mx-4 mb-0">
-              Are you sure you want to remove this image?
-            </p>
+            <p class="text-muted mx-4 mb-0">Are you sure you want to remove this image?</p>
             <input type="hidden" id="modal-product-id" />
             <input type="hidden" id="modal-image-id" />
           </div>
         </div>
         <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button
-            type="button"
-            class="btn w-sm btn-light"
-            data-bs-dismiss="modal"
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            class="btn w-sm btn-danger"
-            id="confirm-delete-image"
-          >
-            Yes, Delete It!
-          </button>
+          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn w-sm btn-danger" id="confirm-delete-image">Yes, Delete It!</button>
         </div>
       </div>
     </div>
@@ -287,112 +265,116 @@
 </div>
 
 <%- contentFor('FooterJs') %>
-<script>
-(function() {
-  console.log('=== Product Edit Page Script Loaded ===');
-  console.log('jQuery loaded:', typeof jQuery !== 'undefined');
-  console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
+<!-- Sweet Alerts js -->
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
-  // ── File selection preview ──────────────────────────────────────────
+<script>
+(function () {
+  var validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  var maxSize = 5 * 1024 * 1024; // 5MB
+
   var uploadForm = document.getElementById('upload-form');
   var imageInput = document.getElementById('image-input');
-  
+
+  // ── File type & size validation on selection ───────────────────────
   if (imageInput) {
-    imageInput.addEventListener('change', function() {
-      var files = this.files;
+    imageInput.addEventListener('change', function () {
       var selectedDiv = document.getElementById('selected-files');
-      
+      var files = Array.from(this.files);
+
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+
+        // Invalid file type
+        if (!validTypes.includes(file.type)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid File Type',
+            html: '<b>' + file.name + '</b> is not a valid image.<br>Please upload JPEG, PNG, GIF, or WebP only.',
+            confirmButtonColor: '#f06548',
+          });
+          this.value = '';
+          selectedDiv.innerHTML = '';
+          return;
+        }
+
+        // File too large
+        if (file.size > maxSize) {
+          Swal.fire({
+            icon: 'error',
+            title: 'File Too Large',
+            html: '<b>' + file.name + '</b> exceeds the 5MB limit.<br>Please choose a smaller image.',
+            confirmButtonColor: '#f06548',
+          });
+          this.value = '';
+          selectedDiv.innerHTML = '';
+          return;
+        }
+      }
+
+      // All valid - show file names
       if (files.length > 0) {
-        var names = Array.from(files).map(function(f) { return f.name; }).join(', ');
-        selectedDiv.innerHTML = '<div class="alert alert-success mt-2"><i class="ri-checkbox-circle-line me-1"></i>' + 
-          files.length + ' file(s) selected: ' + names + '</div>';
+        var names = files.map(function (f) { return f.name; }).join(', ');
+        selectedDiv.innerHTML =
+          '<div class="alert alert-success mt-2">' +
+          '<i class="ri-checkbox-circle-line me-1"></i>' +
+          files.length + ' file(s) selected: ' + names +
+          '</div>';
       } else {
         selectedDiv.innerHTML = '';
       }
     });
   }
-  
-  // ── Upload form validation ──────────────────────────────────────────
+
+  // ── Upload form submit guard ───────────────────────────────────────
   if (uploadForm) {
-    uploadForm.addEventListener('submit', function(e) {
-      var files = imageInput.files;
-      
-      if (files.length === 0) {
+    uploadForm.addEventListener('submit', function (e) {
+      if (!imageInput.files || imageInput.files.length === 0) {
         e.preventDefault();
-        alert('Please select at least one image');
+        Swal.fire({
+          icon: 'warning',
+          title: 'No File Selected',
+          text: 'Please select at least one image to upload.',
+          confirmButtonColor: '#f06548',
+        });
         return false;
       }
-      
-      for (var i = 0; i < files.length; i++) {
-        if (files[i].size > 5 * 1024 * 1024) {
-          e.preventDefault();
-          alert('File "' + files[i].name + '" exceeds 5MB');
-          return false;
-        }
-      }
-      
-      console.log('Submitting to:', this.action, 'with', files.length, 'files');
-      return true;
     });
   }
 
-  // ── Delete image - store IDs when modal opens ──────────────────────
-  var removeButtons = document.querySelectorAll('.remove-image-btn');
-  console.log('Found delete buttons:', removeButtons.length);
-  
-  removeButtons.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var productId = this.getAttribute('data-product-id');
-      var imageId = this.getAttribute('data-image-id');
-      console.log('Delete button clicked - Product:', productId, 'Image:', imageId);
-      document.getElementById('modal-product-id').value = productId;
-      document.getElementById('modal-image-id').value = imageId;
+  // ── Store IDs when delete modal opens ─────────────────────────────
+  document.querySelectorAll('.remove-image-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('modal-product-id').value = this.getAttribute('data-product-id');
+      document.getElementById('modal-image-id').value = this.getAttribute('data-image-id');
     });
   });
 
-  // ── Confirm delete button handler ──────────────────────────────────
+  // ── Confirm delete ─────────────────────────────────────────────────
   var confirmBtn = document.getElementById('confirm-delete-image');
-  console.log('Confirm button found:', confirmBtn !== null);
-  
   if (confirmBtn) {
-    confirmBtn.addEventListener('click', function() {
-      console.log('Confirm delete clicked');
-      
+    confirmBtn.addEventListener('click', function () {
       var productId = document.getElementById('modal-product-id').value;
       var imageId = document.getElementById('modal-image-id').value;
-      
-      console.log('Deleting - Product:', productId, 'Image:', imageId);
-      
-      if (!productId || !imageId) {
-        console.error('Missing IDs!');
-        alert('Error: Missing product or image ID');
-        return;
-      }
+
+      if (!productId || !imageId) return;
 
       // Close modal
-      var modal = document.getElementById('deleteImageModal');
-      var bsModal = bootstrap.Modal.getInstance(modal);
-      if (bsModal) {
-        bsModal.hide();
-      }
+      var bsModal = bootstrap.Modal.getInstance(document.getElementById('deleteImageModal'));
+      if (bsModal) bsModal.hide();
 
-      // Create and submit form
+      // Submit delete form
       var form = document.createElement('form');
       form.method = 'POST';
       form.action = '/products/' + productId + '/images/' + imageId + '?_method=DELETE';
-
       var input = document.createElement('input');
       input.type = 'hidden';
       input.name = '_method';
       input.value = 'DELETE';
       form.appendChild(input);
-
       document.body.appendChild(form);
-      console.log('Submitting form to:', form.action);
       form.submit();
     });
-  } else {
-    console.error('Confirm button not found!');
   }
 })();
 </script>

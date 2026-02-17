@@ -21,6 +21,7 @@ import { PostsModule } from '../posts/posts.module';
 import { Post } from '../posts/post.entity';
 import { User } from '../users/user.entity';
 import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middleware';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middl
     OauthAccessTokenModule,
     UsersModule,
     PostsModule,
+    MailModule,
     // CommentsModule, 
     // LikesModule,
   ],

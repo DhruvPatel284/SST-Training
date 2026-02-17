@@ -22,6 +22,7 @@ import { OrdersModule } from '../orders/orders.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middleware';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middl
     UsersModule,
     OauthAccessTokenModule,
     ProductsModule,
-    OrdersModule
+    OrdersModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
