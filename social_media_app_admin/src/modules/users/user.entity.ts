@@ -62,10 +62,10 @@ export class User {
   accessTokens: OAuthAccessToken[];
 
   @OneToMany(()=>Post,(post)=>post.user)
-  posts:Post[]
+  posts:Post[];
 
   @OneToMany(()=>Comment,(comment)=>comment.user)
-  comments:Comment[]
+  comments:Comment[];
 
   @ManyToMany(()=>Post,(post)=>post.likedBy)
   @JoinTable({
@@ -73,5 +73,17 @@ export class User {
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'post_id', referencedColumnName: 'id' },
   })
-  likes:Post[]
+  likes:Post[];
+
+  @ManyToMany(() => User, user => user.following)
+  @JoinTable({ name: 'user_follows' })
+  followers: User[];
+
+  @ManyToMany(() => User, user => user.followers)
+  following: User[];
+
+  // Virtual fields
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
 }

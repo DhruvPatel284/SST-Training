@@ -1,9 +1,5 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
-
 import { Response } from 'express';
-
-import { AuthGuard } from 'src/common/guards/auth.guard';
-
 import { AppService } from './app.service';
 
 @Controller()
@@ -26,19 +22,5 @@ export class AppController {
   //     message: 'Welcome to the Home Page',
   //   });
   // }
-
-  @Get()
-  @UseGuards(AuthGuard)
-  async getHomePage(@Req() req: Request, @Res() res: Response) {
-    // Get analytics data
-    const analytics = await this.appService.getAnalytics();
-
-    return res.render('index', {
-      title: 'Dashboard',
-      page_title: 'Dashboard',
-      folder: 'Dashboard',
-      analytics,
-    });
-  }
 
 }
