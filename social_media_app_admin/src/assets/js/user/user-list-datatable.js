@@ -5,7 +5,7 @@ $(document).ready(function () {
     processing: true,
     serverSide: false,
     ajax: {
-      url: '/users',
+      url: '/admin/users',
       type: 'GET',
       headers: {
         'Accept': 'application/json',

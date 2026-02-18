@@ -62,6 +62,7 @@ export class AdminPostsController {
     }
 
     return res.render('pages/admin/posts/index', {
+      layout: 'layouts/admin-layout',
       title: 'Post List',
       page_title: 'Post DataTable',
       folder: 'Post',
@@ -83,6 +84,7 @@ export class AdminPostsController {
     const successMessage = req.flash('success')[0] || null;
 
     return res.render('pages/admin/posts/show', {
+      layout: 'layouts/admin-layout',
       title: 'Post Detail',
       page_title: 'Post Detail',
       folder: 'Post',
@@ -119,6 +121,7 @@ export class AdminPostsController {
   @Get('/create')
   createPostView(@Req() req: Request, @Res() res: Response) {
     return res.render('pages/admin/posts/create', {
+      layout: 'layouts/admin-layout',
       title: 'Create Post',
       page_title: 'Create Post',
       folder: 'Post',
@@ -226,6 +229,7 @@ export class AdminPostsController {
     if (!post) throw new NotFoundException('Post not found');
 
     return res.render('pages/admin/posts/edit', {
+      layout: 'layouts/admin-layout',
       title: 'Edit Post',
       page_title: 'Edit Post',
       folder: 'Post',

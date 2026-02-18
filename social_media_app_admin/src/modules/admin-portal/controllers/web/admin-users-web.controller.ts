@@ -53,6 +53,7 @@ export class AdminUsersController {
     }
 
     return res.render('pages/admin/users/index', {
+      layout: 'layouts/admin-layout',
       title: 'User List',
       page_title: 'User DataTable',
       folder: 'User',
@@ -66,6 +67,7 @@ export class AdminUsersController {
   @Get('/create')
   createUserView(@Req() req: Request, @Res() res: Response) {
     return res.render('pages/admin/users/create', {
+      layout: 'layouts/admin-layout',
       title: 'Create User',
       page_title: 'Create User',
       folder: 'User',
@@ -82,6 +84,7 @@ export class AdminUsersController {
     if (!user) return res.redirect('/admin/users');
 
     return res.render('pages/admin/users/show', {
+      layout: 'layouts/admin-layout',
       title: 'User Detail',
       page_title: 'User Detail',
       folder: 'User',
@@ -101,6 +104,7 @@ export class AdminUsersController {
     if (!user) throw new NotFoundException('User not found!');
 
     return res.render('pages/admin/users/edit', {
+      layout: 'layouts/admin-layout',
       title: 'Edit User',
       page_title: 'Edit User',
       folder: 'User',

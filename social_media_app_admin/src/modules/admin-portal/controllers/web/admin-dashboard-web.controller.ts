@@ -7,13 +7,14 @@ import { AdminService } from '../../admin.services';
 export class AdminDashboardController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Get()
+  @Get('dashboard')
   @UseGuards(AuthGuard)
   async getHomePage(@Req() req: Request, @Res() res: Response) {
     // Get analytics data
     const analytics = await this.adminService.getAnalytics();
 
     return res.render('pages/admin/index', {
+      layout: 'layouts/admin-layout',
       title: 'Dashboard',
       page_title: 'Dashboard',
       folder: 'Dashboard',

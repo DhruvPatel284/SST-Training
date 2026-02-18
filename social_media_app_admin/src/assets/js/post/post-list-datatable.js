@@ -3,7 +3,7 @@ $(document).ready(function () {
     processing: true,
     serverSide: false,
     ajax: {
-      url: '/posts',
+      url: '/admin/posts',
       type: 'GET',
       data: { limit: 100 },
       headers: {

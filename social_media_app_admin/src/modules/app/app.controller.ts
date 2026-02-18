@@ -13,13 +13,7 @@ export class AppController {
   }
 
   @Get()
-  getHello(@Res() response: Response) {
-    return response.render('index', {
-      title: 'Home',
-      page_title: 'Home',
-      folder: 'General',
-      message: 'Welcome to the Home Page',
-    });
+  getHello(@Res() res: Response) {
+    return res.send("this is home Page");
   }
-
 }
