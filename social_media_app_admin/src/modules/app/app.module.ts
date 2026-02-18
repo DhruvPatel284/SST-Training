@@ -22,6 +22,8 @@ import { Post } from '../posts/post.entity';
 import { User } from '../users/user.entity';
 import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middleware';
 import { MailModule } from '../mail/mail.module';
+import { UserPortalModule } from '../user-portal/user-portal.module';
+import { AdminPortalModule } from '../admin-portal/admin-portal.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { MailModule } from '../mail/mail.module';
     UsersModule,
     PostsModule,
     MailModule,
+    UserPortalModule,
+    AdminPortalModule
     // CommentsModule, 
     // LikesModule,
   ],

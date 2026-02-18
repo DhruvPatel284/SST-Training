@@ -11,6 +11,9 @@ export class CurrentPathMiddleware implements NestMiddleware {
         if (url === '/') {
             return req.path === '/';
         }
+        if (url === '/admin') {
+          return req.path === '/admin';
+        }
       return req.path.startsWith(url);
     };
 

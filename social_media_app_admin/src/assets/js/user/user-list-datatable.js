@@ -71,12 +71,12 @@ $(document).ready(function () {
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <a href="/users/${row.id}" class="dropdown-item">
+                  <a href="/admin/users/${row.id}" class="dropdown-item">
                     <i class="ri-eye-fill align-bottom me-2 text-muted"></i> View
                   </a>
                 </li>
                 <li>
-                  <a href="/users/${row.id}/edit" class="dropdown-item">
+                  <a href="/admin/users/${row.id}/edit" class="dropdown-item">
                     <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
                   </a>
                 </li>
@@ -131,7 +131,7 @@ $(document).ready(function () {
 
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = `/users/${userId}?_method=DELETE`;
+    form.action = `/admin/users/${userId}?_method=DELETE`;
 
     const input = document.createElement('input');
     input.type = 'hidden';

@@ -103,7 +103,7 @@ $(document).ready(function () {
         width: '80px',
         render: function (data, type, row) {
           return `
-            <a href="/posts/${row.id}" class="btn btn-sm btn-soft-primary">
+            <a href="/admin/posts/${row.id}" class="btn btn-sm btn-soft-primary">
               <i class="ri-eye-fill align-middle"></i> View
             </a>
           `;
