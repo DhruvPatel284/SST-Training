@@ -51,12 +51,15 @@ export class LoginController {
         body.password,
       );
 
-      if (user && user.role === UserRole.Admin) {
+      if (user) {
         session.userId = user.id;
         req.flash('toast', {
           message: { type: 'success', message: 'Login Successful' },
         });
-        return res.redirect('/');
+        if(user.role === UserRole.Admin){
+          return res.redirect('/admin');
+        }
+        return res.redirect('/user');
       } else {
         throw new ForbiddenException('You do not have access to Admin portal');
       }

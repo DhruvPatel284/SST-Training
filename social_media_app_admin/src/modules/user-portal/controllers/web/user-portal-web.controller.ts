@@ -1,4 +1,10 @@
-import { Controller } from '@nestjs/common';
+import { Get, Controller } from '@nestjs/common';
 
-@Controller('user-portal')
-export class UserPortalController {}
+@Controller('user')
+export class UserPortalController {
+    @Get()
+    hello(){
+        console.log("hello")
+        return "hello"
+    }
+}
