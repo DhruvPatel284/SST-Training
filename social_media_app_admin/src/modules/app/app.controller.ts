@@ -12,15 +12,14 @@ export class AppController {
     return response.status(200).json('ok');
   }
 
-  // @Get()
-  
-  // getHello(@Res() response: Response) {
-  //   return response.render('index', {
-  //     title: 'Home',
-  //     page_title: 'Home',
-  //     folder: 'General',
-  //     message: 'Welcome to the Home Page',
-  //   });
-  // }
+  @Get()
+  getHello(@Res() response: Response) {
+    return response.render('index', {
+      title: 'Home',
+      page_title: 'Home',
+      folder: 'General',
+      message: 'Welcome to the Home Page',
+    });
+  }
 
 }

@@ -80,6 +80,17 @@ export class UsersService {
 
     return this.repo.softRemove(user);
   }
+
+  async findOneByVerificationToken(token) {
+    if(!token){
+      throw new NotFoundException('Token Not Found');
+    }
+    return await this.repo.findOne({
+      where:{
+        verificationToken: token
+      }
+    })
+  }
 // ────────────────────────────────────────────────────────────────────
   // Profile Image Management
   // ────────────────────────────────────────────────────────────────────

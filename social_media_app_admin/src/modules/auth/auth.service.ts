@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
   Request,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -10,13 +11,14 @@ import * as bcryptjs from 'bcryptjs';
 import admin from 'firebase-admin';
 
 import { OauthAccessTokenService } from '../oauth-access-token/oauth-access-token.service';
-import { User } from '../users/user.entity';
+import { User, UserRole } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dtos/request/change-password.dto';
 import { LoginDto } from './dtos/request/login.dto';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
 
 const scrypt = promisify(_scrypt);
 
@@ -26,7 +28,8 @@ export class AuthService {
     private usersService: UsersService,
     private configService: ConfigService,
     private accessTokenService: OauthAccessTokenService,
-    private jwtService : JwtService,
+    private jwtService: JwtService,
+    private mailService: MailService,
   ) {
     // Uncomment on use
     // if (!admin.apps.length) {
@@ -39,41 +42,130 @@ export class AuthService {
     //   });
     // }
   }
-  async generatejwt(id:string,email:string , userRole : string){
+
+  async generatejwt(id: string, email: string, userRole: string) {
     const tokenPayload = {
-      sub:id,
-      email:email,
-      role : userRole
-    }
+      sub: id,
+      email: email,
+      role: userRole,
+    };
     return await this.jwtService.signAsync(tokenPayload);
   }
 
-  async signup(@Request() req,email: string, password: string , name?: string ) {
-    
-    // const users = await this.usersService.findOneByEmail(email);
-    // if (users) {
-    //   throw new BadRequestException('email is already in use');
-    // }
+  // ─── SIGNUP WITH EMAIL VERIFICATION ──────────────────────────────────────────
+  async signup(
+    @Request() req,
+    email: string,
+    password: string,
+    name: string,
+  ) {
+    // Check if email already exists
+    const existingUser = await this.usersService.findOneByEmail(email).catch(() => null);
+    if (existingUser) {
+      throw new BadRequestException('Email is already in use');
+    }
 
+    // Hash password
     const salt = randomBytes(8).toString('hex');
-
     const hash = (await scrypt(password, salt, 32)) as Buffer;
+    const hashedPassword = salt + '.' + hash.toString('hex');
 
-    const result = salt + '.' + hash.toString('hex');
+    // Generate verification token (32 random bytes)
+    const verificationToken = randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date();
+    verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24); // 24 hour expiry
 
-    const user = await this.usersService.create({name,email, password:result});
-    const accessToken = await this.generatejwt(user.id,user.email,user.role);
-    Object.assign(user,{
-        accessToken
-    })
-    req.session.accessToken = accessToken;
+    // Create user with emailVerified = false
+    const user = await this.usersService.create({
+      name,
+      email,
+      password: hashedPassword,
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiry,
+      role: UserRole.User, // default role
+    });
+
+    // Send verification email
+    const verificationUrl = `${this.configService.get('APP_URL') || 'http://localhost:3001'}/verify/${verificationToken}`;
+    
+    await this.mailService.sendVerificationEmail({
+      name: user.name,
+      email: user.email,
+      verificationUrl,
+    });
+
     return user;
   }
 
+  // ─── VERIFY EMAIL TOKEN ──────────────────────────────────────────────────────
+  async verifyEmail(token: string): Promise<User> {
+    const user = await this.usersService.findOneByVerificationToken(token);
+
+    if (!user) {
+      throw new NotFoundException('Invalid or expired verification link');
+    }
+    if (!user.verificationToken){
+      throw new NotFoundException('Verification Token Not Found');
+    }
+    if (!user.verificationTokenExpiry){
+      throw new NotFoundException('Verification Token Expiry Not Found');
+    }
+
+    // Check if token is expired
+    if (user.verificationTokenExpiry < new Date()) {
+      throw new BadRequestException('Verification link has expired. Please request a new one.');
+    }
+
+    // Mark email as verified
+    user.emailVerified = true;
+    user.verificationToken =  '';
+    user.verificationTokenExpiry = undefined;
+
+    await this.usersService.update(user.id, {
+      emailVerified: true,
+      verificationToken: '',
+      verificationTokenExpiry: undefined,
+    });
+
+    return user;
+  }
+
+  // ─── RESEND VERIFICATION EMAIL ───────────────────────────────────────────────
+  async resendVerificationEmail(email: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    // Generate new token
+    const verificationToken = randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date();
+    verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24);
+
+    await this.usersService.update(user.id, {
+      verificationToken,
+      verificationTokenExpiry,
+    });
+
+    // Send email
+    const verificationUrl = `${this.configService.get('APP_URL') || 'http://localhost:3001'}/auth/verify/${verificationToken}`;
+    
+    await this.mailService.sendVerificationEmail({
+      name: user.name,
+      email: user.email,
+      verificationUrl,
+    });
+  }
+
+  // ─── LOGIN (OLD METHOD) ──────────────────────────────────────────────────────
   async login(input: LoginDto) {
     const firebaseUser = await admin.auth().verifyIdToken(input.firebaseToken);
-
-    // if (!firebaseUser) throw new NotFoundException('Invalid Credentials.');
 
     const user = await this.usersService.findOneOrCreateByFirebaseUid(
       firebaseUser.uid,
@@ -90,11 +182,24 @@ export class AuthService {
     return userWithToken;
   }
 
+  // ─── VALIDATE USER (FOR LOGIN) ───────────────────────────────────────────────
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) return null;
-    // const matches = await bcryptjs.compare(password, user.password);
-    // if (!matches) return null;
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      throw new BadRequestException('Please verify your email before logging in');
+    }
+
+    // Verify password
+    const [salt, storedHash] = user.password.split('.');
+    const hash = (await scrypt(password, salt, 32)) as Buffer;
+    
+    if (storedHash !== hash.toString('hex')) {
+      return null;
+    }
+
     return user;
   }
 
@@ -111,23 +216,24 @@ export class AuthService {
     password: string,
     newPassword: string | null = null,
   ) {
-    /*
-    This method returns hashed newPassword when passed else hashed of password 
-    */
-    const matches = await bcryptjs.compare(password, user.password);
-    if (!matches) {
+    const [salt, storedHash] = user.password.split('.');
+    const hash = (await scrypt(password, salt, 32)) as Buffer;
+    
+    if (storedHash !== hash.toString('hex')) {
       throw new UnauthorizedException('Password is invalid !!!');
     }
+
     if (newPassword) {
-      const newHash = await bcryptjs.hash(newPassword, 10);
-      return newHash;
+      const newSalt = randomBytes(8).toString('hex');
+      const newHash = (await scrypt(newPassword, newSalt, 32)) as Buffer;
+      return newSalt + '.' + newHash.toString('hex');
     }
+
     return user.password;
   }
 
   async removeUser(userId: string) {
     await this.usersService.remove(userId);
-
     return { message: 'User Successfully Removed!!!' };
   }
 

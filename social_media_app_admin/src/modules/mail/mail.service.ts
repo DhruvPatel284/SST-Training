@@ -11,6 +11,11 @@ export interface MailResult {
   success: boolean;
   error?: string;
 }
+export interface VerificationMailPayload {
+  name: string;
+  email: string;
+  verificationUrl: string;
+}
 
 // Simple regex — good enough for admin-submitted emails; catches obvious bad formats
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -65,6 +70,33 @@ export class MailService {
       return { success: false, error: friendly };
     }
   }
+
+  async sendVerificationEmail(payload: VerificationMailPayload): Promise<MailResult> {
+  const validation = this.validateEmail(payload.email);
+  if (!validation.valid) {
+    return { success: false, error: validation.message };
+  }
+
+  try {
+    await this.mailerService.sendMail({
+      to: payload.email,
+      subject: 'Verify Your Email Address',
+      template: 'verify',
+      context: {
+        name: payload.name,
+        email: payload.email,
+        verificationUrl: payload.verificationUrl,
+      },
+    });
+
+    this.logger.log(`Verification email sent to ${payload.email}`);
+    return { success: true };
+  } catch (error) {
+    this.logger.error(`Failed to send verification email`, error);
+    const friendly = this.friendlySmtpError(error, payload.email);
+    return { success: false, error: friendly };
+  }
+}
 
   // ─── Translate SMTP errors into admin-friendly messages ──────────────────────
   private friendlySmtpError(error: any, email: string): string {

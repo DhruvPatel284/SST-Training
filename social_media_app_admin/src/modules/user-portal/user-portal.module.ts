@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { UserPortalController } from './controllers/web/user-portal-web.controller';
+import { UserDashboardController } from './controllers/web/user-dashboard-web.controller';
 
 @Module({
-  controllers: [UserPortalController]
+  controllers: [UserDashboardController]
 })
 export class UserPortalModule {}

@@ -11,11 +11,12 @@ import { LoginController } from './controllers/web/login.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   controllers: [AuthWebController, AuthApiController, LoginController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  imports: [ConfigModule, UsersModule, PassportModule, OauthAccessTokenModule,
+  imports: [ConfigModule, UsersModule, PassportModule, MailModule, OauthAccessTokenModule,
     JwtModule.register({
       global: true,
       secret: 'hi' ,

@@ -29,6 +29,15 @@ export class User {
   @Column()
   name: string;
 
+  @Column({ default: false }) 
+  emailVerified: boolean;
+
+  @Column({ nullable: true })
+  verificationToken?: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  verificationTokenExpiry?: Date;
+
   @Column({ nullable : true})
   phoneNumber?: string;
 
