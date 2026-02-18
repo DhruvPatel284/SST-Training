@@ -154,7 +154,7 @@ export class AuthService {
     });
 
     // Send email
-    const verificationUrl = `${this.configService.get('APP_URL') || 'http://localhost:3001'}/auth/verify/${verificationToken}`;
+    const verificationUrl = `${this.configService.get('APP_URL') || 'http://localhost:3001'}/verify/${verificationToken}`;
     
     await this.mailService.sendVerificationEmail({
       name: user.name,
