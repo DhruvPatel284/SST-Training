@@ -7,6 +7,26 @@
   #user-table_filter {
     float: right;
   }
+
+  /* Always show sort arrows on the RIGHT side of the header text,
+     regardless of column data type (numeric columns default to left) */
+  #user-table thead th {
+    text-align: left;
+  }
+  #user-table thead th.sorting::after,
+  #user-table thead th.sorting_asc::after,
+  #user-table thead th.sorting_desc::after,
+  #user-table thead th.sorting_asc_disabled::after,
+  #user-table thead th.sorting_desc_disabled::after {
+    right: 8px;
+    left: auto;
+  }
+  /* Remove the left-side arrow that numeric columns add */
+  #user-table thead th.sorting::before,
+  #user-table thead th.sorting_asc::before,
+  #user-table thead th.sorting_desc::before {
+    display: none;
+  }
 </style>
 <link
   href="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.css"

@@ -1,6 +1,6 @@
 $(document).ready(function () {
   console.log('Initializing user DataTable...');
-  
+
   var table = $('#user-table').DataTable({
     processing: true,
     serverSide: false,
@@ -12,10 +12,7 @@ $(document).ready(function () {
         'X-Requested-With': 'XMLHttpRequest'
       },
       data: function (d) {
-        return {
-          limit: 1000,
-          page: 1
-        };
+        return { limit: 1000, page: 1 };
       },
       dataSrc: function (json) {
         console.log('Users data received:', json);
@@ -27,31 +24,33 @@ $(document).ready(function () {
       }
     },
     columns: [
-      { 
+      {
         data: 'id',
         title: 'ID',
-        width: '8%'
+        width: '8%',
       },
-      { 
+      {
         data: 'name',
         title: 'Name',
         width: '20%'
       },
-      { 
+      {
         data: 'email',
         title: 'Email',
         width: '25%'
       },
-      { 
+      {
         data: 'phoneNumber',
         title: 'Phone Number',
         width: '15%',
+        className: 'dt-left'
       },
-      { 
+      {
         data: 'createdAt',
         title: 'Created At',
         width: '15%',
-        render: function(data, type, row) {
+        type: 'string',
+        render: function (data, type, row) {
           if (type === 'display' || type === 'filter') {
             return new Date(data).toLocaleDateString();
           }
@@ -66,7 +65,7 @@ $(document).ready(function () {
         render: function (data, type, row) {
           return `
             <div class="dropdown d-inline-block">
-              <button class="btn btn-soft-secondary btn-sm" type="button" 
+              <button class="btn btn-soft-secondary btn-sm" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="ri-more-fill align-middle"></i>
               </button>
@@ -118,32 +117,29 @@ $(document).ready(function () {
     }
   });
 
-  console.log('DataTable initialized:', table);
-
-  // Delete user with SweetAlert2
-  // ── Delete via modal ────────────────────────────────────────────────
+  // ── Delete via modal ──────────────────────────────────────────────────────────
   $(document).on('click', '.remove-item-btn', function (e) {
-      e.preventDefault();
-      const userId = $(this).data('user-id');
-      $('#modal-row-id').val(userId);
+    e.preventDefault();
+    const userId = $(this).data('user-id');
+    $('#modal-row-id').val(userId);
   });
 
   $('#delete-form').on('submit', function (e) {
-      e.preventDefault();
-      const userId = $('#modal-row-id').val();
-      if (!userId) return;
+    e.preventDefault();
+    const userId = $('#modal-row-id').val();
+    if (!userId) return;
 
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = `/users/${userId}?_method=DELETE`;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/users/${userId}?_method=DELETE`;
 
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = '_method';
-      input.value = 'DELETE';
-      form.appendChild(input);
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = '_method';
+    input.value = 'DELETE';
+    form.appendChild(input);
 
-      document.body.appendChild(form);
-      form.submit();
-   });
+    document.body.appendChild(form);
+    form.submit();
+  });
 });

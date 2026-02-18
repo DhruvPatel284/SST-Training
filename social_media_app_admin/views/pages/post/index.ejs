@@ -1,11 +1,33 @@
 <%- contentFor('HeaderCss') %>
 
+<!-- Sweet Alert css-->
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 <style>
   #post-table_filter {
     float: right;
   }
   .badge-reviewed   { background-color: #0ab39c; }
   .badge-unreviewed { background-color: #f06548; }
+
+  /* Always show sort arrows on the RIGHT side of the header text */
+  #post-table thead th {
+    text-align: left;
+  }
+  #post-table thead th.sorting::after,
+  #post-table thead th.sorting_asc::after,
+  #post-table thead th.sorting_desc::after,
+  #post-table thead th.sorting_asc_disabled::after,
+  #post-table thead th.sorting_desc_disabled::after {
+    right: 8px;
+    left: auto;
+  }
+  /* Remove the left-side arrow that numeric columns add */
+  #post-table thead th.sorting::before,
+  #post-table thead th.sorting_asc::before,
+  #post-table thead th.sorting_desc::before {
+    display: none;
+  }
 </style>
 <link
   href="https://cdn.datatables.net/v/bs/jszip-3.10.1/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/b-html5-3.2.5/b-print-3.2.5/r-3.0.7/datatables.min.css"
@@ -21,6 +43,9 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Posts Datatables</h5>
+        <a href="/posts/create" class="btn btn-primary">
+          <i class="ri-add-line me-1"></i> Create Post
+        </a>
       </div>
       <div class="card-body">
         <table
@@ -55,5 +80,8 @@
   integrity="sha384-EO08psVcLyX54tIlein7GJuWRT/5Y+R8UmjGGrRvzeETg9fLADlsAMA5T3j4pd2R"
   crossorigin="anonymous"
 ></script>
+
+<!-- Sweet Alerts js -->
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 <script src="/assets/js/post/post-list-datatable.js"></script>
