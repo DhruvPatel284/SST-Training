@@ -5,9 +5,10 @@ import { Post } from './post.entity';
 import { PostMedia } from './post-media.entity';
 import { PostsService } from './posts.service';
 import { PostsWebController } from './controllers/web/posts.web.controller';
+import { User } from '../users/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, PostMedia])],
+  imports: [TypeOrmModule.forFeature([Post, PostMedia,User])],
   controllers: [PostsWebController],
   providers: [PostsService],
   exports: [PostsService],

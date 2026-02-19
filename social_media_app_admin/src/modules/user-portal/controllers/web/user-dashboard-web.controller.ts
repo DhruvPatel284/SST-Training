@@ -1,20 +1,63 @@
 import { Get, Controller, UseGuards, Req, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { PostsService } from 'src/modules/posts/posts.service';
+import { UsersService } from 'src/modules/users/users.service';
+import { In } from 'typeorm';
 
-@Controller('user')
+@Controller('user/dashboard')
 export class UserDashboardController {
-    @Get('dashboard')
-    @UseGuards(AuthGuard)
-    async getHomePage(@Req() req: Request, @Res() res: Response) {
-        // Get analytics data
-        //const analytics = await this.adminService.getAnalytics();
+  constructor(
+    private postsService: PostsService,
+    private usersService: UsersService,
+  ) {}
 
-        return res.render('pages/user/index', {
-            layout: 'layouts/user-layout',
-            title: 'Dashboard',
-            page_title: 'Dashboard',
-            folder: 'Dashboard',
-        });
+  @Get()
+  @UseGuards(AuthGuard)
+  async getHomePage(@Req() req: Request, @Res() res: Response) {
+    try {
+      const userId = req.session?.userId;
+      if(!userId){
+        return null;
+      }
+
+      // 1. Get current user with following list
+      const currentUser = await this.usersService.findOne(userId);
+
+      if (!currentUser) {
+        return res.redirect('/login');
+      }
+
+      // 2. Get IDs of users the current user follows
+      const following = await this.usersService.getFollowing(userId);
+      const followingIds = following.map((user) => user.id);
+
+      // 3. Get initial feed posts (paginated - first 10 posts)
+      const feedResult = await this.postsService.getFeedPaginated(
+        userId,
+        followingIds,
+        1, // page
+        10, // limit
+      );
+
+      // 4. Get statistics for user
+      const stats = await this.usersService.getUserStats(userId);
+
+      return res.render('pages/user/index', {
+        layout: 'layouts/user-layout',
+        title: 'Home',
+        page_title: 'Home',
+        folder: 'Dashboard',
+        user: currentUser,
+        posts: feedResult.posts,
+        stats: stats,
+        unreadCount: 0, // TODO: integrate notifications
+        hasMore: feedResult.hasMore,
+      });
+    } catch (error) {
+      console.error('Dashboard error:', error);
+      req.flash('errors', 'Failed to load dashboard');
+      return res.redirect('/login');
     }
+  }
 }

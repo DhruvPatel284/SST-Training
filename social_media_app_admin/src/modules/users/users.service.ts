@@ -138,4 +138,66 @@ export class UsersService {
       fs.unlinkSync(filePath);
     }
   }
+
+  async getFollowing(userId: string) {
+  const user = await this.repo.findOne({
+    where: { id: userId },
+    relations:{
+      following: true
+    },
+  });
+  return user?.following || [];
+}
+
+/**
+ * Get list of users that follow a user
+ * @param userId - User ID
+ * @returns Array of users
+ */
+async getFollowers(userId: string) {
+  const user = await this.repo.findOne({
+    where: { id: userId },
+    relations: ['followers'],
+  });
+
+  return user?.followers || [];
+}
+
+/**
+ * Check if user A follows user B
+ * @param followerId - User A's ID
+ * @param followingId - User B's ID
+ * @returns boolean
+ */
+async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  const user = await this.repo.findOne({
+    where: { id: followerId },
+    relations: ['following'],
+  });
+
+  if (!user) return false;
+
+  return user.following.some((followed) => followed.id === followingId);
+}
+
+/**
+ * Get user statistics (posts, followers, following counts)
+ * @param userId - User ID
+ */
+async getUserStats(userId: string) {
+  const user = await this.repo.findOne({
+    where: { id: userId },
+    relations: ['posts', 'followers', 'following'],
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  return {
+    postsCount: user.posts?.length || 0,
+    followersCount: user.followers?.length || 0,
+    followingCount: user.following?.length || 0,
+  };
+}
 }
