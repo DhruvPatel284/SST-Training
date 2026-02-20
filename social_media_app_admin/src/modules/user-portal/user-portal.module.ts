@@ -6,6 +6,7 @@ import { UserPostsController } from './controllers/web/user-post-web.controller'
 import { CommentsModule } from '../comments/comments.module';
 import { UserSearchController } from './controllers/web/user-search-web.controller';
 import { FollowsModule } from '../follows/follows.module';
+import { UserProfileController } from './controllers/web/user-profile-web.controller';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { FollowsModule } from '../follows/follows.module';
   controllers: [
     UserDashboardController,
     UserPostsController,
-    UserSearchController
+    UserSearchController,
+    UserProfileController
   ]
 })
 export class UserPortalModule {}

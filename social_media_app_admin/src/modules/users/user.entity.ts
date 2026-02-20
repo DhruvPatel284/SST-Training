@@ -56,6 +56,9 @@ export class User {
   @Column({ nullable: true })
   profile_image?: string;
 
+  @Column({ nullable: true }) 
+  bio: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

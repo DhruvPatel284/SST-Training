@@ -269,4 +269,14 @@ export class UsersService {
     return users;
   }
 
+  /**
+   * Get user with all relations for profile page
+   */
+  async findOneForProfile(userId: string) {
+    return await this.repo.findOne({
+      where: { id: userId },
+      relations: ['posts', 'posts.media', 'followers', 'following'],
+    });
+  }
+
 }

@@ -1,0 +1,328 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<style>
+  .profile-cover {
+    height: 200px;
+    background: linear-gradient(135deg, #405189 0%, #0ab39c 100%);
+    position: relative;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+  }
+  .profile-avatar-wrapper {
+    position: absolute;
+    bottom: -60px;
+    left: 30px;
+  }
+  .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    object-fit: cover;
+    background: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+  .avatar-circle-profile {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .post-grid-item {
+    position: relative;
+    padding-top: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .post-grid-item img,
+  .post-grid-item video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .post-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 1.2rem;
+  }
+  .post-grid-item:hover img,
+  .post-grid-item:hover video {
+    transform: scale(1.05);
+  }
+  .post-grid-item:hover .post-overlay {
+    opacity: 1;
+  }
+</style>
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="profile-cover">
+        <div class="profile-avatar-wrapper">
+          <% if (profileUser.profile_image) { %>
+            <img src="/uploads/users/<%= profileUser.profile_image %>" class="profile-avatar-large" alt="<%= profileUser.name %>">
+          <% } else { %>
+            <div class="avatar-circle-profile bg-info-subtle text-info">
+              <%= profileUser.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <div class="card-body pt-0 pt-sm-4">
+        <div class="d-flex justify-content-end mt-3 mt-sm-0 mb-4">
+          <button 
+            class="btn <%= isFollowing ? 'btn-success' : 'btn-primary' %> follow-btn"
+            id="followBtn"
+            data-user-id="<%= profileUser.id %>"
+            data-following="<%= isFollowing %>"
+            onclick="toggleFollow()"
+          >
+            <% if (isFollowing) { %>
+              <i class="ri-user-follow-line align-bottom me-1"></i> Following
+            <% } else { %>
+              <i class="ri-user-add-line align-bottom me-1"></i> Follow
+            <% } %>
+          </button>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6">
+            <h4 class="mb-1"><%= profileUser.name %></h4>
+            <p class="text-muted mb-3"><i class="ri-mail-line align-bottom me-1"></i><%= profileUser.email %></p>
+            <% if (profileUser.bio) { %>
+              <p class="mb-0 text-muted"><%= profileUser.bio %></p>
+            <% } %>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="row text-center mt-4 mt-lg-0">
+              <div class="col-4 border-end border-end-dashed">
+                <h4 class="mb-1 fs-20"><%= stats.postsCount %></h4>
+                <p class="text-muted mb-0 fs-13">Posts</p>
+              </div>
+              <div class="col-4 border-end border-end-dashed">
+                <a href="javascript:void(0);" class="text-body" onclick="showFollowers('<%= profileUser.id %>')">
+                  <h4 class="mb-1 fs-20"><%= stats.followersCount %></h4>
+                  <p class="text-muted mb-0 fs-13">Followers</p>
+                </a>
+              </div>
+              <div class="col-4">
+                <a href="javascript:void(0);" class="text-body" onclick="showFollowing('<%= profileUser.id %>')">
+                  <h4 class="mb-1 fs-20"><%= stats.followingCount %></h4>
+                  <p class="text-muted mb-0 fs-13">Following</p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header align-items-center d-flex">
+        <h5 class="card-title mb-0 flex-grow-1"><%= profileUser.name.split(' ')[0] %>'s Posts</h5>
+      </div>
+      
+      <div class="card-body">
+        <% if (isFollowing) { %>
+          <% if (posts && posts.length > 0) { %>
+            <div class="post-grid">
+              <% posts.forEach(function(post) { %>
+                <div class="post-grid-item" onclick="viewPost(<%= post.id %>)">
+                  <% if (post.media && post.media.length > 0) { %>
+                    <% const firstMedia = post.media[0]; %>
+                    <% if (firstMedia.type === 'image') { %>
+                      <img src="/uploads/posts/<%= firstMedia.filename %>" alt="Post">
+                    <% } else { %>
+                      <video muted>
+                        <source src="/uploads/posts/<%= firstMedia.filename %>" type="video/mp4">
+                      </video>
+                    <% } %>
+                  <% } else { %>
+                    <div class="bg-light d-flex align-items-center justify-content-center h-100 w-100 position-absolute top-0 start-0">
+                      <i class="ri-article-line text-muted opacity-50" style="font-size: 48px;"></i>
+                    </div>
+                  <% } %>
+                  <div class="post-overlay rounded">
+                    <div class="text-center">
+                      <span class="me-3"><i class="ri-heart-fill me-1 align-middle"></i> <%= post.likeCount %></span>
+                      <span><i class="ri-chat-3-fill me-1 align-middle"></i> <%= post.commentCount %></span>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <lord-icon src="https://cdn.lordicon.com/nocovwne.json" trigger="loop" colors="primary:#405189" style="width:100px;height:100px"></lord-icon>
+              <h5 class="mt-3">No posts yet</h5>
+              <p class="text-muted"><%= profileUser.name.split(' ')[0] %> hasn't shared any posts.</p>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="text-center py-5">
+            <lord-icon src="https://cdn.lordicon.com/vusqmlgp.json" trigger="loop" colors="primary:#405189" style="width:100px;height:100px"></lord-icon>
+            <h5 class="mt-3">This Account is Private</h5>
+            <p class="text-muted">Follow <%= profileUser.name.split(' ')[0] %> to see their posts.</p>
+            <button class="btn btn-primary mt-3" onclick="toggleFollow()">
+              <i class="ri-user-add-line align-bottom me-1"></i> Follow
+            </button>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// ─── TOGGLE FOLLOW/UNFOLLOW ─────────────────────────────────────────────────
+async function toggleFollow() {
+  const button = document.getElementById('followBtn');
+  const userId = button.dataset.userId;
+  const isFollowing = button.dataset.following === 'true';
+
+  try {
+    button.disabled = true;
+
+    const response = await fetch(`/user/search/${userId}/follow`, {
+      method: isFollowing ? 'DELETE' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      // Reload page to show/hide posts
+      location.reload();
+    } else {
+      const error = await response.json();
+      Swal.fire('Error', error.error || 'Failed to update follow status', 'error');
+    }
+  } catch (error) {
+    console.error('Follow error:', error);
+    Swal.fire('Error', 'Failed to update follow status', 'error');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// ─── VIEW POST ───────────────────────────────────────────────────────────────
+function viewPost(postId) {
+  // Redirect to post detail page (to be implemented)
+  window.location.href = `/user/posts/${postId}`;
+}
+
+// ─── SHOW FOLLOWERS LIST ─────────────────────────────────────────────────────
+function showFollowers(userId) {
+  fetch(`/user/profile/followers/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        let html = '<div class="list-group list-group-flush">';
+        data.followers.forEach(user => {
+          html += `
+            <a href="/user/profile/${user.id}" class="list-group-item list-group-item-action">
+              <div class="d-flex align-items-center">
+                ${user.profile_image 
+                  ? `<img src="/uploads/users/${user.profile_image}" class="rounded-circle me-3 object-fit-cover" width="45" height="45">`
+                  : `<div class="rounded-circle bg-primary-subtle text-primary me-3 shadow-sm" style="width:45px;height:45px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">${user.name.charAt(0).toUpperCase()}</div>`
+                }
+                <div class="text-start">
+                  <div class="fw-semibold text-body mb-0">${user.name}</div>
+                  <small class="text-muted">${user.email}</small>
+                </div>
+              </div>
+            </a>
+          `;
+        });
+        html += '</div>';
+        
+        Swal.fire({
+          title: `<h5 class="fs-18 mb-0">Followers (${data.followers.length})</h5>`,
+          html: html,
+          width: 500,
+          showCloseButton: true,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'card'
+          }
+        });
+      }
+    });
+}
+
+// ─── SHOW FOLLOWING LIST ─────────────────────────────────────────────────────
+function showFollowing(userId) {
+  fetch(`/user/profile/following/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        let html = '<div class="list-group list-group-flush">';
+        data.following.forEach(user => {
+          html += `
+            <a href="/user/profile/${user.id}" class="list-group-item list-group-item-action">
+              <div class="d-flex align-items-center">
+                ${user.profile_image 
+                  ? `<img src="/uploads/users/${user.profile_image}" class="rounded-circle me-3 object-fit-cover" width="45" height="45">`
+                  : `<div class="rounded-circle bg-primary-subtle text-primary me-3 shadow-sm" style="width:45px;height:45px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">${user.name.charAt(0).toUpperCase()}</div>`
+                }
+                <div class="text-start">
+                  <div class="fw-semibold text-body mb-0">${user.name}</div>
+                  <small class="text-muted">${user.email}</small>
+                </div>
+              </div>
+            </a>
+          `;
+        });
+        html += '</div>';
+        
+        Swal.fire({
+          title: `<h5 class="fs-18 mb-0">Following (${data.following.length})</h5>`,
+          html: html,
+          width: 500,
+          showCloseButton: true,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'card'
+          }
+        });
+      }
+    });
+}
+</script>
