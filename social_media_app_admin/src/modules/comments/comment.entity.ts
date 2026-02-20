@@ -20,8 +20,10 @@ export class Comment{
     @ManyToOne(() => User, (user) => user.comments)
     user:User
 
-    @ManyToOne(() => Post, (post) => post.comments)
-    post:Post
+    @ManyToOne(() => Post, (post) => post.comments, {
+      onDelete: 'CASCADE',
+    })
+    post: Post;
 
     @CreateDateColumn()
     createdAt: Date;

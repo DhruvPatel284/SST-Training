@@ -259,52 +259,52 @@ export class PostsService {
     };
   }
   async getFeedPaginated(
-  userId: string,
-  followingIds: string[],
-  page: number = 1,
-  limit: number = 10,
-) {
-  const userIds = [userId, ...followingIds];
-  const skip = (page - 1) * limit;
+    userId: string,
+    followingIds: string[],
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const userIds = [userId, ...followingIds];
+    const skip = (page - 1) * limit;
 
-  // Get total count
-  const totalPosts = await this.repo.count({
-    where: {
-      user: { id: In(userIds) },
-    },
-  });
+    // Get total count
+    const totalPosts = await this.repo.count({
+      where: {
+        user: { id: In(userIds) },
+      },
+    });
 
-  // Get paginated posts
-  const posts = await this.repo.find({
-    where: {
-      user: { id: In(userIds) },
-    },
-    relations: ['user', 'media', 'likedBy', 'comments', 'comments.user'],
-    order: {
-      createdAt: 'DESC',
-    },
-    skip: skip,
-    take: limit,
-  });
+    // Get paginated posts
+    const posts = await this.repo.find({
+      where: {
+        user: { id: In(userIds) },
+      },
+      relations: ['user', 'media', 'likedBy', 'comments', 'comments.user'],
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: skip,
+      take: limit,
+    });
 
-  // Enrich posts with counts and isLiked flag
-  const enrichedPosts = posts.map((post) => ({
-    ...post,
-    likeCount: post.likedBy?.length || 0,
-    commentCount: post.comments?.length || 0,
-    isLikedByCurrentUser:
-      post.likedBy?.some((like) => like.id === userId) || false,
-  }));
+    // Enrich posts with counts and isLiked flag
+    const enrichedPosts = posts.map((post) => ({
+      ...post,
+      likeCount: post.likedBy?.length || 0,
+      commentCount: post.comments?.length || 0,
+      isLikedByCurrentUser:
+        post.likedBy?.some((like) => like.id === userId) || false,
+    }));
 
-  const totalPages = Math.ceil(totalPosts / limit);
-  const hasMore = page < totalPages;
+    const totalPages = Math.ceil(totalPosts / limit);
+    const hasMore = page < totalPages;
 
-  return {
-    posts: enrichedPosts,
-    currentPage: page,
-    totalPages: totalPages,
-    totalPosts: totalPosts,
-    hasMore: hasMore,
-  };
-}
+    return {
+      posts: enrichedPosts,
+      currentPage: page,
+      totalPages: totalPages,
+      totalPosts: totalPosts,
+      hasMore: hasMore,
+    };
+  }
 }
