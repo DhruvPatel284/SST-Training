@@ -24,6 +24,7 @@ import { CurrentPathMiddleware } from 'src/common/middlewares/current-path.middl
 import { MailModule } from '../mail/mail.module';
 import { UserPortalModule } from '../user-portal/user-portal.module';
 import { AdminPortalModule } from '../admin-portal/admin-portal.module';
+import { FollowsModule } from '../follows/follows.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { AdminPortalModule } from '../admin-portal/admin-portal.module';
     PostsModule,
     MailModule,
     UserPortalModule,
-    AdminPortalModule
+    AdminPortalModule,
+    FollowsModule
     // CommentsModule, 
     // LikesModule,
   ],

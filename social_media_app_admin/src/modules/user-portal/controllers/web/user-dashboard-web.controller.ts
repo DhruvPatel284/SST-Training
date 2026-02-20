@@ -51,7 +51,6 @@ export class UserDashboardController {
         user: currentUser,
         posts: feedResult.posts,
         stats: stats,
-        unreadCount: 0, // TODO: integrate notifications
         hasMore: feedResult.hasMore,
       });
     } catch (error) {

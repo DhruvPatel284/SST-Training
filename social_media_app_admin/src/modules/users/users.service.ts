@@ -4,7 +4,7 @@ import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import { Not, Like } from 'typeorm';
 import { User } from './user.entity';
 
 @Injectable()
@@ -149,55 +149,124 @@ export class UsersService {
   return user?.following || [];
 }
 
-/**
- * Get list of users that follow a user
- * @param userId - User ID
- * @returns Array of users
- */
-async getFollowers(userId: string) {
-  const user = await this.repo.findOne({
-    where: { id: userId },
-    relations: ['followers'],
-  });
+  /**
+   * Get list of users that follow a user
+   * @param userId - User ID
+   * @returns Array of users
+   */
+  async getFollowers(userId: string) {
+    const user = await this.repo.findOne({
+      where: { id: userId },
+      relations: ['followers'],
+    });
 
-  return user?.followers || [];
-}
-
-/**
- * Check if user A follows user B
- * @param followerId - User A's ID
- * @param followingId - User B's ID
- * @returns boolean
- */
-async isFollowing(followerId: string, followingId: string): Promise<boolean> {
-  const user = await this.repo.findOne({
-    where: { id: followerId },
-    relations: ['following'],
-  });
-
-  if (!user) return false;
-
-  return user.following.some((followed) => followed.id === followingId);
-}
-
-/**
- * Get user statistics (posts, followers, following counts)
- * @param userId - User ID
- */
-async getUserStats(userId: string) {
-  const user = await this.repo.findOne({
-    where: { id: userId },
-    relations: ['posts', 'followers', 'following'],
-  });
-
-  if (!user) {
-    throw new Error('User not found');
+    return user?.followers || [];
   }
 
-  return {
-    postsCount: user.posts?.length || 0,
-    followersCount: user.followers?.length || 0,
-    followingCount: user.following?.length || 0,
-  };
-}
+  /**
+   * Check if user A follows user B
+   * @param followerId - User A's ID
+   * @param followingId - User B's ID
+   * @returns boolean
+   */
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const user = await this.repo.findOne({
+      where: { id: followerId },
+      relations: ['following'],
+    });
+
+    if (!user) return false;
+
+    return user.following.some((followed) => followed.id === followingId);
+  }
+
+  /**
+   * Get user statistics (posts, followers, following counts)
+   * @param userId - User ID
+   */
+  async getUserStats(userId: string) {
+    const user = await this.repo.findOne({
+      where: { id: userId },
+      relations: ['posts', 'followers', 'following'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      postsCount: user.posts?.length || 0,
+      followersCount: user.followers?.length || 0,
+      followingCount: user.following?.length || 0,
+    };
+  }
+  async searchUsers(query: string, excludeUserId?: string) {
+    const whereConditions: any = [
+      { name: Like(`%${query}%`) },
+      { email: Like(`%${query}%`) },
+    ];
+
+    // Exclude current user from search results
+    if (excludeUserId) {
+      whereConditions.forEach((condition: any) => {
+        condition.id = Not(excludeUserId);
+      });
+    }
+
+    const users = await this.repo.find({
+      where: whereConditions,
+      select: ['id', 'name', 'email', 'profile_image', 'createdAt'],
+      take: 50, // Limit results
+      order: { name: 'ASC' },
+    });
+
+    return users;
+  }
+
+  /**
+   * Get suggested users (users not following yet)
+   * @param userId - Current user ID
+   * @param limit - Number of suggestions
+   */
+  async getSuggestedUsers(userId: string, limit: number = 10) {
+    // Get current user with following list
+    const currentUser = await this.repo.findOne({
+      where: { id: userId },
+      relations: ['following'],
+    });
+
+    if (!currentUser) return [];
+
+    const followingIds = currentUser.following.map((user) => user.id);
+    followingIds.push(userId); // Also exclude self
+
+    // Find users not in following list
+    const suggestedUsers = await this.repo
+      .createQueryBuilder('user')
+      .where('user.id NOT IN (:...ids)', { ids: followingIds })
+      .select(['user.id', 'user.name', 'user.email', 'user.profile_image'])
+      .orderBy('user.createdAt', 'DESC') // Newest users first
+      .limit(limit)
+      .getMany();
+
+    return suggestedUsers;
+  }
+
+  /**
+   * Get users with most followers (popular users)
+   */
+  async getPopularUsers(limit: number = 10) {
+    const users = await this.repo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.followers', 'followers')
+      .select(['user.id', 'user.name', 'user.email', 'user.profile_image'])
+      .addSelect('COUNT(followers.id)', 'followerCount')
+      .groupBy('user.id')
+      .orderBy('followerCount', 'DESC')
+      .limit(limit)
+      .getMany();
+
+    return users;
+  }
+
 }

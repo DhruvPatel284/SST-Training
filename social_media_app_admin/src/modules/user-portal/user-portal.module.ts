@@ -4,13 +4,20 @@ import { UsersModule } from '../users/users.module';
 import { PostsModule } from '../posts/posts.module';
 import { UserPostsController } from './controllers/web/user-post-web.controller';
 import { CommentsModule } from '../comments/comments.module';
+import { UserSearchController } from './controllers/web/user-search-web.controller';
+import { FollowsModule } from '../follows/follows.module';
 
 @Module({
   imports: [
     UsersModule,  // For user data and following
     PostsModule,
-    CommentsModule  // For feed posts
+    CommentsModule,
+    FollowsModule // For feed posts
   ],
-  controllers: [UserDashboardController,UserPostsController]
+  controllers: [
+    UserDashboardController,
+    UserPostsController,
+    UserSearchController
+  ]
 })
 export class UserPortalModule {}
