@@ -1,10 +1,15 @@
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Session, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
+import { UsersService } from '../users/users.service';
+import { UserRole } from '../users/user.entity';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private usersService: UsersService
+  ) {}
 
   @Get('health-check')
   healthCheck(@Res() response: Response) {
@@ -13,7 +18,12 @@ export class AppController {
   }
 
   @Get()
-  getHello(@Res() res: Response) {
-    return res.send("this is home Page");
+  async getHello(@Session() session , @Res() res: Response) {
+    if (!session.userId) {
+      res.redirect('/login');
+      return;
+    }
+    const user = await this.usersService.findOne(session.userId)
+    res.redirect(user.role===UserRole.Admin ?'/admin/dashboard':'/user/dashboard');
   }
 }

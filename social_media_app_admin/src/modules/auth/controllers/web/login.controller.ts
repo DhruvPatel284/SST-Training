@@ -10,18 +10,19 @@ import {
   Session,
   UseGuards,
 } from '@nestjs/common';
-
 import { Request, Response } from 'express';
-
 import { UserRole } from 'src/modules/users/user.entity';
-
 import { AuthGuard } from '../../../../common/guards/auth.guard';
 import { AuthService } from '../../auth.service';
 import { LoginWebDto } from '../../dtos/request/login-web.dto';
+import { UsersService } from 'src/modules/users/users.service';
 
 @Controller()
 export class LoginController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   // ─── SIGNUP ROUTES ───────────────────────────────────────────────────────────
 
@@ -39,7 +40,12 @@ export class LoginController {
   }
 
   @Post('signup')
-  async signup(@Body() body, @Req() req: Request, @Res() res: Response) {
+  async signup(@Session() session, @Body() body, @Req() req: Request, @Res() res: Response) {
+    if (session.userId) {
+     const user = await this.usersService.findOne(session.userId)
+     res.redirect(user.role===UserRole.Admin ?'/admin/dashboard':'/user/dashboard');
+     return;
+    }
     try {
       // Validate inputs
       if (!body.email || !body.password || !body.name) {
@@ -125,9 +131,11 @@ export class LoginController {
   // ─── SIGNIN ROUTES ───────────────────────────────────────────────────────────
 
   @Get('login')
-  loadLoginView(@Session() session, @Res() res: Response, @Req() req: Request) {
+  async loadLoginView(@Session() session, @Res() res: Response, @Req() req: Request) {
     if (session.userId) {
-      return res.redirect('/');
+     const user = await this.usersService.findOne(session.userId)
+     res.redirect(user.role===UserRole.Admin ?'/admin/dashboard':'/user/dashboard');
+     return;
     }
     return res.render('pages/auth/login', {
       title: 'Login',
