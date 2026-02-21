@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
 import { Post } from '../posts/post.entity';
 import { User } from '../users/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
@@ -14,6 +15,7 @@ export class CommentsService {
     private postRepo: Repository<Post>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -22,6 +24,7 @@ export class CommentsService {
   async create(data: { postId: number; userId: string; content: string }) {
     const post = await this.postRepo.findOne({
       where: { id: data.postId },
+      relations: ['user'],  // ADD relation to get post owner
     });
 
     if (!post) {
@@ -42,7 +45,20 @@ export class CommentsService {
       user: user,
     });
 
-    return await this.repo.save(comment);
+    const savedComment = await this.repo.save(comment);
+
+    // CREATE NOTIFICATION (ADD THIS)
+    try {
+      await this.notificationsService.createCommentNotification(
+        savedComment.id,
+        data.postId,
+        data.userId,
+      );
+    } catch (error) {
+      console.error('Failed to create comment notification:', error);
+    }
+
+    return savedComment;
   }
 
   /**

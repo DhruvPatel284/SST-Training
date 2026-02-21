@@ -216,7 +216,7 @@
                       <a href="/user/profile/<%= comment.user.id %>" class="fw-semibold text-dark d-block mb-1">
                         <%= comment.user.name %>
                       </a>
-                      <p class="mb-0" style="white-space: pre-wrap;"><%= comment.content %></p>
+                      <p class="mb-0" style="white-space: pre-wrap;"><%= comment.comment %></p>
                     </div>
                     <small class="text-muted ms-2">
                       <%= new Date(comment.createdAt).toLocaleString('en-US', { 

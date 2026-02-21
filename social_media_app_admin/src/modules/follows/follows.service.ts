@@ -2,12 +2,14 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -20,7 +22,6 @@ export class FollowsService {
       throw new BadRequestException('You cannot follow yourself');
     }
 
-    // Get both users with their relations
     const follower = await this.userRepo.findOne({
       where: { id: followerId },
       relations: ['following'],
@@ -34,7 +35,6 @@ export class FollowsService {
       throw new BadRequestException('User not found');
     }
 
-    // Check if already following
     const isAlreadyFollowing = follower.following.some(
       (user) => user.id === followingId,
     );
@@ -43,9 +43,18 @@ export class FollowsService {
       throw new BadRequestException('You are already following this user');
     }
 
-    // Add to following list
     follower.following.push(following);
     await this.userRepo.save(follower);
+
+    // CREATE NOTIFICATION (ADD THIS)
+    try {
+      await this.notificationsService.createFollowNotification(
+        followingId,
+        followerId,
+      );
+    } catch (error) {
+      console.error('Failed to create follow notification:', error);
+    }
 
     return {
       success: true,

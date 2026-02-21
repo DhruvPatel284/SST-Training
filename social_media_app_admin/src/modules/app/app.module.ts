@@ -25,6 +25,8 @@ import { MailModule } from '../mail/mail.module';
 import { UserPortalModule } from '../user-portal/user-portal.module';
 import { AdminPortalModule } from '../admin-portal/admin-portal.module';
 import { FollowsModule } from '../follows/follows.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { CommentsModule } from '../comments/comments.module';
 
 @Module({
   imports: [
@@ -45,8 +47,9 @@ import { FollowsModule } from '../follows/follows.module';
     MailModule,
     UserPortalModule,
     AdminPortalModule,
-    FollowsModule
-    // CommentsModule, 
+    FollowsModule,
+    NotificationsModule,
+    CommentsModule, 
     // LikesModule,
   ],
   controllers: [AppController],

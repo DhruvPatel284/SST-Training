@@ -1,0 +1,364 @@
+<%- contentFor('HeaderCss') %>
+<style>
+  .notification-item {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+  }
+  .notification-item:hover {
+    background: #f8f9fa;
+  }
+  .notification-item.unread {
+    background: #f0f7ff;
+    border-left-color: #405189;
+  }
+  .notification-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .avatar-circle-notif {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .notification-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: 2px solid white;
+  }
+</style>
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-12">
+    
+    <!-- Header -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h4 class="mb-1">Notifications</h4>
+            <p class="text-muted mb-0">
+              <% if (unreadCount > 0) { %>
+                <span class="badge bg-primary"><%= unreadCount %> Unread</span>
+              <% } else { %>
+                All caught up!
+              <% } %>
+            </p>
+          </div>
+          <div>
+            <% if (unreadCount > 0) { %>
+              <button class="btn btn-soft-primary me-2" onclick="markAllAsRead()">
+                <i class="ri-check-double-line me-1"></i> Mark All Read
+              </button>
+            <% } %>
+            <button class="btn btn-soft-danger" onclick="deleteAllRead()">
+              <i class="ri-delete-bin-line me-1"></i> Delete Read
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card">
+      <div class="card-body p-0">
+        <% if (notifications && notifications.length > 0) { %>
+          <div id="notificationsList">
+            <% notifications.forEach(function(notification) { %>
+              <div class="notification-item <%= notification.isRead ? '' : 'unread' %> p-3 border-bottom" id="notif-<%= notification.id %>" data-notif-id="<%= notification.id %>">
+                <div class="d-flex align-items-start">
+                  
+                  <!-- Avatar with Icon -->
+                  <div class="position-relative me-3">
+                    <a href="/user/profile/<%= notification.actor.id %>">
+                      <% if (notification.actor.profile_image) { %>
+                        <img src="/uploads/users/<%= notification.actor.profile_image %>" class="notification-avatar" alt="<%= notification.actor.name %>">
+                      <% } else { %>
+                        <div class="avatar-circle-notif bg-info-subtle text-info">
+                          <%= notification.actor.name.charAt(0).toUpperCase() %>
+                        </div>
+                      <% } %>
+                    </a>
+                    <!-- Type Icon -->
+                    <div class="notification-icon 
+                      <%= notification.type === 'like' ? 'bg-danger' : '' %>
+                      <%= notification.type === 'comment' ? 'bg-primary' : '' %>
+                      <%= notification.type === 'follow' ? 'bg-success' : '' %>
+                    ">
+                      <% if (notification.type === 'like') { %>
+                        <i class="ri-heart-fill text-white"></i>
+                      <% } else if (notification.type === 'comment') { %>
+                        <i class="ri-chat-3-fill text-white"></i>
+                      <% } else if (notification.type === 'follow') { %>
+                        <i class="ri-user-add-fill text-white"></i>
+                      <% } %>
+                    </div>
+                  </div>
+
+                  <!-- Content -->
+                  <div class="flex-grow-1">
+                    <% 
+                      let message = '';
+                      let link = '';
+                      
+                      if (notification.type === 'like') {
+                        message = `<strong>${notification.actor.name}</strong> liked your post`;
+                        link = `/user/posts/${notification.post.id}`;
+                      } else if (notification.type === 'comment') {
+                        message = `<strong>${notification.actor.name}</strong> commented on your post`;
+                        link = `/user/posts/${notification.post.id}`;
+                      } else if (notification.type === 'follow') {
+                        message = `<strong>${notification.actor.name}</strong> started following you`;
+                        link = `/user/profile/${notification.actor.id}`;
+                      }
+                    %>
+                    
+                    <a href="<%= link %>" class="text-dark d-block" onclick="markAsRead(<%= notification.id %>)">
+                      <p class="mb-1"><%- message %></p>
+                      
+                      <!-- Post Preview for like/comment -->
+                      <% if ((notification.type === 'like' || notification.type === 'comment') && notification.post) { %>
+                        <p class="text-muted mb-1 small">
+                          <i class="ri-article-line me-1"></i>
+                          "<%= notification.post.content.substring(0, 60) %><%= notification.post.content.length > 60 ? '...' : '' %>"
+                        </p>
+                      <% } %>
+
+                      <!-- Comment Preview -->
+                      <% if (notification.type === 'comment' && notification.comment) { %>
+                        <div class="bg-light rounded p-2 mt-2 small">
+                          <%= notification.comment.comment.substring(0, 100) %><%= notification.comment.comment.length > 100 ? '...' : '' %>
+                        </div>
+                      <% } %>
+                    </a>
+                    
+                    <small class="text-muted">
+                      <i class="ri-time-line me-1"></i>
+                      <%= new Date(notification.createdAt).toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) %>
+                    </small>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-ghost-secondary" type="button" data-bs-toggle="dropdown">
+                      <i class="ri-more-2-fill"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <% if (!notification.isRead) { %>
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="event.preventDefault(); markAsRead(<%= notification.id %>);">
+                            <i class="ri-check-line me-2"></i>Mark as Read
+                          </a>
+                        </li>
+                      <% } %>
+                      <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); deleteNotification(<%= notification.id %>);">
+                          <i class="ri-delete-bin-line me-2"></i>Delete
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <!-- Pagination -->
+          <% if (totalPages > 1) { %>
+          <div class="p-3 border-top">
+            <nav aria-label="Notifications pagination">
+              <ul class="pagination justify-content-center mb-0">
+                
+                <!-- Previous -->
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %>">
+                    <i class="ri-arrow-left-s-line"></i>
+                  </a>
+                </li>
+
+                <!-- Page Numbers -->
+                <% 
+                  const startPage = Math.max(1, currentPage - 2);
+                  const endPage = Math.min(totalPages, currentPage + 2);
+                %>
+
+                <% if (startPage > 1) { %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1">1</a>
+                  </li>
+                  <% if (startPage > 2) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                  <% } %>
+                <% } %>
+
+                <% for (let i = startPage; i <= endPage; i++) { %>
+                  <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                  </li>
+                <% } %>
+
+                <% if (endPage < totalPages) { %>
+                  <% if (endPage < totalPages - 1) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                  <% } %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a>
+                  </li>
+                <% } %>
+
+                <!-- Next -->
+                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                  <a class="page-link" href="?page=<%= currentPage + 1 %>">
+                    <i class="ri-arrow-right-s-line"></i>
+                  </a>
+                </li>
+
+              </ul>
+            </nav>
+          </div>
+          <% } %>
+
+        <% } else { %>
+          <!-- Empty State -->
+          <div class="text-center py-5">
+            <lord-icon src="https://cdn.lordicon.com/zxvuvcnc.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px"></lord-icon>
+            <h5 class="mt-3">No Notifications</h5>
+            <p class="text-muted">You're all caught up! We'll notify you when something new happens.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+// ─── MARK AS READ ────────────────────────────────────────────────────────────
+async function markAsRead(notificationId) {
+  try {
+    const response = await fetch(`/user/notifications/${notificationId}/read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      const notifElement = document.getElementById(`notif-${notificationId}`);
+      if (notifElement) {
+        notifElement.classList.remove('unread');
+      }
+      updateUnreadCount();
+    }
+  } catch (error) {
+    console.error('Mark as read error:', error);
+  }
+}
+
+// ─── MARK ALL AS READ ────────────────────────────────────────────────────────
+async function markAllAsRead() {
+  try {
+    const response = await fetch('/user/notifications/mark-all-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Mark all as read error:', error);
+  }
+}
+
+// ─── DELETE NOTIFICATION ─────────────────────────────────────────────────────
+async function deleteNotification(notificationId) {
+  if (!confirm('Delete this notification?')) return;
+
+  try {
+    const response = await fetch(`/user/notifications/${notificationId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      const notifElement = document.getElementById(`notif-${notificationId}`);
+      if (notifElement) {
+        notifElement.remove();
+        
+        // Check if list is empty
+        const list = document.getElementById('notificationsList');
+        if (list && list.children.length === 0) {
+          location.reload();
+        }
+      }
+      updateUnreadCount();
+    }
+  } catch (error) {
+    console.error('Delete notification error:', error);
+  }
+}
+
+// ─── DELETE ALL READ ─────────────────────────────────────────────────────────
+async function deleteAllRead() {
+  if (!confirm('Delete all read notifications?')) return;
+
+  try {
+    const response = await fetch('/user/notifications/delete-all-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      location.reload();
+    } else {
+      alert('Failed to delete notifications');
+    }
+  } catch (error) {
+    console.error('Delete all read error:', error);
+    alert('Failed to delete notifications');
+  }
+}
+
+// ─── UPDATE UNREAD COUNT ─────────────────────────────────────────────────────
+async function updateUnreadCount() {
+  try {
+    const response = await fetch('/user/notifications/unread-count');
+    if (response.ok) {
+      const data = await response.json();
+      // Update badge in topbar if it exists
+      const badge = document.querySelector('.notification-badge');
+      if (badge) {
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Update unread count error:', error);
+  }
+}
+</script>

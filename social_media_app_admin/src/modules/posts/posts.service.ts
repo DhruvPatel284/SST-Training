@@ -8,6 +8,7 @@ import { PostMedia, MediaType } from './post-media.entity';
 import { User } from '../users/user.entity';
 import * as fs from 'fs';
 import * as path from 'path';
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class PostsService {
   constructor(
@@ -16,6 +17,7 @@ export class PostsService {
     private userRepo: Repository<User>,
     @InjectRepository(PostMedia)
     private mediaRepo: Repository<PostMedia>,
+    private notificationsService: NotificationsService,
   ) {}
 
   async getPostsPaginate(query: PaginateQuery): Promise<Paginated<Post>> {
@@ -229,7 +231,7 @@ export class PostsService {
   async toggleLike(postId: number, userId: string) {
     const post = await this.repo.findOne({
       where: { id: postId },
-      relations: ['likedBy'],
+      relations: ['likedBy', 'user'],  // ADD 'user' relation
     });
 
     if (!post) {
@@ -241,7 +243,6 @@ export class PostsService {
       throw new Error('User not found');
     }
 
-    // Check if user already liked the post
     const likeIndex = post.likedBy.findIndex((like) => like.id === userId);
 
     if (likeIndex > -1) {
@@ -250,6 +251,13 @@ export class PostsService {
     } else {
       // Like: add user to likedBy
       post.likedBy.push(user);
+      
+      // CREATE NOTIFICATION (ADD THIS)
+      try {
+        await this.notificationsService.createLikeNotification(postId, userId);
+      } catch (error) {
+        console.error('Failed to create like notification:', error);
+      }
     }
 
     await this.repo.save(post);

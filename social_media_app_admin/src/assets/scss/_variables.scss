@@ -322,8 +322,10 @@ $cyans: (
 // fusv-enable
 
 // scss-docs-start theme-color-variables
-$primary:       $red-300;
-$secondary:     $red-200;
+// $primary:       $red-300;
+// $secondary:     $red-200;
+$primary:       $indigo;
+$secondary:     $blue;
 $success:       $green;
 $info:          $cyan;
 $warning:       $yellow;
