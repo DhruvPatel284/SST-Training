@@ -18,7 +18,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { PostsService } from 'src/modules/posts/posts.service';
 import { CommentsService } from 'src/modules/comments/comments.service';
 import { UsersService } from 'src/modules/users/users.service';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { multerPostMediaConfig, validateFileSize } from 'src/modules/posts/config/multer-post-media.config';
 
 @Controller('user/posts')
@@ -241,18 +241,11 @@ export class UserPostsController {
 
   // ─── CREATE POST ─────────────────────────────────────────────────────────────
   @Post('create')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'images', maxCount: 10 },
-        { name: 'videos', maxCount: 10 },
-      ],
-      multerPostMediaConfig,
-    ),
-  )
+  // Use FilesInterceptor for a single field handling multiple files
+  @UseInterceptors(FilesInterceptor('media', 10, multerPostMediaConfig))
   async createPost(
     @Body() body: { content: string },
-    @UploadedFiles() files: { images?: Express.Multer.File[]; videos?: Express.Multer.File[] },
+    @UploadedFiles() files: Express.Multer.File[], // Changed from object to array
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -269,19 +262,21 @@ export class UserPostsController {
         return res.redirect('/user/posts/create');
       }
 
-      // Validate file sizes
-      if (files?.images) {
-        files.images.forEach(file => validateFileSize(file));
-      }
-      if (files?.videos) {
-        files.videos.forEach(file => validateFileSize(file));
+      // Validate file sizes dynamically based on their mimetypes
+      if (files && files.length > 0) {
+        files.forEach(file => validateFileSize(file));
       }
 
-      // Extract filenames
-      const imageFilenames = files?.images?.map(file => file.filename) || [];
-      const videoFilenames = files?.videos?.map(file => file.filename) || [];
+      // Separate filenames by type so your service handles them exactly as before
+      const imageFilenames = files
+        ?.filter(file => file.mimetype.startsWith('image/'))
+        .map(file => file.filename) || [];
+        
+      const videoFilenames = files
+        ?.filter(file => file.mimetype.startsWith('video/'))
+        .map(file => file.filename) || [];
 
-      // Create post using your existing service method
+      // Create post using your existing service method (no changes needed in service!)
       const post = await this.postsService.create(
         userId,
         body.content.trim(),

@@ -27,23 +27,29 @@ export const multerPostMediaConfig = {
     },
   }),
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'images') {
-      // Validate image type
-      if (!IMAGE_MIME_TYPES.includes(file.mimetype)) {
+    if (file.fieldname === 'media') {
+      // If it's an image, validate against image mime types
+      if (file.mimetype.startsWith('image/')) {
+        if (!IMAGE_MIME_TYPES.includes(file.mimetype)) {
+          return cb(
+            new BadRequestException(`Invalid image format. Allowed formats: JPEG, PNG, GIF, WebP`),
+            false,
+          );
+        }
+      } 
+      // If it's a video, validate against video mime types
+      else if (file.mimetype.startsWith('video/')) {
+        if (!VIDEO_MIME_TYPES.includes(file.mimetype)) {
+          return cb(
+            new BadRequestException(`Invalid video format. Allowed formats: MP4, MPEG, QuickTime, AVI`),
+            false,
+          );
+        }
+      } 
+      // Unrecognized file type
+      else {
         return cb(
-          new BadRequestException(
-            `Invalid image format. Allowed formats: JPEG, PNG, GIF, WebP`,
-          ),
-          false,
-        );
-      }
-    } else if (file.fieldname === 'videos') {
-      // Validate video type
-      if (!VIDEO_MIME_TYPES.includes(file.mimetype)) {
-        return cb(
-          new BadRequestException(
-            `Invalid video format. Allowed formats: MP4, MPEG, QuickTime, AVI`,
-          ),
+          new BadRequestException(`Invalid file type. Only images and videos are allowed.`),
           false,
         );
       }
@@ -51,20 +57,16 @@ export const multerPostMediaConfig = {
     cb(null, true);
   },
   limits: {
-    fileSize: MAX_VIDEO_SIZE, // Max size for any file (will be further validated per type)
+    fileSize: MAX_VIDEO_SIZE, // Apply max upper limit globally (specific type size handled below)
   },
 };
 
 // Custom file size validator
 export function validateFileSize(file: Express.Multer.File): void {
-  if (file.fieldname === 'images' && file.size > MAX_IMAGE_SIZE) {
-    throw new BadRequestException(
-      `Image file ${file.originalname} exceeds 5 MB limit`,
-    );
+  if (file.mimetype.startsWith('image/') && file.size > MAX_IMAGE_SIZE) {
+    throw new BadRequestException(`Image file ${file.originalname} exceeds 5 MB limit`);
   }
-  if (file.fieldname === 'videos' && file.size > MAX_VIDEO_SIZE) {
-    throw new BadRequestException(
-      `Video file ${file.originalname} exceeds 15 MB limit`,
-    );
+  if (file.mimetype.startsWith('video/') && file.size > MAX_VIDEO_SIZE) {
+    throw new BadRequestException(`Video file ${file.originalname} exceeds 15 MB limit`);
   }
 }
