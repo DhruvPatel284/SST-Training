@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -343,6 +344,130 @@ export class UserPostsController {
       console.error('Get post error:', error);
       req.flash('error', 'Failed to load post');
       return res.redirect('/user/dashboard');
+    }
+  }
+
+  // ─── EDIT POST PAGE ──────────────────────────────────────────────────────────
+  @Get(':id/edit')
+  async getEditPage(
+    @Param('id') postId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.redirect('/login');
+      }
+
+      const currentUser = await this.usersService.findOne(userId);
+
+      // Get post with all relations
+      const post = await this.postsService.findOne(parseInt(postId));
+
+      if (!post) {
+        req.flash('error', 'Post not found');
+        return res.redirect('/user/dashboard');
+      }
+
+      // Check if user owns the post
+      if (post.user.id !== userId) {
+        req.flash('error', 'You can only edit your own posts');
+        return res.redirect(`/user/posts/${postId}`);
+      }
+
+      return res.render('pages/user/posts/edit', {
+        layout: 'layouts/user-layout',
+        title: 'Edit Post',
+        page_title: 'Edit Post',
+        folder: 'Posts',
+        user: currentUser,
+        post: post,
+        unreadCount: 0,
+        errors: req.flash('errors')[0] || {},
+      });
+    } catch (error) {
+      console.error('Edit post page error:', error);
+      req.flash('error', 'Failed to load edit page');
+      return res.redirect('/user/dashboard');
+    }
+  }
+
+  // ─── UPDATE POST ─────────────────────────────────────────────────────────────
+  @Put(':id/edit')
+  @UseInterceptors(FilesInterceptor('media', 10, multerPostMediaConfig)) // Unified interceptor
+  async updatePost(
+    @Param('id') postId: string,
+    @Body() body: { content: string; deleteMediaIds?: string },
+    @UploadedFiles() files: Express.Multer.File[], // Changed to array
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.redirect('/login');
+      }
+
+      // Get post to verify ownership
+      const post = await this.postsService.findOne(parseInt(postId));
+
+      if (!post) {
+        req.flash('error', 'Post not found');
+        return res.redirect('/user/dashboard');
+      }
+
+      if (post.user.id !== userId) {
+        req.flash('error', 'You can only edit your own posts');
+        return res.redirect(`/user/posts/${postId}`);
+      }
+
+      // Validate content
+      if (!body.content || body.content.trim() === '') {
+        req.flash('errors', { content: ['Post content is required'] });
+        return res.redirect(`/user/posts/${postId}/edit`);
+      }
+
+      // Handle media deletions
+      if (body.deleteMediaIds) {
+        const mediaIdsToDelete = body.deleteMediaIds
+          .split(',')
+          .filter(id => id.trim())
+          .map(id => parseInt(id.trim()));
+
+        for (const mediaId of mediaIdsToDelete) {
+          await this.postsService.deleteMedia(mediaId);
+        }
+      }
+
+      // Validate file sizes dynamically based on their mimetypes
+      if (files && files.length > 0) {
+        files.forEach(file => validateFileSize(file));
+      }
+
+      // Separate filenames by type for the service
+      const newImageFilenames = files
+        ?.filter(file => file.mimetype.startsWith('image/'))
+        .map(file => file.filename) || [];
+        
+      const newVideoFilenames = files
+        ?.filter(file => file.mimetype.startsWith('video/'))
+        .map(file => file.filename) || [];
+
+      // Update post using your existing service method
+      await this.postsService.updateWithMedia(
+        parseInt(postId),
+        body.content.trim(),
+        newImageFilenames,
+        newVideoFilenames,
+      );
+
+      req.flash('success', 'Post updated successfully!');
+      return res.redirect(`/user/posts/${postId}`);
+    } catch (error) {
+      console.error('Update post error:', error);
+      req.flash('errors', { general: [error.message || 'Failed to update post'] });
+      return res.redirect(`/user/posts/${postId}/edit`);
     }
   }
 }

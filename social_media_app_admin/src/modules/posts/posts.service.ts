@@ -6,7 +6,8 @@ import { In, Repository } from 'typeorm';
 import { Post } from './post.entity';
 import { PostMedia, MediaType } from './post-media.entity';
 import { User } from '../users/user.entity';
-
+import * as fs from 'fs';
+import * as path from 'path';
 @Injectable()
 export class PostsService {
   constructor(
@@ -307,4 +308,91 @@ export class PostsService {
       hasMore: hasMore,
     };
   }
+
+  async deleteMedia(mediaId: number): Promise<void> {
+  const media = await this.mediaRepo.findOne({
+    where: { id: mediaId },
+  });
+
+  if (!media) {
+    throw new NotFoundException('Media not found');
+  }
+
+  // Delete file from disk
+  const filePath = path.join(
+    process.cwd(),
+    'public',
+    'uploads',
+    'posts',
+    media.filename,
+  );
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+
+  // Delete from database
+  await this.mediaRepo.remove(media);
+}
+
+/**
+ * Update post with new media (adds to existing media)
+ * @param postId - Post ID
+ * @param content - Updated content
+ * @param newImageFilenames - New images to add
+ * @param newVideoFilenames - New videos to add
+ */
+async updateWithMedia(
+  postId: number,
+  content: string,
+  newImageFilenames: string[] = [],
+  newVideoFilenames: string[] = [],
+): Promise<Post> {
+  const post = await this.findOne(postId);
+
+  // Update content
+  post.content = content;
+  await this.repo.save(post);
+
+  // Get current max display_order
+  const existingMedia = await this.mediaRepo.find({
+    where: { post: { id: postId } },
+    order: { display_order: 'DESC' },
+  });
+
+  let maxOrder = 0;
+  if (existingMedia.length > 0) {
+    maxOrder = existingMedia[0].display_order;
+  }
+
+  // Add new images
+  if (newImageFilenames.length > 0) {
+    const newImages = newImageFilenames.map((filename, index) =>
+      this.mediaRepo.create({
+        filename,
+        type: MediaType.IMAGE,
+        display_order: maxOrder + index + 1,
+        post: post,
+      }),
+    );
+    await this.mediaRepo.save(newImages);
+    maxOrder += newImageFilenames.length;
+  }
+
+  // Add new videos
+  if (newVideoFilenames.length > 0) {
+    const newVideos = newVideoFilenames.map((filename, index) =>
+      this.mediaRepo.create({
+        filename,
+        type: MediaType.VIDEO,
+        display_order: maxOrder + index + 1,
+        post: post,
+      }),
+    );
+    await this.mediaRepo.save(newVideos);
+  }
+
+  return this.findOne(postId);
+}
+
 }
