@@ -130,21 +130,21 @@
           </div>
 
           <div class="col-lg-6">
-            <div class="row text-center mt-4 mt-lg-0">
-              <div class="col-4 border-end border-end-dashed">
-                <h4 class="mb-1 fs-20"><%= stats.postsCount %></h4>
-                <p class="text-muted mb-0 fs-13">Posts</p>
+            <div class="row text-center">
+              <div class="col-4">
+                <h4 class="mb-0"><%= stats.postsCount %></h4>
+                <p class="text-muted mb-0">Posts</p>
               </div>
-              <div class="col-4 border-end border-end-dashed">
-                <a href="javascript:void(0);" class="text-body" onclick="showFollowers('<%= profileUser.id %>')">
-                  <h4 class="mb-1 fs-20"><%= stats.followersCount %></h4>
-                  <p class="text-muted mb-0 fs-13">Followers</p>
+              <div class="col-4">
+                <a href="/user/profile/<%= profileUser.id %>/followers" class="text-dark d-block">
+                  <h4 class="mb-0"><%= stats.followersCount %></h4>
+                  <p class="text-muted mb-0">Followers</p>
                 </a>
               </div>
               <div class="col-4">
-                <a href="javascript:void(0);" class="text-body" onclick="showFollowing('<%= profileUser.id %>')">
-                  <h4 class="mb-1 fs-20"><%= stats.followingCount %></h4>
-                  <p class="text-muted mb-0 fs-13">Following</p>
+                <a href="/user/profile/<%= profileUser.id %>/following" class="text-dark d-block">
+                  <h4 class="mb-0"><%= stats.followingCount %></h4>
+                  <p class="text-muted mb-0">Following</p>
                 </a>
               </div>
             </div>

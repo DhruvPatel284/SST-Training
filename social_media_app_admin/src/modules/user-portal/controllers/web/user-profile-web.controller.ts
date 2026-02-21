@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   Post,
   Put,
   Req,
@@ -258,4 +259,128 @@ export class UserProfileController {
       return res.status(500).json({ success: false, error: 'Failed to get following' });
     }
   }
+
+  @Get(':id/followers')
+  async getFollowersPage(
+    @Param('id') targetUserId: string,
+    @Query('page') page: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const currentUserId = req.session?.userId;
+      if (!currentUserId) {
+        return res.redirect('/login');
+      }
+
+      const currentUser = await this.usersService.findOne(currentUserId);
+      const targetUser = await this.usersService.findOne(targetUserId);
+
+      if (!targetUser) {
+        req.flash('error', 'User not found');
+        return res.redirect('/user/search');
+      }
+
+      const pageNumber = parseInt(page) || 1;
+      const limit = 20;
+
+      // Get paginated followers
+      const result = await this.usersService.getFollowersPaginated(
+        targetUserId,
+        pageNumber,
+        limit,
+      );
+
+      return res.render('pages/user/profile/followers', {
+        layout: 'layouts/user-layout',
+        title: `${targetUser.name}'s Followers`,
+        page_title: 'Followers',
+        folder: 'Profile',
+        user: currentUser,
+        profileUser: targetUser,
+        followers: result.followers,
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        totalFollowers: result.totalFollowers,
+        unreadCount: 0,
+      });
+    } catch (error) {
+      console.error('Followers page error:', error);
+      req.flash('error', 'Failed to load followers');
+      return res.redirect('/user/dashboard');
+    }
+  }
+
+  // ─── FOLLOWING PAGE ──────────────────────────────────────────────────────────
+  @Get(':id/following')
+  async getFollowingPage(
+    @Param('id') targetUserId: string,
+    @Query('page') page: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const currentUserId = req.session?.userId;
+      if (!currentUserId) {
+        return res.redirect('/login');
+      }
+
+      const currentUser = await this.usersService.findOne(currentUserId);
+      const targetUser = await this.usersService.findOne(targetUserId);
+
+      if (!targetUser) {
+        req.flash('error', 'User not found');
+        return res.redirect('/user/search');
+      }
+
+      const pageNumber = parseInt(page) || 1;
+      const limit = 20;
+
+      // Get paginated following
+      const result = await this.usersService.getFollowingPaginated(
+        targetUserId,
+        pageNumber,
+        limit,
+      );
+
+      return res.render('pages/user/profile/following', {
+        layout: 'layouts/user-layout',
+        title: `${targetUser.name}'s Following`,
+        page_title: 'Following',
+        folder: 'Profile',
+        user: currentUser,
+        profileUser: targetUser,
+        following: result.following,
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        totalFollowing: result.totalFollowing,
+        unreadCount: 0,
+      });
+    } catch (error) {
+      console.error('Following page error:', error);
+      req.flash('error', 'Failed to load following');
+      return res.redirect('/user/dashboard');
+    }
+  }
+
+  // ─── OWN FOLLOWERS PAGE (convenience route) ─────────────────────────────────
+  @Get('followers')
+  async getOwnFollowersPage(@Req() req: Request, @Res() res: Response) {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.redirect('/login');
+    }
+    return res.redirect(`/user/profile/${userId}/followers`);
+  }
+
+  // ─── OWN FOLLOWING PAGE (convenience route) ─────────────────────────────────
+  @Get('following')
+  async getOwnFollowingPage(@Req() req: Request, @Res() res: Response) {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.redirect('/login');
+    }
+    return res.redirect(`/user/profile/${userId}/following`);
+  }
+
 }

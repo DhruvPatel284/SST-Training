@@ -279,4 +279,92 @@ export class UsersService {
     });
   }
 
+  async getFollowersPaginated(
+  userId: string,
+  page: number = 1,
+  limit: number = 20,
+) {
+  const skip = (page - 1) * limit;
+
+  // Get user with followers
+  const user = await this.repo.findOne({
+    where: { id: userId },
+    relations: ['followers'],
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  const totalFollowers = user.followers?.length || 0;
+
+  // Get paginated followers
+  const followers = await this.repo
+    .createQueryBuilder('follower')
+    .innerJoin('follower.following', 'following')
+    .where('following.id = :userId', { userId })
+    .select(['follower.id', 'follower.name', 'follower.email', 'follower.profile_image'])
+    .orderBy('follower.name', 'ASC')
+    .skip(skip)
+    .take(limit)
+    .getMany();
+
+  const totalPages = Math.ceil(totalFollowers / limit);
+
+  return {
+    followers,
+    currentPage: page,
+    totalPages,
+    totalFollowers,
+    hasMore: page < totalPages,
+  };
+}
+
+/**
+ * Get paginated following list
+ * @param userId - User ID
+ * @param page - Page number (1-indexed)
+ * @param limit - Items per page
+ */
+async getFollowingPaginated(
+  userId: string,
+  page: number = 1,
+  limit: number = 20,
+) {
+  const skip = (page - 1) * limit;
+
+  // Get user with following
+  const user = await this.repo.findOne({
+    where: { id: userId },
+    relations: ['following'],
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  const totalFollowing = user.following?.length || 0;
+
+  // Get paginated following
+  const following = await this.repo
+    .createQueryBuilder('following')
+    .innerJoin('following.followers', 'follower')
+    .where('follower.id = :userId', { userId })
+    .select(['following.id', 'following.name', 'following.email', 'following.profile_image'])
+    .orderBy('following.name', 'ASC')
+    .skip(skip)
+    .take(limit)
+    .getMany();
+
+  const totalPages = Math.ceil(totalFollowing / limit);
+
+  return {
+    following,
+    currentPage: page,
+    totalPages,
+    totalFollowing,
+    hasMore: page < totalPages,
+  };
+}
+
 }
