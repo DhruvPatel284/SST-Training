@@ -1,4 +1,6 @@
 <%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 <style>
   .notification-item {
     transition: all 0.3s ease;
@@ -47,7 +49,6 @@
 <div class="row">
   <div class="col-12">
     
-    <!-- Header -->
     <div class="card mb-3">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
@@ -67,7 +68,7 @@
                 <i class="ri-check-double-line me-1"></i> Mark All Read
               </button>
             <% } %>
-            <button class="btn btn-soft-danger" onclick="deleteAllRead()">
+            <button class="btn btn-soft-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" onclick="setDeleteData('bulk')">
               <i class="ri-delete-bin-line me-1"></i> Delete Read
             </button>
           </div>
@@ -75,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Notifications List -->
     <div class="card">
       <div class="card-body p-0">
         <% if (notifications && notifications.length > 0) { %>
@@ -84,7 +84,6 @@
               <div class="notification-item <%= notification.isRead ? '' : 'unread' %> p-3 border-bottom" id="notif-<%= notification.id %>" data-notif-id="<%= notification.id %>">
                 <div class="d-flex align-items-start">
                   
-                  <!-- Avatar with Icon -->
                   <div class="position-relative me-3">
                     <a href="/user/profile/<%= notification.actor.id %>">
                       <% if (notification.actor.profile_image) { %>
@@ -95,7 +94,6 @@
                         </div>
                       <% } %>
                     </a>
-                    <!-- Type Icon -->
                     <div class="notification-icon 
                       <%= notification.type === 'like' ? 'bg-danger' : '' %>
                       <%= notification.type === 'comment' ? 'bg-primary' : '' %>
@@ -111,7 +109,6 @@
                     </div>
                   </div>
 
-                  <!-- Content -->
                   <div class="flex-grow-1">
                     <% 
                       let message = '';
@@ -132,7 +129,6 @@
                     <a href="<%= link %>" class="text-dark d-block" onclick="markAsRead(<%= notification.id %>)">
                       <p class="mb-1"><%- message %></p>
                       
-                      <!-- Post Preview for like/comment -->
                       <% if ((notification.type === 'like' || notification.type === 'comment') && notification.post) { %>
                         <p class="text-muted mb-1 small">
                           <i class="ri-article-line me-1"></i>
@@ -140,7 +136,6 @@
                         </p>
                       <% } %>
 
-                      <!-- Comment Preview -->
                       <% if (notification.type === 'comment' && notification.comment) { %>
                         <div class="bg-light rounded p-2 mt-2 small">
                           <%= notification.comment.comment.substring(0, 100) %><%= notification.comment.comment.length > 100 ? '...' : '' %>
@@ -159,7 +154,6 @@
                     </small>
                   </div>
 
-                  <!-- Actions -->
                   <div class="dropdown">
                     <button class="btn btn-sm btn-ghost-secondary" type="button" data-bs-toggle="dropdown">
                       <i class="ri-more-2-fill"></i>
@@ -167,13 +161,13 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                       <% if (!notification.isRead) { %>
                         <li>
-                          <a class="dropdown-item" href="#" onclick="event.preventDefault(); markAsRead(<%= notification.id %>);">
+                          <a class="dropdown-item" href="javascript:void(0);" onclick="markAsRead(<%= notification.id %>);">
                             <i class="ri-check-line me-2"></i>Mark as Read
                           </a>
                         </li>
                       <% } %>
                       <li>
-                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); deleteNotification(<%= notification.id %>);">
+                        <a class="dropdown-item text-danger" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" onclick="setDeleteData('single', <%= notification.id %>)">
                           <i class="ri-delete-bin-line me-2"></i>Delete
                         </a>
                       </li>
@@ -185,20 +179,17 @@
             <% }) %>
           </div>
 
-          <!-- Pagination -->
           <% if (totalPages > 1) { %>
           <div class="p-3 border-top">
             <nav aria-label="Notifications pagination">
               <ul class="pagination justify-content-center mb-0">
                 
-                <!-- Previous -->
                 <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
                   <a class="page-link" href="?page=<%= currentPage - 1 %>">
                     <i class="ri-arrow-left-s-line"></i>
                   </a>
                 </li>
 
-                <!-- Page Numbers -->
                 <% 
                   const startPage = Math.max(1, currentPage - 2);
                   const endPage = Math.min(totalPages, currentPage + 2);
@@ -228,7 +219,6 @@
                   </li>
                 <% } %>
 
-                <!-- Next -->
                 <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
                   <a class="page-link" href="?page=<%= currentPage + 1 %>">
                     <i class="ri-arrow-right-s-line"></i>
@@ -241,7 +231,6 @@
           <% } %>
 
         <% } else { %>
-          <!-- Empty State -->
           <div class="text-center py-5">
             <lord-icon src="https://cdn.lordicon.com/zxvuvcnc.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px"></lord-icon>
             <h5 class="mt-3">No Notifications</h5>
@@ -254,8 +243,46 @@
   </div>
 </div>
 
+<div id="deleteConfirmationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="deleteConfirmationModal-close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="delete-form" method="POST">
+          <div class="mt-2 text-center">
+            <lord-icon
+              src="https://cdn.lordicon.com/gsqxdxog.json"
+              trigger="loop"
+              colors="primary:#f7b84b,secondary:#f06548"
+              style="width: 100px; height: 100px"
+            ></lord-icon>
+            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+              <h4>Are you sure?</h4>
+              <p class="text-muted mx-4 mb-0" id="delete-modal-text">
+                Are you sure you want to remove this notification?
+              </p>
+              <input type="hidden" id="modal-row-id" />
+            </div>
+          </div>
+          <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn w-sm btn-danger" id="delete-confirmation">Yes, Delete It!</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
 <script>
+// Track what type of delete operation we are performing
+let currentDeleteMode = ''; 
+
 // ─── MARK AS READ ────────────────────────────────────────────────────────────
 async function markAsRead(notificationId) {
   try {
@@ -292,53 +319,80 @@ async function markAllAsRead() {
   }
 }
 
-// ─── DELETE NOTIFICATION ─────────────────────────────────────────────────────
-async function deleteNotification(notificationId) {
-  if (!confirm('Delete this notification?')) return;
+// ─── DELETE PREPARATION LOGIC ────────────────────────────────────────────────
+// Dynamically configure the modal text and hidden ID based on single/bulk delete
+function setDeleteData(mode, id = null) {
+  currentDeleteMode = mode;
+  const textEl = document.getElementById('delete-modal-text');
+  const inputEl = document.getElementById('modal-row-id');
+  
+  if (mode === 'single') {
+    inputEl.value = id;
+    textEl.innerText = "Are you sure you want to remove this notification?";
+  } else if (mode === 'bulk') {
+    inputEl.value = '';
+    textEl.innerText = "Are you sure you want to remove all read notifications? This action cannot be undone.";
+  }
+}
+
+// ─── EXECUTE DELETE ACTION ───────────────────────────────────────────────────
+document.getElementById('delete-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const submitBtn = document.getElementById('delete-confirmation');
+  const originalBtnText = submitBtn.innerHTML;
 
   try {
-    const response = await fetch(`/user/notifications/${notificationId}`, {
-      method: 'DELETE',
-    });
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Deleting...';
 
-    if (response.ok) {
-      const notifElement = document.getElementById(`notif-${notificationId}`);
-      if (notifElement) {
-        notifElement.remove();
-        
-        // Check if list is empty
-        const list = document.getElementById('notificationsList');
-        if (list && list.children.length === 0) {
-          location.reload();
+    if (currentDeleteMode === 'single') {
+      const id = document.getElementById('modal-row-id').value;
+      const response = await fetch(`/user/notifications/${id}`, { method: 'DELETE' });
+      
+      if (response.ok) {
+        const notifElement = document.getElementById(`notif-${id}`);
+        if (notifElement) {
+          notifElement.remove();
+          
+          // Check if list is empty, reload if so to show empty state
+          const list = document.getElementById('notificationsList');
+          if (list && list.children.length === 0) {
+            location.reload();
+          }
         }
+        updateUnreadCount();
+        
+        // Hide modal
+        const modalEl = document.getElementById('deleteConfirmationModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+      } else {
+        Swal.fire('Error', 'Failed to delete notification.', 'error');
       }
-      updateUnreadCount();
+      
+    } else if (currentDeleteMode === 'bulk') {
+      const response = await fetch('/user/notifications/delete-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        location.reload(); // Reloads the page to reflect empty read list
+      } else {
+        Swal.fire('Error', 'Failed to delete notifications.', 'error');
+      }
     }
   } catch (error) {
-    console.error('Delete notification error:', error);
+    console.error('Delete error:', error);
+    Swal.fire('Error', 'An unexpected error occurred.', 'error');
+  } finally {
+    // Restore button state
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
   }
-}
-
-// ─── DELETE ALL READ ─────────────────────────────────────────────────────────
-async function deleteAllRead() {
-  if (!confirm('Delete all read notifications?')) return;
-
-  try {
-    const response = await fetch('/user/notifications/delete-all-read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (response.ok) {
-      location.reload();
-    } else {
-      alert('Failed to delete notifications');
-    }
-  } catch (error) {
-    console.error('Delete all read error:', error);
-    alert('Failed to delete notifications');
-  }
-}
+});
 
 // ─── UPDATE UNREAD COUNT ─────────────────────────────────────────────────────
 async function updateUnreadCount() {
