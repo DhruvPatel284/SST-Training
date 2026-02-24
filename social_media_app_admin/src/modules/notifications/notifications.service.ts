@@ -77,23 +77,34 @@ export class NotificationsService {
   }
 
   /**
-   * Get paginated notifications for a user
+   * Get paginated notifications for a user with optional filter
    */
   async getUserNotifications(
     userId: string,
     page: number = 1,
     limit: number = 20,
+    filter: string = 'all',
   ) {
     const skip = (page - 1) * limit;
 
+    // Build where clause
+    const whereClause: any = {
+      recipient: { id: userId },
+    };
+
+    // Add type filter if not 'all'
+    if (filter !== 'all') {
+      whereClause.type = filter;
+    }
+
     // Get total count
     const totalNotifications = await this.repo.count({
-      where: { recipient: { id: userId } },
+      where: whereClause,
     });
 
     // Get paginated notifications
     const notifications = await this.repo.find({
-      where: { recipient: { id: userId } },
+      where: whereClause,
       relations: ['actor', 'post', 'post.user', 'comment', 'comment.post'],
       order: { createdAt: 'DESC' },
       skip,
@@ -108,6 +119,44 @@ export class NotificationsService {
       totalPages,
       totalNotifications,
       hasMore: page < totalPages,
+    };
+  }
+
+  /**
+   * Get counts by notification type
+   */
+  async getCountsByType(userId: string) {
+    const allCount = await this.repo.count({
+      where: { recipient: { id: userId } },
+    });
+
+    const likeCount = await this.repo.count({
+      where: { recipient: { id: userId }, type: NotificationType.LIKE },
+    });
+
+    const commentCount = await this.repo.count({
+      where: { recipient: { id: userId }, type: NotificationType.COMMENT },
+    });
+
+    const followCount = await this.repo.count({
+      where: { recipient: { id: userId }, type: NotificationType.FOLLOW },
+    });
+
+    const followRequestCount = await this.repo.count({
+      where: { recipient: { id: userId }, type: NotificationType.FOLLOW_REQUEST },
+    });
+
+    const followAcceptCount = await this.repo.count({
+      where: { recipient: { id: userId }, type: NotificationType.FOLLOW_ACCEPT },
+    });
+
+    return {
+      all: allCount,
+      like: likeCount,
+      comment: commentCount,
+      follow: followCount,
+      follow_request: followRequestCount,
+      follow_accept: followAcceptCount,
     };
   }
 

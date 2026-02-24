@@ -26,6 +26,7 @@ export class UserNotificationsController {
   @Get()
   async getNotificationsPage(
     @Query('page') page: string,
+    @Query('filter') filter: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -39,15 +40,19 @@ export class UserNotificationsController {
       const pageNumber = parseInt(page) || 1;
       const limit = 20;
 
-      // Get paginated notifications
+      // Get paginated notifications with optional filter
       const result = await this.notificationsService.getUserNotifications(
         userId,
         pageNumber,
         limit,
+        filter || 'all',
       );
 
       // Get unread count
       const unreadCount = await this.notificationsService.getUnreadCount(userId);
+
+      // Get counts by type
+      const counts = await this.notificationsService.getCountsByType(userId);
 
       return res.render('pages/user/notifications/index', {
         layout: 'layouts/user-layout',
@@ -60,6 +65,8 @@ export class UserNotificationsController {
         totalPages: result.totalPages,
         totalNotifications: result.totalNotifications,
         unreadCount: unreadCount,
+        filter: filter || 'all',
+        counts: counts,
       });
     } catch (error) {
       console.error('Notifications page error:', error);

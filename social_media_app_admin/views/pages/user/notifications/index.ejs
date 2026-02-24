@@ -42,6 +42,25 @@
     right: 0;
     border: 2px solid white;
   }
+  .nav-tabs-custom .nav-link {
+    border: none;
+    color: #878a99;
+    padding: 12px 20px;
+    transition: all 0.3s;
+  }
+  .nav-tabs-custom .nav-link:hover {
+    color: #405189;
+    background: #f3f6f9;
+  }
+  .nav-tabs-custom .nav-link.active {
+    color: #0ab39c;
+    background: #0ab39c1a;
+    border-bottom: 2px solid #0ab39c;
+  }
+  .nav-tabs-custom .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
 </style>
 
 <%- contentFor('body') %>
@@ -51,7 +70,7 @@
     
     <div class="card mb-3">
       <div class="card-body">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between mb-3">
           <div>
             <h4 class="mb-1">Notifications</h4>
             <p class="text-muted mb-0">
@@ -73,6 +92,57 @@
             </button>
           </div>
         </div>
+
+        <ul class="nav nav-tabs nav-tabs-custom nav-success" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= !filter || filter === 'all' ? 'active' : '' %>" href="/user/notifications?filter=all">
+              <i class="ri-checkbox-multiple-line me-1"></i> All
+              <% if (counts.all > 0) { %>
+                <span class="badge bg-secondary ms-1"><%= counts.all %></span>
+              <% } %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= filter === 'like' ? 'active' : '' %>" href="/user/notifications?filter=like">
+              <i class="ri-heart-line me-1"></i> Likes
+              <% if (counts.like > 0) { %>
+                <span class="badge bg-danger ms-1"><%= counts.like %></span>
+              <% } %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= filter === 'comment' ? 'active' : '' %>" href="/user/notifications?filter=comment">
+              <i class="ri-chat-3-line me-1"></i> Comments
+              <% if (counts.comment > 0) { %>
+                <span class="badge bg-primary ms-1"><%= counts.comment %></span>
+              <% } %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= filter === 'follow' ? 'active' : '' %>" href="/user/notifications?filter=follow">
+              <i class="ri-user-follow-line me-1"></i> Follows
+              <% if (counts.follow > 0) { %>
+                <span class="badge bg-success ms-1"><%= counts.follow %></span>
+              <% } %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= filter === 'follow_request' ? 'active' : '' %>" href="/user/notifications?filter=follow_request">
+              <i class="ri-user-add-line me-1"></i> Requests
+              <% if (counts.follow_request > 0) { %>
+                <span class="badge bg-warning ms-1"><%= counts.follow_request %></span>
+              <% } %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link <%= filter === 'follow_accept' ? 'active' : '' %>" href="/user/notifications?filter=follow_accept">
+              <i class="ri-user-received-line me-1"></i> Accepted
+              <% if (counts.follow_accept > 0) { %>
+                <span class="badge bg-info ms-1"><%= counts.follow_accept %></span>
+              <% } %>
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -184,8 +254,12 @@
             <nav aria-label="Notifications pagination">
               <ul class="pagination justify-content-center mb-0">
                 
+                <% 
+                  const filterParam = filter && filter !== 'all' ? `&filter=${filter}` : '';
+                %>
+
                 <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                  <a class="page-link" href="?page=<%= currentPage - 1 %>">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %><%= filterParam %>">
                     <i class="ri-arrow-left-s-line"></i>
                   </a>
                 </li>
@@ -197,7 +271,7 @@
 
                 <% if (startPage > 1) { %>
                   <li class="page-item">
-                    <a class="page-link" href="?page=1">1</a>
+                    <a class="page-link" href="?page=1<%= filterParam %>">1</a>
                   </li>
                   <% if (startPage > 2) { %>
                     <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -206,7 +280,7 @@
 
                 <% for (let i = startPage; i <= endPage; i++) { %>
                   <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    <a class="page-link" href="?page=<%= i %><%= filterParam %>"><%= i %></a>
                   </li>
                 <% } %>
 
@@ -215,12 +289,12 @@
                     <li class="page-item disabled"><span class="page-link">...</span></li>
                   <% } %>
                   <li class="page-item">
-                    <a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a>
+                    <a class="page-link" href="?page=<%= totalPages %><%= filterParam %>"><%= totalPages %></a>
                   </li>
                 <% } %>
 
                 <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                  <a class="page-link" href="?page=<%= currentPage + 1 %>">
+                  <a class="page-link" href="?page=<%= currentPage + 1 %><%= filterParam %>">
                     <i class="ri-arrow-right-s-line"></i>
                   </a>
                 </li>
@@ -364,10 +438,8 @@ document.getElementById('delete-form').addEventListener('submit', async function
         }
         updateUnreadCount();
         
-        // Hide modal
-        const modalEl = document.getElementById('deleteConfirmationModal');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
+        // Hide modal programmatically
+        document.getElementById('deleteConfirmationModal-close').click();
       } else {
         Swal.fire('Error', 'Failed to delete notification.', 'error');
       }

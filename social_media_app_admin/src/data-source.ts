@@ -29,37 +29,3 @@ export const AppDataSource = new DataSource({
   // logging: 'all', //for sql queries logging
 });
 
-/*
-
-
-Name : Dhruv Navinbhai Patel 
-Surname : Patel
-
-Father Name : Navinbhai Naranbhai Patel
-Employee Code : 257
-
-Designation: Trainee Software Engineer 
-Date of Joining : 01/01/2026
-
-Date of Leaving : 
-PAN number : HSQPP4158D
-
-Aadhar Number : 5556 5619 5031
-Employee's phone number : 9898751449
-
-Father's phone number : 9925693892
-personal email : dhruv156328@gmail.com
-
-SST email : dhruvpatel.silversky@gmail.com
-
-Birthdate : 28/04/2005
-IFSC Code : SBIN0018832
-
-Account Number : 39565310046
-UPI id : dhruv156328@oksbi
-
-Local Living Address : 202/1,I-block,Rudra Square Appartment , near judges bunglow road , Bodakdev , Ahmedabad.
-Permanent Address : 11,Gokul Homes , B/H Avsar Party Plot , Near Radhe Exotica , Modhera Road , Mehsana.
-
-
-*/
