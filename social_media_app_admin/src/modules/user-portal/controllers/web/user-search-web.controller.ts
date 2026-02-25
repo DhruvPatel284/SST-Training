@@ -1,6 +1,6 @@
 import {
-  Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -8,13 +8,13 @@ import {
   Req,
   Res,
   UseGuards,
-  Delete,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UsersService } from 'src/modules/users/users.service';
 import { FollowsService } from 'src/modules/follows/follows.service';
-import { User } from 'src/modules/users/user.entity';
+import { NotificationsService } from 'src/modules/notifications/notifications.service';
+import { NotificationType } from 'src/modules/notifications/notification.entity';
 
 @Controller('user/search')
 @UseGuards(AuthGuard)
@@ -22,141 +22,98 @@ export class UserSearchController {
   constructor(
     private usersService: UsersService,
     private followsService: FollowsService,
+    private notificationsService: NotificationsService,
   ) {}
 
   // ─── SEARCH PAGE ─────────────────────────────────────────────────────────────
   @Get()
-  async getSearchPage(@Req() req: Request, @Res() res: Response) {
-    try {
-      const userId = req.session?.userId;
-      if(!userId){
-        return null;
-      }      
-      const currentUser = await this.usersService.findOne(userId);
-
-      if (!currentUser) {
-        return res.redirect('/login');
-      }
-
-      // Get search query from URL
-      const searchQuery = (req.query.q as string) || '';
-
-      let users:User[] = [];
-      let followingMap = new Map();
-
-      if (searchQuery.trim()) {
-        // Search users by name or email
-        users = await this.usersService.searchUsers(searchQuery, userId);
-
-        // Get following status for each user
-        const following = await this.usersService.getFollowing(userId);
-        following.forEach((user) => {
-          followingMap.set(user.id, true);
-        });
-      } else {
-        // If no search query, show suggested users (not following yet)
-        users = await this.usersService.getSuggestedUsers(userId, 20);
-      }
-
-      return res.render('pages/user/search', {
-        layout: 'layouts/user-layout',
-        title: 'Search',
-        page_title: 'Search Users',
-        folder: 'Search',
-        user: currentUser,
-        searchQuery: searchQuery,
-        users: users,
-        followingMap: followingMap,
-        unreadCount: 0, // TODO: integrate notifications
-      });
-    } catch (error) {
-      console.error('Search page error:', error);
-      req.flash('errors', 'Failed to load search page');
-      return res.redirect('/user/dashboard');
-    }
-  }
-
-  // ─── SEARCH API (AJAX) ───────────────────────────────────────────────────────
-  @Get('api')
-  async searchUsersApi(
+  async getSearchPage(
     @Query('q') query: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
-        return null;
-      }
-      if (!query || query.trim() === '') {
-        return res.json({
-          success: true,
-          users: [],
-        });
+      if (!userId) {
+        return res.redirect('/login');
       }
 
-      const users = await this.usersService.searchUsers(query, userId);
+      const currentUser = await this.usersService.findOne(userId);
 
-      // Get following status
-      const following = await this.usersService.getFollowing(userId);
-      const followingIds = new Set(following.map((u) => u.id));
+      let searchResults:any = [];
+      let suggestedUsers:any = [];
 
-      const usersWithFollowStatus = users.map((user) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        profile_image: user.profile_image,
-        isFollowing: followingIds.has(user.id),
-      }));
+      if (query && query.trim() !== '') {
+        // Perform search - now includes currentUserId
+        searchResults = await this.usersService.searchUsers(
+          query.trim(),
+          userId,
+          userId, // Exclude self from results
+        );
+      } else {
+        // Show suggested users when no search query
+        suggestedUsers = await this.usersService.getSuggestedUsers(userId, 20);
+      }
 
-      return res.json({
-        success: true,
-        users: usersWithFollowStatus,
+      // Get pending requests count for badge
+      const pendingRequestsCount = await this.followsService.getPendingRequestsCount(userId);
+
+      return res.render('pages/user/search/index', {
+        layout: 'layouts/user-layout',
+        title: 'Search Users',
+        page_title: 'Search',
+        folder: 'Search',
+        user: currentUser,
+        query: query || '',
+        searchResults: searchResults,
+        suggestedUsers: suggestedUsers,
+        pendingRequestsCount: pendingRequestsCount,
+        unreadCount: 0,
       });
     } catch (error) {
-      console.error('Search API error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Search failed',
-      });
+      console.error('Search page error:', error);
+      req.flash('error', 'Failed to load search page');
+      return res.redirect('/user/dashboard');
     }
   }
 
-  // ─── FOLLOW USER ─────────────────────────────────────────────────────────────
+  // ─── SEND FOLLOW REQUEST ─────────────────────────────────────────────────────
   @Post(':id/follow')
-  async followUser(
+  async sendFollowRequest(
     @Param('id') targetUserId: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     try {
-      const currentUserId = req.session?.userId;
-      if(!currentUserId){
-        return null;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
-      if (currentUserId === targetUserId) {
-        return res.status(400).json({
-          success: false,
-          error: 'You cannot follow yourself',
+
+      await this.followsService.sendFollowRequest(userId, targetUserId);
+
+      // Create notification for follow request
+      try {
+        await this.notificationsService.create({
+          recipientId: targetUserId,
+          actorId: userId,
+          type: NotificationType.FOLLOW_REQUEST,
         });
+      } catch (error) {
+        console.error('Failed to create notification:', error);
       }
 
-      await this.followsService.follow(currentUserId, targetUserId);
-
-      return res.json({
-        success: true,
-        message: 'User followed successfully',
-      });
+      return res.json({ success: true, status: 'pending' });
     } catch (error) {
-      console.error('Follow error:', error);
-      return res.status(500).json({
+      console.error('Follow request error:', error);
+      return res.status(400).json({
         success: false,
-        error: error.message || 'Failed to follow user',
+        error: error.message || 'Failed to send follow request',
       });
     }
   }
 
-  // ─── UNFOLLOW USER ───────────────────────────────────────────────────────────
+  // ─── UNFOLLOW / CANCEL REQUEST ───────────────────────────────────────────────
   @Delete(':id/follow')
   async unfollowUser(
     @Param('id') targetUserId: string,
@@ -165,67 +122,131 @@ export class UserSearchController {
   ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
-        return null;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
+
       await this.followsService.unfollow(userId, targetUserId);
 
-      return res.json({
-        success: true,
-        message: 'User unfollowed successfully',
-      });
+      return res.json({ success: true });
     } catch (error) {
       console.error('Unfollow error:', error);
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        error: error.message || 'Failed to unfollow user',
+        error: error.message || 'Failed to unfollow',
       });
     }
   }
 
-  // ─── GET FOLLOWERS LIST ──────────────────────────────────────────────────────
-  @Get('followers')
-  async getFollowers(@Req() req: Request, @Res() res: Response) {
+  // ─── ACCEPT FOLLOW REQUEST ───────────────────────────────────────────────────
+  @Post('follow-request/:id/accept')
+  async acceptFollowRequest(
+    @Param('id') followId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
-        return null;
+      if (!userId) {
+        return res.status(401).json({ success: false });
       }
-      const followers = await this.usersService.getFollowers(userId);
 
-      return res.json({
-        success: true,
-        followers: followers,
-      });
+      const follow = await this.followsService.acceptFollowRequest(
+        parseInt(followId),
+        userId,
+      );
+
+      // Create notification for follow accept
+      try {
+        await this.notificationsService.create({
+          recipientId: follow.follower.id,
+          actorId: userId,
+          type: NotificationType.FOLLOW_ACCEPT,
+        });
+      } catch (error) {
+        console.error('Failed to create notification:', error);
+      }
+
+      return res.json({ success: true });
     } catch (error) {
-      console.error('Get followers error:', error);
-      return res.status(500).json({
+      console.error('Accept request error:', error);
+      return res.status(400).json({
         success: false,
-        error: 'Failed to get followers',
+        error: error.message || 'Failed to accept request',
       });
     }
   }
 
-  // ─── GET FOLLOWING LIST ──────────────────────────────────────────────────────
-  @Get('following')
-  async getFollowing(@Req() req: Request, @Res() res: Response) {
+  // ─── REJECT FOLLOW REQUEST ───────────────────────────────────────────────────
+  @Post('follow-request/:id/reject')
+  async rejectFollowRequest(
+    @Param('id') followId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
-        return null;
+      if (!userId) {
+        return res.status(401).json({ success: false });
       }
-      const following = await this.usersService.getFollowing(userId);
 
-      return res.json({
-        success: true,
-        following: following,
+      const follow = await this.followsService.rejectFollowRequest(
+        parseInt(followId),
+        userId,
+      );
+
+      // Create notification for rejection (optional - let sender know)
+      try {
+        await this.notificationsService.create({
+          recipientId: follow.follower.id,
+          actorId: userId,
+          type: NotificationType.FOLLOW_REJECT,
+        });
+      } catch (error) {
+        console.error('Failed to create notification:', error);
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Reject request error:', error);
+      return res.status(400).json({
+        success: false,
+        error: error.message || 'Failed to reject request',
+      });
+    }
+  }
+
+  // ─── GET FOLLOW REQUESTS PAGE ────────────────────────────────────────────────
+  @Get('follow-requests')
+  async getFollowRequestsPage(@Req() req: Request, @Res() res: Response) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.redirect('/login');
+      }
+
+      const currentUser = await this.usersService.findOne(userId);
+
+      // Get pending requests (incoming)
+      const pendingRequests = await this.followsService.getPendingRequests(userId);
+
+      // Get sent requests (outgoing)
+      const sentRequests = await this.followsService.getSentRequests(userId);
+
+      return res.render('pages/user/search/follow-requests', {
+        layout: 'layouts/user-layout',
+        title: 'Follow Requests',
+        page_title: 'Follow Requests',
+        folder: 'Search',
+        user: currentUser,
+        pendingRequests: pendingRequests,
+        sentRequests: sentRequests,
+        unreadCount: 0,
       });
     } catch (error) {
-      console.error('Get following error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to get following',
-      });
+      console.error('Follow requests page error:', error);
+      req.flash('error', 'Failed to load follow requests');
+      return res.redirect('/user/search');
     }
   }
 }

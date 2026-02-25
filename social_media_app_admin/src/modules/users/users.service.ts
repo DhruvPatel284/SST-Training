@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
-import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Not, Like } from 'typeorm';
 import { User } from './user.entity';
+import { UserFollow, FollowStatus } from '../follows/user-follow.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private repo: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private repo: Repository<User>,
+    private dataSource: DataSource,
+  ) {}
 
   async getUsersPaginate(query: PaginateQuery): Promise<Paginated<User>> {
     const results = await paginate(query, this.repo, {
@@ -37,6 +41,7 @@ export class UsersService {
 
     return results;
   }
+
   async findOneByEmail(email: string) {
     const user = await this.repo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('user not found');
@@ -65,7 +70,6 @@ export class UsersService {
 
   async update(id: string, attributes: Partial<User>) {
     const user = await this.findOne(id);
-
     Object.assign(user, attributes);
     return this.repo.save(user);
   }
@@ -77,21 +81,21 @@ export class UsersService {
 
   async remove(id: string) {
     const user = await this.findOne(id);
-
     return this.repo.softRemove(user);
   }
 
   async findOneByVerificationToken(token) {
-    if(!token){
+    if (!token) {
       throw new NotFoundException('Token Not Found');
     }
     return await this.repo.findOne({
-      where:{
-        verificationToken: token
-      }
-    })
+      where: {
+        verificationToken: token,
+      },
+    });
   }
-// ────────────────────────────────────────────────────────────────────
+
+  // ────────────────────────────────────────────────────────────────────
   // Profile Image Management
   // ────────────────────────────────────────────────────────────────────
 
@@ -122,7 +126,7 @@ export class UsersService {
     this.deleteProfileImageFile(user.profile_image);
 
     // Remove from database
-    user.profile_image = "";
+    user.profile_image = '';
     return this.repo.save(user);
   }
 
@@ -139,68 +143,103 @@ export class UsersService {
     }
   }
 
-  async getFollowing(userId: string) {
-  const user = await this.repo.findOne({
-    where: { id: userId },
-    relations:{
-      following: true
-    },
-  });
-  return user?.following || [];
-}
+  // ────────────────────────────────────────────────────────────────────
+  // Follow System - Updated for Follow Requests
+  // ────────────────────────────────────────────────────────────────────
 
   /**
-   * Get list of users that follow a user
-   * @param userId - User ID
-   * @returns Array of users
+   * Get list of users that a user is following (accepted only)
    */
-  async getFollowers(userId: string) {
-    const user = await this.repo.findOne({
-      where: { id: userId },
-      relations: ['followers'],
-    });
+  async getFollowing(userId: string): Promise<User[]> {
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
 
-    return user?.followers || [];
-  }
-
-  /**
-   * Check if user A follows user B
-   * @param followerId - User A's ID
-   * @param followingId - User B's ID
-   * @returns boolean
-   */
-  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
-    const user = await this.repo.findOne({
-      where: { id: followerId },
+    const follows = await userFollowRepo.find({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
       relations: ['following'],
     });
 
-    if (!user) return false;
-
-    return user.following.some((followed) => followed.id === followingId);
+    return follows.map((f) => f.following);
   }
 
   /**
-   * Get user statistics (posts, followers, following counts)
-   * @param userId - User ID
+   * Get list of users that follow a user (accepted only)
+   */
+  async getFollowers(userId: string): Promise<User[]> {
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
+    const follows = await userFollowRepo.find({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+      relations: ['follower'],
+    });
+
+    return follows.map((f) => f.follower);
+  }
+
+  /**
+   * Check if user A follows user B (accepted only)
+   */
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
+    const follow = await userFollowRepo.findOne({
+      where: {
+        follower: { id: followerId },
+        following: { id: followingId },
+        status: FollowStatus.ACCEPTED,
+      },
+    });
+
+    return !!follow;
+  }
+
+  /**
+   * Get user statistics (posts, followers, following counts) - accepted only
    */
   async getUserStats(userId: string) {
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
     const user = await this.repo.findOne({
       where: { id: userId },
-      relations: ['posts', 'followers', 'following'],
+      relations: ['posts'],
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
+
+    // Count accepted followers
+    const followersCount = await userFollowRepo.count({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+    });
+
+    // Count accepted following
+    const followingCount = await userFollowRepo.count({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+    });
 
     return {
       postsCount: user.posts?.length || 0,
-      followersCount: user.followers?.length || 0,
-      followingCount: user.following?.length || 0,
+      followersCount,
+      followingCount,
     };
   }
-  async searchUsers(query: string, excludeUserId?: string) {
+
+  /**
+   * Search users with follow status
+   */
+  async searchUsers(query: string, currentUserId: string, excludeUserId?: string) {
     const whereConditions: any = [
       { name: Like(`%${query}%`) },
       { email: Like(`%${query}%`) },
@@ -216,57 +255,113 @@ export class UsersService {
     const users = await this.repo.find({
       where: whereConditions,
       select: ['id', 'name', 'email', 'profile_image', 'createdAt'],
-      take: 50, // Limit results
+      take: 50,
       order: { name: 'ASC' },
     });
 
-    return users;
+    // Get follow statuses for all users
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
+    const enrichedUsers = await Promise.all(
+      users.map(async (user) => {
+        const follow = await userFollowRepo.findOne({
+          where: {
+            follower: { id: currentUserId },
+            following: { id: user.id },
+          },
+        });
+
+        return {
+          ...user,
+          followStatus: follow?.status || null,
+        };
+      }),
+    );
+
+    return enrichedUsers;
   }
 
   /**
    * Get suggested users (users not following yet)
-   * @param userId - Current user ID
-   * @param limit - Number of suggestions
    */
   async getSuggestedUsers(userId: string, limit: number = 10) {
-    // Get current user with following list
-    const currentUser = await this.repo.findOne({
-      where: { id: userId },
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
+    // Get IDs of users already following or requested (accepted + pending)
+    const existingFollows = await userFollowRepo.find({
+      where: {
+        follower: { id: userId },
+        status: Not(FollowStatus.REJECTED),
+      },
       relations: ['following'],
     });
 
-    if (!currentUser) return [];
-
-    const followingIds = currentUser.following.map((user) => user.id);
+    const followingIds = existingFollows.map((f) => f.following.id);
     followingIds.push(userId); // Also exclude self
 
     // Find users not in following list
-    const suggestedUsers = await this.repo
-      .createQueryBuilder('user')
+    const queryBuilder = this.repo.createQueryBuilder('user');
+
+    queryBuilder
       .where('user.id NOT IN (:...ids)', { ids: followingIds })
       .select(['user.id', 'user.name', 'user.email', 'user.profile_image'])
-      .orderBy('user.createdAt', 'DESC') // Newest users first
-      .limit(limit)
-      .getMany();
+      .orderBy('user.createdAt', 'DESC')
+      .limit(limit);
 
-    return suggestedUsers;
+    const suggestedUsers = await queryBuilder.getMany();
+
+    // Add follow status
+    const enrichedUsers = await Promise.all(
+      suggestedUsers.map(async (user) => {
+        const follow = await userFollowRepo.findOne({
+          where: {
+            follower: { id: userId },
+            following: { id: user.id },
+          },
+        });
+
+        return {
+          ...user,
+          followStatus: follow?.status || null,
+        };
+      }),
+    );
+
+    return enrichedUsers;
   }
 
   /**
    * Get users with most followers (popular users)
    */
   async getPopularUsers(limit: number = 10) {
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
+
     const users = await this.repo
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.followers', 'followers')
       .select(['user.id', 'user.name', 'user.email', 'user.profile_image'])
-      .addSelect('COUNT(followers.id)', 'followerCount')
-      .groupBy('user.id')
-      .orderBy('followerCount', 'DESC')
-      .limit(limit)
       .getMany();
 
-    return users;
+    // Count accepted followers for each user
+    const usersWithCounts = await Promise.all(
+      users.map(async (user) => {
+        const followerCount = await userFollowRepo.count({
+          where: {
+            following: { id: user.id },
+            status: FollowStatus.ACCEPTED,
+          },
+        });
+
+        return {
+          ...user,
+          followerCount,
+        };
+      }),
+    );
+
+    // Sort by follower count and limit
+    return usersWithCounts
+      .sort((a, b) => b.followerCount - a.followerCount)
+      .slice(0, limit);
   }
 
   /**
@@ -275,96 +370,99 @@ export class UsersService {
   async findOneForProfile(userId: string) {
     return await this.repo.findOne({
       where: { id: userId },
-      relations: ['posts', 'posts.media', 'followers', 'following'],
+      relations: ['posts', 'posts.media'],
     });
   }
 
+  /**
+   * Get paginated followers (accepted only)
+   */
   async getFollowersPaginated(
-  userId: string,
-  page: number = 1,
-  limit: number = 20,
-) {
-  const skip = (page - 1) * limit;
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const skip = (page - 1) * limit;
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
 
-  // Get user with followers
-  const user = await this.repo.findOne({
-    where: { id: userId },
-    relations: ['followers'],
-  });
+    // Get total count
+    const totalFollowers = await userFollowRepo.count({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+    });
 
-  if (!user) {
-    throw new NotFoundException('User not found');
+    // Get paginated followers
+    const follows = await userFollowRepo.find({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+      relations: ['follower'],
+      order: {
+        createdAt: 'DESC',
+      },
+      skip,
+      take: limit,
+    });
+
+    const followers = follows.map((f) => f.follower);
+
+    const totalPages = Math.ceil(totalFollowers / limit);
+
+    return {
+      followers,
+      currentPage: page,
+      totalPages,
+      totalFollowers,
+      hasMore: page < totalPages,
+    };
   }
 
-  const totalFollowers = user.followers?.length || 0;
+  /**
+   * Get paginated following (accepted only)
+   */
+  async getFollowingPaginated(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const skip = (page - 1) * limit;
+    const userFollowRepo = this.dataSource.getRepository(UserFollow);
 
-  // Get paginated followers
-  const followers = await this.repo
-    .createQueryBuilder('follower')
-    .innerJoin('follower.following', 'following')
-    .where('following.id = :userId', { userId })
-    .select(['follower.id', 'follower.name', 'follower.email', 'follower.profile_image'])
-    .orderBy('follower.name', 'ASC')
-    .skip(skip)
-    .take(limit)
-    .getMany();
+    // Get total count
+    const totalFollowing = await userFollowRepo.count({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+    });
 
-  const totalPages = Math.ceil(totalFollowers / limit);
+    // Get paginated following
+    const follows = await userFollowRepo.find({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+      relations: ['following'],
+      order: {
+        createdAt: 'DESC',
+      },
+      skip,
+      take: limit,
+    });
 
-  return {
-    followers,
-    currentPage: page,
-    totalPages,
-    totalFollowers,
-    hasMore: page < totalPages,
-  };
-}
+    const following = follows.map((f) => f.following);
 
-/**
- * Get paginated following list
- * @param userId - User ID
- * @param page - Page number (1-indexed)
- * @param limit - Items per page
- */
-async getFollowingPaginated(
-  userId: string,
-  page: number = 1,
-  limit: number = 20,
-) {
-  const skip = (page - 1) * limit;
+    const totalPages = Math.ceil(totalFollowing / limit);
 
-  // Get user with following
-  const user = await this.repo.findOne({
-    where: { id: userId },
-    relations: ['following'],
-  });
-
-  if (!user) {
-    throw new NotFoundException('User not found');
+    return {
+      following,
+      currentPage: page,
+      totalPages,
+      totalFollowing,
+      hasMore: page < totalPages,
+    };
   }
-
-  const totalFollowing = user.following?.length || 0;
-
-  // Get paginated following
-  const following = await this.repo
-    .createQueryBuilder('following')
-    .innerJoin('following.followers', 'follower')
-    .where('follower.id = :userId', { userId })
-    .select(['following.id', 'following.name', 'following.email', 'following.profile_image'])
-    .orderBy('following.name', 'ASC')
-    .skip(skip)
-    .take(limit)
-    .getMany();
-
-  const totalPages = Math.ceil(totalFollowing / limit);
-
-  return {
-    following,
-    currentPage: page,
-    totalPages,
-    totalFollowing,
-    hasMore: page < totalPages,
-  };
-}
-
 }

@@ -8,6 +8,7 @@ import { Post } from './modules/posts/post.entity';
 import { PostMedia } from './modules/posts/post-media.entity';
 import { Comment } from './modules/comments/comment.entity';
 import { Notification } from './modules/notifications/notification.entity';
+import { UserFollow } from './modules/follows/user-follow.entity';
 
 // we can't access configService directly here because this file is loaded before the AppModule
 dotenv.config();
@@ -20,7 +21,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User, OAuthAccessToken, Post, PostMedia, Comment, Notification],
+  entities: [User, OAuthAccessToken, Post, PostMedia, Comment, Notification, UserFollow],
   migrations: [__dirname + '/database/migrations/*.ts'],
   // ssl: {  // this ssl config is needed when connecting to some cloud db providers with https
   //   rejectUnauthorized: false,

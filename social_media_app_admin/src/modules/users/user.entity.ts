@@ -13,6 +13,7 @@ import {
 import { Post } from '../posts/post.entity'
 import { Comment } from '../comments/comment.entity';
 import { OAuthAccessToken } from '../oauth-access-token/oauth-access-token.entity';
+import { UserFollow } from '../follows/user-follow.entity';
 
 export enum UserRole {
   User = 'user',
@@ -87,12 +88,11 @@ export class User {
   })
   likes:Post[];
 
-  @ManyToMany(() => User, user => user.following)
-  @JoinTable({ name: 'user_follows' })
-  followers: User[];
+  @OneToMany(() => UserFollow, f => f.follower)
+  followingRelations: UserFollow[];
 
-  @ManyToMany(() => User, user => user.followers)
-  following: User[];
+  @OneToMany(() => UserFollow, f => f.following)
+  followerRelations: UserFollow[];
 
   // Virtual fields
   followersCount?: number;

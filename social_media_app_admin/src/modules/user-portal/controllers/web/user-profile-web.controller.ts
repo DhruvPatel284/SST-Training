@@ -97,14 +97,17 @@ export class UserProfileController {
         return res.redirect('/user/search');
       }
 
-      // Check if following
-      const isFollowing = await this.followsService.isFollowing(
+      // Get follow status
+      const followStatus = await this.followsService.getFollowStatus(
         currentUserId,
         targetUserId,
       );
 
+      // Check if following (accepted only)
+      const isFollowing = followStatus === 'accepted';
+
       // Get posts (only if following)
-      let posts:any = [];
+      let posts: any = [];
       if (isFollowing) {
         posts = await this.postsService.getPostsByUser(targetUserId);
       }
@@ -123,6 +126,7 @@ export class UserProfileController {
         stats: stats,
         isOwnProfile: false,
         isFollowing: isFollowing,
+        followStatus: followStatus, // NEW: pending/accepted/rejected/null
         unreadCount: 0,
       });
     } catch (error) {

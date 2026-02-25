@@ -1,4 +1,6 @@
 <%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 <style>
   .profile-cover {
     height: 200px;
@@ -99,19 +101,43 @@
       
       <div class="card-body pt-0 pt-sm-4">
         <div class="d-flex justify-content-end mt-3 mt-sm-0 mb-4">
-          <button 
-            class="btn <%= isFollowing ? 'btn-success' : 'btn-primary' %> follow-btn"
-            id="followBtn"
-            data-user-id="<%= profileUser.id %>"
-            data-following="<%= isFollowing %>"
-            onclick="toggleFollow()"
-          >
-            <% if (isFollowing) { %>
+          
+          <% if (followStatus === 'accepted') { %>
+            <button 
+              class="btn btn-success follow-btn"
+              id="followBtn"
+              data-user-id="<%= profileUser.id %>"
+              data-status="accepted"
+              data-bs-toggle="modal" 
+              data-bs-target="#actionConfirmationModal"
+              onclick="prepareAction('unfollow')"
+            >
               <i class="ri-user-follow-line align-bottom me-1"></i> Following
-            <% } else { %>
+            </button>
+          <% } else if (followStatus === 'pending') { %>
+            <button 
+              class="btn btn-secondary follow-btn"
+              id="followBtn"
+              data-user-id="<%= profileUser.id %>"
+              data-status="pending"
+              data-bs-toggle="modal" 
+              data-bs-target="#actionConfirmationModal"
+              onclick="prepareAction('cancel')"
+            >
+              <i class="ri-time-line align-bottom me-1"></i> Requested
+            </button>
+          <% } else { %>
+            <button 
+              class="btn btn-primary follow-btn"
+              id="followBtn"
+              data-user-id="<%= profileUser.id %>"
+              data-status="none"
+              onclick="sendFollowRequest()"
+            >
               <i class="ri-user-add-line align-bottom me-1"></i> Follow
-            <% } %>
-          </button>
+            </button>
+          <% } %>
+
         </div>
 
         <div class="row">
@@ -196,10 +222,16 @@
           <div class="text-center py-5">
             <lord-icon src="https://cdn.lordicon.com/vusqmlgp.json" trigger="loop" colors="primary:#405189" style="width:100px;height:100px"></lord-icon>
             <h5 class="mt-3">This Account is Private</h5>
-            <p class="text-muted">Follow <%= profileUser.name.split(' ')[0] %> to see their posts.</p>
-            <button class="btn btn-primary mt-3" onclick="toggleFollow()">
-              <i class="ri-user-add-line align-bottom me-1"></i> Follow
-            </button>
+            
+            <% if (followStatus === 'pending') { %>
+              <p class="text-muted">Follow request sent. Waiting for approval.</p>
+            <% } else { %>
+              <p class="text-muted">Follow <%= profileUser.name.split(' ')[0] %> to see their posts.</p>
+              <button class="btn btn-primary mt-3" onclick="document.getElementById('followBtn').click()">
+                <i class="ri-user-add-line align-bottom me-1"></i> Follow
+              </button>
+            <% } %>
+
           </div>
         <% } %>
       </div>
@@ -207,43 +239,128 @@
   </div>
 </div>
 
+<div class="modal fade zoomIn" id="actionConfirmationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="actionConfirmationModal-close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="action-form" method="POST">
+          <div class="mt-2 text-center">
+            <lord-icon
+              src="https://cdn.lordicon.com/gsqxdxog.json"
+              trigger="loop"
+              colors="primary:#f7b84b,secondary:#f06548"
+              style="width: 100px; height: 100px"
+            ></lord-icon>
+            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+              <h4>Are you sure?</h4>
+              <p class="text-muted mx-4 mb-0" id="action-modal-text">
+                Are you sure you want to perform this action?
+              </p>
+              <input type="hidden" id="modal-action-type" />
+            </div>
+          </div>
+          <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn w-sm btn-danger" id="action-confirmation">Yes, Proceed</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
-// ─── TOGGLE FOLLOW/UNFOLLOW ─────────────────────────────────────────────────
-async function toggleFollow() {
+// ─── VIEW POST ───────────────────────────────────────────────────────────────
+function viewPost(postId) {
+  window.location.href = `/user/posts/${postId}`;
+}
+
+// ─── FOLLOW LOGIC ────────────────────────────────────────────────────────────
+async function sendFollowRequest() {
   const button = document.getElementById('followBtn');
   const userId = button.dataset.userId;
-  const isFollowing = button.dataset.following === 'true';
 
   try {
     button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
 
     const response = await fetch(`/user/search/${userId}/follow`, {
-      method: isFollowing ? 'DELETE' : 'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (response.ok) {
-      // Reload page to show/hide posts
+    const data = await response.json();
+
+    if (data.success) {
+      // Reload the page so the server can re-render the UI correctly
+      // (This ensures the Private account message updates to "Pending Approval")
       location.reload();
     } else {
-      const error = await response.json();
-      Swal.fire('Error', error.error || 'Failed to update follow status', 'error');
+      Swal.fire('Error', data.error || 'Failed to send request', 'error');
+      button.innerHTML = '<i class="ri-user-add-line align-bottom me-1"></i> Follow';
     }
   } catch (error) {
     console.error('Follow error:', error);
-    Swal.fire('Error', 'Failed to update follow status', 'error');
+    Swal.fire('Error', 'Failed to send follow request', 'error');
+    button.innerHTML = '<i class="ri-user-add-line align-bottom me-1"></i> Follow';
   } finally {
     button.disabled = false;
   }
 }
 
-// ─── VIEW POST ───────────────────────────────────────────────────────────────
-function viewPost(postId) {
-  // Redirect to post detail page (to be implemented)
-  window.location.href = `/user/posts/${postId}`;
+// ─── MODAL LOGIC (UNFOLLOW / CANCEL) ─────────────────────────────────────────
+function prepareAction(actionType) {
+  const modalText = document.getElementById('action-modal-text');
+  const confirmBtn = document.getElementById('action-confirmation');
+  document.getElementById('modal-action-type').value = actionType;
+
+  if (actionType === 'unfollow') {
+    modalText.innerText = "Are you sure you want to unfollow this user?";
+    confirmBtn.innerText = "Yes, Unfollow";
+  } else if (actionType === 'cancel') {
+    modalText.innerText = "Are you sure you want to cancel this follow request?";
+    confirmBtn.innerText = "Yes, Cancel Request";
+  }
 }
 
+document.getElementById('action-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const button = document.getElementById('followBtn');
+  const userId = button.dataset.userId;
+  
+  const submitBtn = document.getElementById('action-confirmation');
+  const originalText = submitBtn.innerText;
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+
+    // Both Unfollow and Cancel use the DELETE endpoint
+    const response = await fetch(`/user/search/${userId}/follow`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.ok) {
+      // Reload to safely reset posts state and buttons
+      location.reload();
+    } else {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to complete action');
+    }
+  } catch (error) {
+    console.error('Action error:', error);
+    Swal.fire('Error', error.message || 'An error occurred', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalText;
+  }
+});
 </script>

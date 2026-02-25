@@ -288,4 +288,32 @@ export class NotificationsService {
       type: NotificationType.FOLLOW,
     });
   }
+
+  /**
+   * Create notification for follow request
+   */
+  async createFollowRequestNotification(
+    recipientId: string,
+    actorId: string,
+  ): Promise<Notification | null> {
+    return this.create({
+      recipientId,
+      actorId,
+      type: NotificationType.FOLLOW_REQUEST,
+    });
+  }
+
+  /**
+   * Create notification for follow accept
+   */
+  async createFollowAcceptNotification(
+    recipientId: string,
+    actorId: string,
+  ): Promise<Notification | null> {
+    return this.create({
+      recipientId,
+      actorId,
+      type: NotificationType.FOLLOW_ACCEPT,
+    });
+  }
 }

@@ -1,30 +1,28 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
-import { NotificationsService } from '../notifications/notifications.service';
+import { UserFollow, FollowStatus } from './user-follow.entity';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-    private notificationsService: NotificationsService,
+    @InjectRepository(UserFollow)
+    private userFollowRepo: Repository<UserFollow>,
   ) {}
 
   /**
-   * Follow a user
-   * @param followerId - User who is following
-   * @param followingId - User being followed
+   * Send follow request
    */
-  async follow(followerId: string, followingId: string) {
+  async sendFollowRequest(followerId: string, followingId: string) {
     if (followerId === followingId) {
       throw new BadRequestException('You cannot follow yourself');
     }
 
     const follower = await this.userRepo.findOne({
       where: { id: followerId },
-      relations: ['following'],
     });
 
     const following = await this.userRepo.findOne({
@@ -35,99 +33,223 @@ export class FollowsService {
       throw new BadRequestException('User not found');
     }
 
-    const isAlreadyFollowing = follower.following.some(
-      (user) => user.id === followingId,
-    );
+    // Check if follow relationship already exists
+    const existing = await this.userFollowRepo.findOne({
+      where: {
+        follower: { id: followerId },
+        following: { id: followingId },
+      },
+    });
 
-    if (isAlreadyFollowing) {
-      throw new BadRequestException('You are already following this user');
+    if (existing) {
+      if (existing.status === FollowStatus.PENDING) {
+        throw new BadRequestException('Follow request already sent');
+      }
+      if (existing.status === FollowStatus.ACCEPTED) {
+        throw new BadRequestException('You are already following this user');
+      }
+      // If rejected, allow sending new request
+      existing.status = FollowStatus.PENDING;
+      existing.createdAt = new Date();
+      return await this.userFollowRepo.save(existing);
     }
 
-    follower.following.push(following);
-    await this.userRepo.save(follower);
+    // Create new follow request
+    const followRequest = this.userFollowRepo.create({
+      follower,
+      following,
+      status: FollowStatus.PENDING,
+    });
 
-    // CREATE NOTIFICATION (ADD THIS)
-    try {
-      await this.notificationsService.createFollowNotification(
-        followingId,
-        followerId,
-      );
-    } catch (error) {
-      console.error('Failed to create follow notification:', error);
-    }
-
-    return {
-      success: true,
-      message: 'User followed successfully',
-    };
+    return await this.userFollowRepo.save(followRequest);
   }
 
   /**
-   * Unfollow a user
-   * @param followerId - User who is unfollowing
-   * @param followingId - User being unfollowed
+   * Accept follow request
+   */
+  async acceptFollowRequest(followId: number, userId: string) {
+    const follow = await this.userFollowRepo.findOne({
+      where: { id: followId },
+      relations: ['follower', 'following'],
+    });
+
+    if (!follow) {
+      throw new NotFoundException('Follow request not found');
+    }
+
+    // Verify user is the recipient
+    if (follow.following.id !== userId) {
+      throw new BadRequestException('You can only accept requests sent to you');
+    }
+
+    if (follow.status === FollowStatus.ACCEPTED) {
+      throw new BadRequestException('Request already accepted');
+    }
+
+    follow.status = FollowStatus.ACCEPTED;
+    follow.acceptedAt = new Date();
+
+    return await this.userFollowRepo.save(follow);
+  }
+
+  /**
+   * Reject follow request
+   */
+  async rejectFollowRequest(followId: number, userId: string) {
+    const follow = await this.userFollowRepo.findOne({
+      where: { id: followId },
+      relations: ['follower', 'following'],
+    });
+
+    if (!follow) {
+      throw new NotFoundException('Follow request not found');
+    }
+
+    // Verify user is the recipient
+    if (follow.following.id !== userId) {
+      throw new BadRequestException('You can only reject requests sent to you');
+    }
+
+    follow.status = FollowStatus.REJECTED;
+    await this.userFollowRepo.save(follow);
+    
+    return follow;
+  }
+
+  /**
+   * Unfollow / Cancel request
    */
   async unfollow(followerId: string, followingId: string) {
-    const follower = await this.userRepo.findOne({
-      where: { id: followerId },
-      relations: ['following'],
+    const follow = await this.userFollowRepo.findOne({
+      where: {
+        follower: { id: followerId },
+        following: { id: followingId },
+      },
     });
 
-    if (!follower) {
-      throw new BadRequestException('User not found');
+    if (!follow) {
+      throw new BadRequestException('Follow relationship not found');
     }
 
-    // Check if actually following
-    const followingIndex = follower.following.findIndex(
-      (user) => user.id === followingId,
-    );
-
-    if (followingIndex === -1) {
-      throw new BadRequestException('You are not following this user');
-    }
-
-    // Remove from following list
-    follower.following.splice(followingIndex, 1);
-    await this.userRepo.save(follower);
+    await this.userFollowRepo.remove(follow);
 
     return {
       success: true,
-      message: 'User unfollowed successfully',
+      message: 'Unfollowed successfully',
     };
   }
 
   /**
-   * Check if user A follows user B
+   * Check if user is following another user (accepted only)
    */
-  async isFollowing(
-    followerId: string,
-    followingId: string,
-  ): Promise<boolean> {
-    const follower = await this.userRepo.findOne({
-      where: { id: followerId },
-      relations: ['following'],
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const follow = await this.userFollowRepo.findOne({
+      where: {
+        follower: { id: followerId },
+        following: { id: followingId },
+        status: FollowStatus.ACCEPTED,
+      },
     });
 
-    if (!follower) return false;
-
-    return follower.following.some((user) => user.id === followingId);
+    return !!follow;
   }
 
   /**
-   * Get mutual followers (users who follow each other)
+   * Get follow status between two users
    */
-  async getMutualFollowers(userId: string) {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-      relations: ['followers', 'following'],
+  async getFollowStatus(
+    followerId: string,
+    followingId: string,
+  ): Promise<FollowStatus | null> {
+    const follow = await this.userFollowRepo.findOne({
+      where: {
+        follower: { id: followerId },
+        following: { id: followingId },
+      },
     });
 
-    if (!user) return [];
+    return follow?.status || null;
+  }
 
-    // Find users who are in both lists
-    const followerIds = new Set(user.followers.map((u) => u.id));
-    const mutual = user.following.filter((u) => followerIds.has(u.id));
+  /**
+   * Get pending requests (incoming)
+   */
+  async getPendingRequests(userId: string) {
+    const follows = await this.userFollowRepo.find({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.PENDING,
+      },
+      relations: ['follower'],
+      order: { createdAt: 'DESC' },
+    });
 
-    return mutual;
+    return follows.map((f) => ({
+      id: f.id,
+      user: f.follower,
+      createdAt: f.createdAt,
+    }));
+  }
+
+  /**
+   * Get sent requests (outgoing)
+   */
+  async getSentRequests(userId: string) {
+    const follows = await this.userFollowRepo.find({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.PENDING,
+      },
+      relations: ['following'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return follows.map((f) => ({
+      id: f.id,
+      user: f.following,
+      createdAt: f.createdAt,
+    }));
+  }
+
+  /**
+   * Get followers (accepted only)
+   */
+  async getFollowers(userId: string): Promise<User[]> {
+    const follows = await this.userFollowRepo.find({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+      relations: ['follower'],
+    });
+
+    return follows.map((f) => f.follower);
+  }
+
+  /**
+   * Get following (accepted only)
+   */
+  async getFollowing(userId: string): Promise<User[]> {
+    const follows = await this.userFollowRepo.find({
+      where: {
+        follower: { id: userId },
+        status: FollowStatus.ACCEPTED,
+      },
+      relations: ['following'],
+    });
+
+    return follows.map((f) => f.following);
+  }
+
+  /**
+   * Get pending requests count
+   */
+  async getPendingRequestsCount(userId: string): Promise<number> {
+    return await this.userFollowRepo.count({
+      where: {
+        following: { id: userId },
+        status: FollowStatus.PENDING,
+      },
+    });
   }
 }
