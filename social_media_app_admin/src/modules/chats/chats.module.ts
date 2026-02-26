@@ -1,0 +1,17 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { Chat } from './chat.entity';
+import { ChatMember } from './chat-member.entity';
+import { ChatMessage } from './chat-message.entity';
+import { ChatsService } from './chats.service';
+import { User } from '../users/user.entity';
+import { FollowsModule } from '../follows/follows.module';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Chat, ChatMember, ChatMessage, User]), FollowsModule],
+  providers: [ChatsService],
+  exports: [ChatsService],
+})
+export class ChatsModule {}
+
