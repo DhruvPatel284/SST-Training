@@ -140,6 +140,29 @@ export class FollowsService {
   }
 
   /**
+   * Remove a follower (owner removes someone who follows them)
+   */
+  async removeFollower(ownerId: string, followerIdToRemove: string) {
+    const follow = await this.userFollowRepo.findOne({
+      where: {
+        follower: { id: followerIdToRemove },
+        following: { id: ownerId },
+      },
+    });
+
+    if (!follow) {
+      throw new BadRequestException('Follow relationship not found');
+    }
+
+    await this.userFollowRepo.remove(follow);
+
+    return {
+      success: true,
+      message: 'Follower removed successfully',
+    };
+  }
+
+  /**
    * Check if user is following another user (accepted only)
    */
   async isFollowing(followerId: string, followingId: string): Promise<boolean> {

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Query,
@@ -28,16 +29,16 @@ export class UserProfileController {
     private usersService: UsersService,
     private postsService: PostsService,
     private followsService: FollowsService,
-  ) {}
+  ) { }
 
   // ─── OWN PROFILE (EDITABLE) ──────────────────────────────────────────────────
   @Get()
   async getOwnProfile(@Req() req: Request, @Res() res: Response) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
-      }      
+      }
       const currentUser = await this.usersService.findOne(userId);
 
       if (!currentUser) {
@@ -81,7 +82,7 @@ export class UserProfileController {
   ) {
     try {
       const currentUserId = req.session?.userId;
-      if(!currentUserId){
+      if (!currentUserId) {
         return null;
       }
       // If viewing own profile, redirect to /user/profile
@@ -106,6 +107,13 @@ export class UserProfileController {
       // Check if following (accepted only)
       const isFollowing = followStatus === 'accepted';
 
+      // Can chat if there is an accepted follow in either direction
+      const isFollower = await this.followsService.isFollowing(
+        targetUserId,
+        currentUserId,
+      );
+      const canChat = isFollowing || isFollower;
+
       // Get posts (only if following)
       let posts: any = [];
       if (isFollowing) {
@@ -127,6 +135,7 @@ export class UserProfileController {
         isOwnProfile: false,
         isFollowing: isFollowing,
         followStatus: followStatus, // NEW: pending/accepted/rejected/null
+        canChat: canChat,
         unreadCount: 0,
       });
     } catch (error) {
@@ -146,7 +155,7 @@ export class UserProfileController {
     try {
       console.log("Hi ----")
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
       }
       // Validate
@@ -190,7 +199,7 @@ export class UserProfileController {
     console.log("hi -------")
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
       }
 
@@ -220,9 +229,9 @@ export class UserProfileController {
   async deleteProfileImage(@Req() req: Request, @Res() res: Response) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
-      }      
+      }
       await this.usersService.deleteProfileImage(userId);
 
       req.flash('success', 'Profile image deleted successfully');
@@ -385,6 +394,31 @@ export class UserProfileController {
       return res.redirect('/login');
     }
     return res.redirect(`/user/profile/${userId}/following`);
+  }
+
+  // ─── REMOVE A FOLLOWER ───────────────────────────────────────────────────────
+  @Delete(':id/remove-follower')
+  async removeFollower(
+    @Param('id') followerUserId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const currentUserId = req.session?.userId;
+      if (!currentUserId) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+
+      await this.followsService.removeFollower(currentUserId, followerUserId);
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Remove follower error:', error);
+      return res.status(400).json({
+        success: false,
+        error: error.message || 'Failed to remove follower',
+      });
+    }
   }
 
 }
