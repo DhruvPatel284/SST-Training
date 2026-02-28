@@ -9,6 +9,9 @@ import { PostMedia } from './modules/posts/post-media.entity';
 import { Comment } from './modules/comments/comment.entity';
 import { Notification } from './modules/notifications/notification.entity';
 import { UserFollow } from './modules/follows/user-follow.entity';
+import { Chat } from './modules/chats/chat.entity';
+import { ChatMember } from './modules/chats/chat-member.entity';
+import { ChatMessage } from './modules/chats/chat-message.entity';
 
 // we can't access configService directly here because this file is loaded before the AppModule
 dotenv.config();
@@ -21,7 +24,18 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User, OAuthAccessToken, Post, PostMedia, Comment, Notification, UserFollow],
+  entities: [
+    User,
+    OAuthAccessToken,
+    Post,
+    PostMedia,
+    Comment,
+    Notification,
+    UserFollow,
+    Chat,
+    ChatMember,
+    ChatMessage,
+  ],
   migrations: [__dirname + '/database/migrations/*.ts'],
   // ssl: {  // this ssl config is needed when connecting to some cloud db providers with https
   //   rejectUnauthorized: false,

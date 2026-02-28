@@ -138,6 +138,12 @@
             </button>
           <% } %>
 
+          <% if (canChat) { %>
+            <a href="/user/chats/with/<%= profileUser.id %>" class="btn btn-soft-primary ms-2">
+              <i class="ri-question-answer-line align-bottom me-1"></i> Chat
+            </a>
+          <% } %>
+
         </div>
 
         <div class="row">

@@ -9,6 +9,8 @@ import { FollowsModule } from '../follows/follows.module';
 import { UserProfileController } from './controllers/web/user-profile-web.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UserNotificationsController } from './controllers/web/user-notifications-web.controller';
+import { ChatsModule } from '../chats/chats.module';
+import { UserChatsWebController } from './controllers/web/user-chats-web.controller';
 
 @Module({
   imports: [
@@ -16,7 +18,8 @@ import { UserNotificationsController } from './controllers/web/user-notification
     PostsModule,
     CommentsModule,
     FollowsModule,
-    NotificationsModule // For feed posts
+    NotificationsModule, // For feed posts
+    ChatsModule,
   ],
   controllers: [
     UserDashboardController,
@@ -24,6 +27,7 @@ import { UserNotificationsController } from './controllers/web/user-notification
     UserSearchController,
     UserProfileController,
     UserNotificationsController,
+    UserChatsWebController,
   ]
 })
 export class UserPortalModule {}
