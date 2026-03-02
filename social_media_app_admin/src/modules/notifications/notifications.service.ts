@@ -17,7 +17,7 @@ export class NotificationsService {
     private postRepo: Repository<Post>,
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
-  ) {}
+  ) { }
 
   /**
    * Create a new notification
@@ -314,6 +314,35 @@ export class NotificationsService {
       recipientId,
       actorId,
       type: NotificationType.FOLLOW_ACCEPT,
+    });
+  }
+
+  /** Notify a user they were added to a group chat. meta: { chatId, groupName } */
+  async createGroupAddNotification(
+    recipientId: string,
+    actorId: string,
+    chatId: number,
+    groupName: string,
+  ): Promise<Notification | null> {
+    return this.create({
+      recipientId,
+      actorId,
+      type: NotificationType.GROUP_ADD,
+      meta: { chatId, groupName },
+    });
+  }
+
+  /** Notify a user they were removed from a group chat. meta: { groupName } */
+  async createGroupRemoveNotification(
+    recipientId: string,
+    actorId: string,
+    groupName: string,
+  ): Promise<Notification | null> {
+    return this.create({
+      recipientId,
+      actorId,
+      type: NotificationType.GROUP_REMOVE,
+      meta: { groupName },
     });
   }
 }

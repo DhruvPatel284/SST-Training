@@ -20,7 +20,7 @@ export class UserChatsWebController {
   constructor(
     private chatsService: ChatsService,
     private usersService: UsersService,
-  ) {}
+  ) { }
 
   // UI #1: Topbar -> sidebar list + conversation
   @Get()
@@ -142,13 +142,13 @@ export class UserChatsWebController {
         success: true,
         message: msg
           ? {
-              id: msg.id,
-              chatId: Number(chatId),
-              senderId: msg.sender?.id ?? null,
-              content: msg.isDeleted ? 'This message was deleted' : msg.content,
-              isDeleted: msg.isDeleted,
-              createdAt: msg.createdAt,
-            }
+            id: msg.id,
+            chatId: Number(chatId),
+            senderId: msg.sender?.id ?? null,
+            content: msg.isDeleted ? 'This message was deleted' : msg.content,
+            isDeleted: msg.isDeleted,
+            createdAt: msg.createdAt,
+          }
           : null,
       });
     } catch (error) {
@@ -176,5 +176,120 @@ export class UserChatsWebController {
       return res.status(400).json({ success: false, error: 'Failed to delete message' });
     }
   }
-}
 
+  // -------------------- Group chat routes --------------------
+
+  // Page: create group form
+  @Get('group/new')
+  async createGroupPage(@Req() req: Request, @Res() res: Response) {
+    const userId = req.session?.userId;
+    if (!userId) return res.redirect('/login');
+
+    const user = await this.usersService.findOne(userId);
+    if (!user) return res.redirect('/login');
+
+    const network = await this.chatsService.getFollowNetwork(userId);
+
+    return res.render('pages/user/chat/create-group', {
+      layout: 'layouts/user-layout',
+      title: 'Create Group',
+      page_title: 'Create Group',
+      folder: 'Chats',
+      user,
+      network,
+      unreadCount: 0,
+    });
+  }
+
+  // API: create a group chat
+  @Post('api/group')
+  async apiCreateGroup(
+    @Body() body: { name: string; memberIds: string[] },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      const chat = await this.chatsService.createGroupChat(
+        userId,
+        body.name,
+        Array.isArray(body.memberIds) ? body.memberIds : [],
+      );
+      return res.json({ success: true, chatId: chat.id });
+    } catch (error) {
+      console.error('Create group chat error:', error);
+      return res.status(400).json({ success: false, error: error?.message ?? 'Failed to create group' });
+    }
+  }
+
+  // API: get followers + following for member picker
+  @Get('api/followers-following')
+  async apiFollowNetwork(@Req() req: Request, @Res() res: Response) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      const users = await this.chatsService.getFollowNetwork(userId);
+      return res.json({ success: true, users });
+    } catch (error) {
+      console.error('Follow network error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to load network' });
+    }
+  }
+
+  // API: get group chat details (members, creator)
+  @Get('api/group/:chatId/members')
+  async apiGroupMembers(
+    @Param('chatId') chatId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      const details = await this.chatsService.getChatDetails(Number(chatId), userId);
+      return res.json({ success: true, ...details });
+    } catch (error) {
+      console.error('Group members error:', error);
+      return res.status(400).json({ success: false, error: 'Failed to load group members' });
+    }
+  }
+
+  // API: add a member to a group (creator only)
+  @Post('api/group/:chatId/members/add')
+  async apiAddGroupMember(
+    @Param('chatId') chatId: string,
+    @Body() body: { userId: string },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      await this.chatsService.addGroupMember(Number(chatId), userId, body.userId);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Add member error:', error);
+      return res.status(400).json({ success: false, error: error?.message ?? 'Failed to add member' });
+    }
+  }
+
+  // API: remove a member from a group (creator only)
+  @Post('api/group/:chatId/members/remove')
+  async apiRemoveGroupMember(
+    @Param('chatId') chatId: string,
+    @Body() body: { userId: string },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      await this.chatsService.removeGroupMember(Number(chatId), userId, body.userId);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Remove member error:', error);
+      return res.status(400).json({ success: false, error: error?.message ?? 'Failed to remove member' });
+    }
+  }
+}

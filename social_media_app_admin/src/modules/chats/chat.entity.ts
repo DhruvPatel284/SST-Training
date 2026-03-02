@@ -26,6 +26,9 @@ export class Chat {
   })
   type: ChatType;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  name: string | null;
+
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   creator: User | null;
 
@@ -41,4 +44,3 @@ export class Chat {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

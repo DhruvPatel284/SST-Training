@@ -7,10 +7,12 @@ import { ChatMember } from './chat-member.entity';
 import { ChatMessage, ChatMessageType } from './chat-message.entity';
 import { User } from '../users/user.entity';
 import { FollowsService } from '../follows/follows.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 type ListChatsItem = {
   chatId: number;
   type: 'direct' | 'group';
+  groupName: string | null;
   otherUser: { id: string; name: string; profile_image?: string | null } | null;
   lastMessage: { id: number; content: string; createdAt: Date; senderId: string | null } | null;
   unreadCount: number;
@@ -24,7 +26,8 @@ export class ChatsService {
     @InjectRepository(ChatMessage) private messageRepo: Repository<ChatMessage>,
     @InjectRepository(User) private userRepo: Repository<User>,
     private followsService: FollowsService,
-  ) {}
+    private notificationsService: NotificationsService,
+  ) { }
 
   private async assertMember(chatId: number, userId: string) {
     const membership = await this.memberRepo.findOne({
@@ -147,16 +150,17 @@ export class ChatsService {
         const last = latestByChat.get(chat.id);
         const lastDto = last
           ? {
-              id: last.id,
-              content: last.content,
-              createdAt: last.createdAt,
-              senderId: last.sender?.id ?? null,
-            }
+            id: last.id,
+            content: last.content,
+            createdAt: last.createdAt,
+            senderId: last.sender?.id ?? null,
+          }
           : null;
 
         return {
           chatId: chat.id,
           type: chat.type,
+          groupName: chat.type === 'group' ? (chat.name ?? null) : null,
           otherUser: other
             ? { id: other.id, name: other.name, profile_image: other.profile_image ?? null }
             : null,
@@ -214,24 +218,17 @@ export class ChatsService {
       throw new NotFoundException('Chat not found');
     }
 
-    const otherUser = chat.members.find((m) => m.user?.id !== senderId)?.user;
-    if (!otherUser) {
-      throw new BadRequestException('Chat does not have another member');
-    }
-
-    // Allow sending only if there is still an accepted follow in either direction.
-    const canSendAsFollowing = await this.followsService.isFollowing(
-      senderId,
-      otherUser.id,
-    );
-    const canSendAsFollower = await this.followsService.isFollowing(
-      otherUser.id,
-      senderId,
-    );
-    if (!canSendAsFollowing && !canSendAsFollower) {
-      throw new ForbiddenException(
-        'You must follow this user before sending a new message.',
-      );
+    // Follow-check only applies to direct chats
+    if (chat.type === 'direct') {
+      const otherUser = chat.members.find((m) => m.user?.id !== senderId)?.user;
+      if (!otherUser) {
+        throw new BadRequestException('Chat does not have another member');
+      }
+      const canSendAsFollowing = await this.followsService.isFollowing(senderId, otherUser.id);
+      const canSendAsFollower = await this.followsService.isFollowing(otherUser.id, senderId);
+      if (!canSendAsFollowing && !canSendAsFollower) {
+        throw new ForbiddenException('You must follow this user before sending a new message.');
+      }
     }
 
     const text = (content ?? '').trim();
@@ -251,6 +248,150 @@ export class ChatsService {
       where: { id: msg.id },
       relations: ['sender'],
     });
+  }
+
+  // -------------------- Group chat methods --------------------
+
+  async getFollowNetwork(userId: string) {
+    const followers = await this.followsService.getFollowers(userId);
+    const following = await this.followsService.getFollowing(userId);
+    const seen = new Set<string>();
+    const result: { id: string; name: string; profile_image: string | null }[] = [];
+    for (const u of [...followers, ...following]) {
+      if (!seen.has(u.id)) {
+        seen.add(u.id);
+        result.push({ id: u.id, name: u.name, profile_image: u.profile_image ?? null });
+      }
+    }
+    return result;
+  }
+
+  async createGroupChat(creatorId: string, name: string, memberIds: string[]) {
+    const trimmedName = (name ?? '').trim();
+    if (!trimmedName) throw new BadRequestException('Group name is required');
+
+    // Validate members are in follow network
+    const network = await this.getFollowNetwork(creatorId);
+    const networkIds = new Set(network.map((u) => u.id));
+    for (const mid of memberIds) {
+      if (!networkIds.has(mid)) {
+        throw new ForbiddenException('You can only add followers or following as group members');
+      }
+    }
+
+    const chat = await this.chatRepo.save(
+      this.chatRepo.create({
+        type: 'group',
+        name: trimmedName,
+        creator: { id: creatorId } as User,
+      }),
+    );
+
+    const allMemberIds = [creatorId, ...memberIds.filter((id) => id !== creatorId)];
+    await this.memberRepo.save(
+      allMemberIds.map((uid) =>
+        this.memberRepo.create({
+          chat: { id: chat.id } as Chat,
+          user: { id: uid } as User,
+          lastReadAt: uid === creatorId ? new Date() : null,
+        }),
+      ),
+    );
+
+    // Notify each invited member (not the creator) asynchronously
+    for (const mid of memberIds.filter((id) => id !== creatorId)) {
+      this.notificationsService
+        .createGroupAddNotification(mid, creatorId, chat.id, trimmedName)
+        .catch(() => { /* ignore notification errors */ });
+    }
+
+    return chat;
+  }
+
+  async getChatDetails(chatId: number, userId: string) {
+    await this.assertMember(chatId, userId);
+    const chat = await this.chatRepo.findOne({
+      where: { id: chatId },
+      relations: ['creator', 'members', 'members.user'],
+    });
+    if (!chat) throw new NotFoundException('Chat not found');
+    return {
+      id: chat.id,
+      type: chat.type,
+      name: chat.name,
+      creatorId: chat.creator?.id ?? null,
+      members: chat.members.map((m) => ({
+        id: m.user?.id ?? null,
+        name: m.user?.name ?? null,
+        profile_image: m.user?.profile_image ?? null,
+      })),
+    };
+  }
+
+  async addGroupMember(chatId: number, requesterId: string, newMemberId: string) {
+    const chat = await this.chatRepo.findOne({
+      where: { id: chatId },
+      relations: ['creator'],
+    });
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (chat.type !== 'group') throw new BadRequestException('Not a group chat');
+    if ((chat.creator?.id ?? null) !== requesterId) {
+      throw new ForbiddenException('Only the group creator can add members');
+    }
+
+    // Must be in follow network
+    const network = await this.getFollowNetwork(requesterId);
+    const inNetwork = network.some((u) => u.id === newMemberId);
+    if (!inNetwork) throw new ForbiddenException('User is not in your followers or following');
+
+    // Check not already a member
+    const existing = await this.memberRepo.findOne({
+      where: { chat: { id: chatId }, user: { id: newMemberId } },
+    });
+    if (existing) throw new BadRequestException('User is already a member of this group');
+
+    await this.memberRepo.save(
+      this.memberRepo.create({
+        chat: { id: chatId } as Chat,
+        user: { id: newMemberId } as User,
+        lastReadAt: null,
+      }),
+    );
+
+    // Notify the newly added member asynchronously
+    this.notificationsService
+      .createGroupAddNotification(newMemberId, requesterId, chatId, chat.name ?? 'Group')
+      .catch(() => { /* ignore notification errors */ });
+
+    return true;
+  }
+
+  async removeGroupMember(chatId: number, requesterId: string, memberIdToRemove: string) {
+    const chat = await this.chatRepo.findOne({
+      where: { id: chatId },
+      relations: ['creator'],
+    });
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (chat.type !== 'group') throw new BadRequestException('Not a group chat');
+    if ((chat.creator?.id ?? null) !== requesterId) {
+      throw new ForbiddenException('Only the group creator can remove members');
+    }
+    if (memberIdToRemove === requesterId) {
+      throw new BadRequestException('Creator cannot remove themselves from the group');
+    }
+
+    const membership = await this.memberRepo.findOne({
+      where: { chat: { id: chatId }, user: { id: memberIdToRemove } },
+    });
+    if (!membership) throw new NotFoundException('Member not found in this group');
+    await this.memberRepo.remove(membership);
+
+    // Notify the removed member asynchronously
+    this.notificationsService
+      .createGroupRemoveNotification(memberIdToRemove, requesterId, chat.name ?? 'Group')
+      .catch(() => { /* ignore notification errors */ });
+
+    return true;
   }
 
   async deleteMessage(chatId: number, messageId: number, userId: string) {

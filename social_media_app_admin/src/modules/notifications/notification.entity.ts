@@ -16,6 +16,8 @@ export enum NotificationType {
   FOLLOW_REQUEST = 'follow_request',
   FOLLOW_ACCEPT = 'follow_accept',
   FOLLOW_REJECT = 'follow_reject',
+  GROUP_ADD = 'group_add',
+  GROUP_REMOVE = 'group_remove',
 }
 
 @Entity()
