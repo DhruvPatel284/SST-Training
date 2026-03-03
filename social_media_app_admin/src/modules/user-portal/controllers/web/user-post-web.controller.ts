@@ -29,7 +29,7 @@ export class UserPostsController {
     private postsService: PostsService,
     private commentsService: CommentsService,
     private usersService: UsersService,
-  ) {}
+  ) { }
 
   // ─── LIKE / UNLIKE POST ──────────────────────────────────────────────────────
   @Post(':id/like')
@@ -40,9 +40,9 @@ export class UserPostsController {
   ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
-      }      
+      }
       const result = await this.postsService.toggleLike(
         parseInt(postId),
         userId,
@@ -72,7 +72,7 @@ export class UserPostsController {
   ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
       }
 
@@ -93,7 +93,7 @@ export class UserPostsController {
       const commentWithUser = await this.commentsService.findOneWithUser(
         comment.id,
       );
-      if(!commentWithUser){
+      if (!commentWithUser) {
         throw new NotFoundException('Comment Not Found')
       }
 
@@ -119,6 +119,43 @@ export class UserPostsController {
     }
   }
 
+  // ─── GET COMMENTS FOR POST ───────────────────────────────────────────────────
+  @Get(':id/comments')
+  async getComments(
+    @Param('id') postId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return null;
+      }
+
+      const comments = await this.commentsService.getCommentsForPost(parseInt(postId));
+
+      return res.json({
+        success: true,
+        comments: comments.map((c) => ({
+          id: c.id,
+          content: c.comment,
+          createdAt: c.createdAt,
+          user: {
+            id: c.user.id,
+            name: c.user.name,
+            profile_image: c.user.profile_image,
+          },
+        })),
+      });
+    } catch (error) {
+      console.error('Get comments error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to load comments',
+      });
+    }
+  }
+
   // ─── GET PAGINATED FEED ──────────────────────────────────────────────────────
   @Get('feed')
   async getFeedPaginated(
@@ -129,7 +166,7 @@ export class UserPostsController {
   ) {
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
       }
       const pageNumber = parseInt(page) || 1;
@@ -176,7 +213,7 @@ export class UserPostsController {
     console.log("Hi ________")
     try {
       const userId = req.session?.userId;
-      if(!userId){
+      if (!userId) {
         return null;
       }
 
@@ -272,7 +309,7 @@ export class UserPostsController {
       const imageFilenames = files
         ?.filter(file => file.mimetype.startsWith('image/'))
         .map(file => file.filename) || [];
-        
+
       const videoFilenames = files
         ?.filter(file => file.mimetype.startsWith('video/'))
         .map(file => file.filename) || [];
@@ -449,7 +486,7 @@ export class UserPostsController {
       const newImageFilenames = files
         ?.filter(file => file.mimetype.startsWith('image/'))
         .map(file => file.filename) || [];
-        
+
       const newVideoFilenames = files
         ?.filter(file => file.mimetype.startsWith('video/'))
         .map(file => file.filename) || [];
