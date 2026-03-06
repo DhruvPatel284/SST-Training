@@ -5,6 +5,7 @@ import { Comment } from './comment.entity';
 import { Post } from '../posts/post.entity';
 import { User } from '../users/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 
 @Injectable()
 export class CommentsService {
@@ -16,7 +17,7 @@ export class CommentsService {
     @InjectRepository(User)
     private userRepo: Repository<User>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   /**
    * Create a new comment
@@ -47,13 +48,15 @@ export class CommentsService {
 
     const savedComment = await this.repo.save(comment);
 
-    // CREATE NOTIFICATION (ADD THIS)
+    // Notify the post owner
     try {
-      await this.notificationsService.createCommentNotification(
-        savedComment.id,
-        data.postId,
-        data.userId,
-      );
+      await this.notificationsService.createNotification({
+        recipientId: post.user.id,
+        actorId: data.userId,
+        type: NotificationType.COMMENT,
+        postId: data.postId,
+        commentId: savedComment.id,
+      });
     } catch (error) {
       console.error('Failed to create comment notification:', error);
     }

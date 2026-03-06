@@ -12,6 +12,9 @@ import { User } from '../users/user.entity';
 
 export enum ChatMessageType {
   TEXT = 'text',
+  FILE = 'file',
+  IMAGE = 'image',
+  VIDEO = 'video',
 }
 
 @Entity('chat_messages')
@@ -34,6 +37,12 @@ export class ChatMessage {
 
   @Column({ type: 'text' })
   content: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  fileName: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  fileSize: number | null;
 
   @Column({ type: 'boolean', default: false })
   isDeleted: boolean;

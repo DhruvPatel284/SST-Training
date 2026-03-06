@@ -20,9 +20,10 @@ export class NotificationsService {
   ) { }
 
   /**
-   * Create a new notification
+   * Create a notification. Pass the type explicitly along with any optional
+   * postId / commentId / meta needed for that type.
    */
-  async create(data: {
+  async createNotification(data: {
     recipientId: string;
     actorId: string;
     type: NotificationType;
@@ -229,120 +230,5 @@ export class NotificationsService {
     }
   }
 
-  /**
-   * Create notification for like
-   */
-  async createLikeNotification(
-    postId: number,
-    actorId: string,
-  ): Promise<Notification | null> {
-    const post = await this.postRepo.findOne({
-      where: { id: postId },
-      relations: ['user'],
-    });
-
-    if (!post) return null;
-
-    return this.create({
-      recipientId: post.user.id,
-      actorId,
-      type: NotificationType.LIKE,
-      postId,
-    });
-  }
-
-  /**
-   * Create notification for comment
-   */
-  async createCommentNotification(
-    commentId: number,
-    postId: number,
-    actorId: string,
-  ): Promise<Notification | null> {
-    const post = await this.postRepo.findOne({
-      where: { id: postId },
-      relations: ['user'],
-    });
-
-    if (!post) return null;
-
-    return this.create({
-      recipientId: post.user.id,
-      actorId,
-      type: NotificationType.COMMENT,
-      postId,
-      commentId,
-    });
-  }
-
-  /**
-   * Create notification for follow
-   */
-  async createFollowNotification(
-    recipientId: string,
-    actorId: string,
-  ): Promise<Notification | null> {
-    return this.create({
-      recipientId,
-      actorId,
-      type: NotificationType.FOLLOW,
-    });
-  }
-
-  /**
-   * Create notification for follow request
-   */
-  async createFollowRequestNotification(
-    recipientId: string,
-    actorId: string,
-  ): Promise<Notification | null> {
-    return this.create({
-      recipientId,
-      actorId,
-      type: NotificationType.FOLLOW_REQUEST,
-    });
-  }
-
-  /**
-   * Create notification for follow accept
-   */
-  async createFollowAcceptNotification(
-    recipientId: string,
-    actorId: string,
-  ): Promise<Notification | null> {
-    return this.create({
-      recipientId,
-      actorId,
-      type: NotificationType.FOLLOW_ACCEPT,
-    });
-  }
-
-  /** Notify a user they were added to a group chat. meta: { chatId, groupName } */
-  async createGroupAddNotification(
-    recipientId: string,
-    actorId: string,
-    chatId: number,
-    groupName: string,
-  ): Promise<Notification | null> {
-    return this.create({
-      recipientId,
-      actorId,
-      type: NotificationType.GROUP_ADD,
-      meta: { chatId, groupName },
-    });
-  }
-
-  /** Notify a user they were removed from a group chat. meta: { groupName } */
-  async createGroupRemoveNotification(
-    recipientId: string,
-    actorId: string,
-    groupName: string,
-  ): Promise<Notification | null> {
-    return this.create({
-      recipientId,
-      actorId,
-      type: NotificationType.GROUP_REMOVE,
-      meta: { groupName },
-    });
-  }
 }
+

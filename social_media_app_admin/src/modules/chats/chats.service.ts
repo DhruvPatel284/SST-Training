@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 import { ChatMember } from './chat-member.entity';
 import { ChatMessage, ChatMessageType } from './chat-message.entity';
+import { mimeToMessageType } from './config/multer-chat-file.config';
+import { NotificationType } from '../notifications/notification.entity';
 import { User } from '../users/user.entity';
 import { FollowsService } from '../follows/follows.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -152,6 +154,7 @@ export class ChatsService {
           ? {
             id: last.id,
             content: last.content,
+            messageType: last.messageType,
             createdAt: last.createdAt,
             senderId: last.sender?.id ?? null,
           }
@@ -195,6 +198,8 @@ export class ChatsService {
       senderProfileImage: m.sender?.profile_image ?? null,
       messageType: m.messageType,
       content: m.isDeleted ? 'This message was deleted' : m.content,
+      fileName: m.isDeleted ? null : (m.fileName ?? null),
+      fileSize: m.isDeleted ? null : (m.fileSize ?? null),
       isDeleted: m.isDeleted,
       createdAt: m.createdAt,
     }));
@@ -240,6 +245,52 @@ export class ChatsService {
         sender: { id: senderId } as User,
         messageType: ChatMessageType.TEXT,
         content: text,
+        isDeleted: false,
+      }),
+    );
+
+    return this.messageRepo.findOne({
+      where: { id: msg.id },
+      relations: ['sender'],
+    });
+  }
+
+  async sendFileMessage(
+    chatId: number,
+    senderId: string,
+    file: Express.Multer.File,
+  ) {
+    await this.assertMember(chatId, senderId);
+
+    const chat = await this.chatRepo.findOne({
+      where: { id: chatId },
+      relations: ['members', 'members.user'],
+    });
+    if (!chat) throw new NotFoundException('Chat not found');
+
+    // Follow-check only applies to direct chats
+    if (chat.type === 'direct') {
+      const otherUser = chat.members.find((m) => m.user?.id !== senderId)?.user;
+      if (!otherUser) throw new BadRequestException('Chat does not have another member');
+      const canSendAsFollowing = await this.followsService.isFollowing(senderId, otherUser.id);
+      const canSendAsFollower = await this.followsService.isFollowing(otherUser.id, senderId);
+      if (!canSendAsFollowing && !canSendAsFollower) {
+        throw new ForbiddenException('You must follow this user before sending files.');
+      }
+    }
+
+    const msgType = mimeToMessageType(file.mimetype) as ChatMessageType;
+    const storedFilename = file.filename; // uuid-based name saved on disk
+    const originalName = file.originalname;
+
+    const msg = await this.messageRepo.save(
+      this.messageRepo.create({
+        chat: { id: chatId } as Chat,
+        sender: { id: senderId } as User,
+        messageType: msgType,
+        content: storedFilename,   // stored filename used as content/path
+        fileName: originalName,    // original name shown to user
+        fileSize: file.size,
         isDeleted: false,
       }),
     );
@@ -301,7 +352,12 @@ export class ChatsService {
     // Notify each invited member (not the creator) asynchronously
     for (const mid of memberIds.filter((id) => id !== creatorId)) {
       this.notificationsService
-        .createGroupAddNotification(mid, creatorId, chat.id, trimmedName)
+        .createNotification({
+          recipientId: mid,
+          actorId: creatorId,
+          type: NotificationType.GROUP_ADD,
+          meta: { chatId: chat.id, groupName: trimmedName },
+        })
         .catch(() => { /* ignore notification errors */ });
     }
 
@@ -360,7 +416,12 @@ export class ChatsService {
 
     // Notify the newly added member asynchronously
     this.notificationsService
-      .createGroupAddNotification(newMemberId, requesterId, chatId, chat.name ?? 'Group')
+      .createNotification({
+        recipientId: newMemberId,
+        actorId: requesterId,
+        type: NotificationType.GROUP_ADD,
+        meta: { chatId, groupName: chat.name ?? 'Group' },
+      })
       .catch(() => { /* ignore notification errors */ });
 
     return true;
@@ -388,7 +449,12 @@ export class ChatsService {
 
     // Notify the removed member asynchronously
     this.notificationsService
-      .createGroupRemoveNotification(memberIdToRemove, requesterId, chat.name ?? 'Group')
+      .createNotification({
+        recipientId: memberIdToRemove,
+        actorId: requesterId,
+        type: NotificationType.GROUP_REMOVE,
+        meta: { groupName: chat.name ?? 'Group' },
+      })
       .catch(() => { /* ignore notification errors */ });
 
     return true;

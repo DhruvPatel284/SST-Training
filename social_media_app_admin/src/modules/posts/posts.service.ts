@@ -9,6 +9,7 @@ import { User } from '../users/user.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 @Injectable()
 export class PostsService {
   constructor(
@@ -18,7 +19,7 @@ export class PostsService {
     @InjectRepository(PostMedia)
     private mediaRepo: Repository<PostMedia>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async getPostsPaginate(query: PaginateQuery): Promise<Paginated<Post>> {
     return paginate(query, this.repo, {
@@ -120,9 +121,9 @@ export class PostsService {
     // Update images if provided
     if (imageFilenames !== undefined) {
       // Remove all existing images
-      await this.mediaRepo.delete({ 
+      await this.mediaRepo.delete({
         post: { id },
-        type: MediaType.IMAGE 
+        type: MediaType.IMAGE
       });
 
       // Add new images
@@ -142,10 +143,10 @@ export class PostsService {
     // Update videos if provided
     if (videoFilenames !== undefined) {
       // Remove all existing videos
-      await this.mediaRepo.delete({ 
+      await this.mediaRepo.delete({
         post: { id },
-        type: MediaType.VIDEO 
-      });    
+        type: MediaType.VIDEO
+      });
 
       // Add new videos
       if (videoFilenames.length > 0) {
@@ -163,7 +164,7 @@ export class PostsService {
 
     return this.findOne(id);
   }
-                        
+
   async remove(id: number): Promise<Post> {
     const post = await this.findOne(id);
     // Media will cascade delete
@@ -171,34 +172,34 @@ export class PostsService {
   }
 
   async getFeedForUser(userId: string, followingIds: string[]) {
-  // Combine current user ID with following IDs
-  const userIds = [userId, ...followingIds];
+    // Combine current user ID with following IDs
+    const userIds = [userId, ...followingIds];
 
-  const posts = await this.repo.find({
-    where: {
-      user: { id: In(userIds) },
-    },
-    relations: [
-      'user',
-      'media',
-      'likedBy',
-      'comments',
-      'comments.user',
-    ],
-    order: {
-      createdAt: 'DESC',
-    },
-    take: 50, // Limit to 50 recent posts
-  });
+    const posts = await this.repo.find({
+      where: {
+        user: { id: In(userIds) },
+      },
+      relations: [
+        'user',
+        'media',
+        'likedBy',
+        'comments',
+        'comments.user',
+      ],
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 50, // Limit to 50 recent posts
+    });
 
-  // Enrich posts with counts
-  return posts.map((post) => ({
-    ...post,
-    likeCount: post.likedBy?.length || 0,
-    commentCount: post.comments?.length || 0,
-    isLikedByCurrentUser: post.likedBy?.some((like) => like.id === userId) || false,
-  }));
-}
+    // Enrich posts with counts
+    return posts.map((post) => ({
+      ...post,
+      likeCount: post.likedBy?.length || 0,
+      commentCount: post.comments?.length || 0,
+      isLikedByCurrentUser: post.likedBy?.some((like) => like.id === userId) || false,
+    }));
+  }
 
   /**
    * Get posts by a specific user
@@ -251,10 +252,15 @@ export class PostsService {
     } else {
       // Like: add user to likedBy
       post.likedBy.push(user);
-      
-      // CREATE NOTIFICATION (ADD THIS)
+
+      // Notify the post owner
       try {
-        await this.notificationsService.createLikeNotification(postId, userId);
+        await this.notificationsService.createNotification({
+          recipientId: post.user.id,
+          actorId: userId,
+          type: NotificationType.LIKE,
+          postId,
+        });
       } catch (error) {
         console.error('Failed to create like notification:', error);
       }
@@ -318,89 +324,89 @@ export class PostsService {
   }
 
   async deleteMedia(mediaId: number): Promise<void> {
-  const media = await this.mediaRepo.findOne({
-    where: { id: mediaId },
-  });
+    const media = await this.mediaRepo.findOne({
+      where: { id: mediaId },
+    });
 
-  if (!media) {
-    throw new NotFoundException('Media not found');
-  }
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
 
-  // Delete file from disk
-  const filePath = path.join(
-    process.cwd(),
-    'public',
-    'uploads',
-    'posts',
-    media.filename,
-  );
-
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-
-  // Delete from database
-  await this.mediaRepo.remove(media);
-}
-
-/**
- * Update post with new media (adds to existing media)
- * @param postId - Post ID
- * @param content - Updated content
- * @param newImageFilenames - New images to add
- * @param newVideoFilenames - New videos to add
- */
-async updateWithMedia(
-  postId: number,
-  content: string,
-  newImageFilenames: string[] = [],
-  newVideoFilenames: string[] = [],
-): Promise<Post> {
-  const post = await this.findOne(postId);
-
-  // Update content
-  post.content = content;
-  await this.repo.save(post);
-
-  // Get current max display_order
-  const existingMedia = await this.mediaRepo.find({
-    where: { post: { id: postId } },
-    order: { display_order: 'DESC' },
-  });
-
-  let maxOrder = 0;
-  if (existingMedia.length > 0) {
-    maxOrder = existingMedia[0].display_order;
-  }
-
-  // Add new images
-  if (newImageFilenames.length > 0) {
-    const newImages = newImageFilenames.map((filename, index) =>
-      this.mediaRepo.create({
-        filename,
-        type: MediaType.IMAGE,
-        display_order: maxOrder + index + 1,
-        post: post,
-      }),
+    // Delete file from disk
+    const filePath = path.join(
+      process.cwd(),
+      'public',
+      'uploads',
+      'posts',
+      media.filename,
     );
-    await this.mediaRepo.save(newImages);
-    maxOrder += newImageFilenames.length;
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    await this.mediaRepo.remove(media);
   }
 
-  // Add new videos
-  if (newVideoFilenames.length > 0) {
-    const newVideos = newVideoFilenames.map((filename, index) =>
-      this.mediaRepo.create({
-        filename,
-        type: MediaType.VIDEO,
-        display_order: maxOrder + index + 1,
-        post: post,
-      }),
-    );
-    await this.mediaRepo.save(newVideos);
-  }
+  /**
+   * Update post with new media (adds to existing media)
+   * @param postId - Post ID
+   * @param content - Updated content
+   * @param newImageFilenames - New images to add
+   * @param newVideoFilenames - New videos to add
+   */
+  async updateWithMedia(
+    postId: number,
+    content: string,
+    newImageFilenames: string[] = [],
+    newVideoFilenames: string[] = [],
+  ): Promise<Post> {
+    const post = await this.findOne(postId);
 
-  return this.findOne(postId);
-}
+    // Update content
+    post.content = content;
+    await this.repo.save(post);
+
+    // Get current max display_order
+    const existingMedia = await this.mediaRepo.find({
+      where: { post: { id: postId } },
+      order: { display_order: 'DESC' },
+    });
+
+    let maxOrder = 0;
+    if (existingMedia.length > 0) {
+      maxOrder = existingMedia[0].display_order;
+    }
+
+    // Add new images
+    if (newImageFilenames.length > 0) {
+      const newImages = newImageFilenames.map((filename, index) =>
+        this.mediaRepo.create({
+          filename,
+          type: MediaType.IMAGE,
+          display_order: maxOrder + index + 1,
+          post: post,
+        }),
+      );
+      await this.mediaRepo.save(newImages);
+      maxOrder += newImageFilenames.length;
+    }
+
+    // Add new videos
+    if (newVideoFilenames.length > 0) {
+      const newVideos = newVideoFilenames.map((filename, index) =>
+        this.mediaRepo.create({
+          filename,
+          type: MediaType.VIDEO,
+          display_order: maxOrder + index + 1,
+          post: post,
+        }),
+      );
+      await this.mediaRepo.save(newVideos);
+    }
+
+    return this.findOne(postId);
+  }
 
 }

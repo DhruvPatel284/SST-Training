@@ -15,12 +15,14 @@
   var chatInput = document.getElementById("chat-input");
   var chatInputFeedback = document.querySelector(".chat-input-feedback");
   var chatSearchInput = document.getElementById("chatSearchInput");
+  var attachBtn = document.getElementById("attach-file-btn");
+  var fileInput = document.getElementById("chat-file-input");
 
   var currentChatId = cfg.chatId || null;
   var currentChatType = null; // 'direct' | 'group'
   var chatIndex = [];
 
-  // ─── Utilities ───────────────────────────────────────────────────────────────
+  // ─── Utilities ────────────────────────────────────────────────────────────────
 
   function escapeHtml(str) {
     return (str == null ? "" : String(str))
@@ -37,6 +39,13 @@
     return dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
+  function fmtFileSize(bytes) {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
   function fetchJson(url, opts) {
     return fetch(url, Object.assign({ headers: { "Content-Type": "application/json" }, credentials: "same-origin" }, opts || {}))
       .then(function (res) {
@@ -47,7 +56,7 @@
       });
   }
 
-  // ─── Header ──────────────────────────────────────────────────────────────────
+  // ─── Header ───────────────────────────────────────────────────────────────────
 
   function setHeader(chat) {
     if (!chat) return;
@@ -84,7 +93,16 @@
     }
   }
 
-  // ─── Render list ─────────────────────────────────────────────────────────────
+  // ─── Render list ──────────────────────────────────────────────────────────────
+
+  function lastMessagePreview(lastMessage) {
+    if (!lastMessage) return "";
+    var msgType = lastMessage.messageType || "text";
+    if (msgType === "image") return "📷 Image";
+    if (msgType === "video") return "🎥 Video";
+    if (msgType === "file") return "📎 File";
+    return lastMessage.content || "";
+  }
 
   function renderChatList(items) {
     var directItems = (items || []).filter(function (c) { return c.type === "direct" && c.otherUser; });
@@ -108,7 +126,7 @@
           '<div class="d-flex align-items-center">' +
           '<div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0"><div class="avatar-xxs">' + profileImg + '</div></div>' +
           '<div class="flex-grow-1 overflow-hidden"><p class="text-truncate mb-0">' + escapeHtml(c.otherUser.name) + '</p>' +
-          '<small class="text-muted text-truncate d-block">' + escapeHtml((c.lastMessage && c.lastMessage.content) || "") + '</small></div>' +
+          '<small class="text-muted text-truncate d-block">' + escapeHtml(lastMessagePreview(c.lastMessage)) + '</small></div>' +
           badge +
           '</div></a></li>'
         );
@@ -132,7 +150,7 @@
           '<div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0"><div class="avatar-xxs">' +
           '<div class="avatar-title rounded-circle bg-soft-primary text-primary fs-11"><i class="ri-group-line"></i></div></div></div>' +
           '<div class="flex-grow-1 overflow-hidden"><p class="text-truncate mb-0">' + escapeHtml(c.groupName || "Group") + '</p>' +
-          '<small class="text-muted text-truncate d-block">' + escapeHtml((c.lastMessage && c.lastMessage.content) || "") + '</small></div>' +
+          '<small class="text-muted text-truncate d-block">' + escapeHtml(lastMessagePreview(c.lastMessage)) + '</small></div>' +
           badge +
           '</div></a></li>'
         );
@@ -165,7 +183,59 @@
     });
   }
 
-  // ─── Messages ────────────────────────────────────────────────────────────────
+  // ─── Message content rendering ────────────────────────────────────────────────
+
+  function renderMessageContent(m) {
+    if (m.isDeleted) {
+      return '<p class="mb-0 ctext-content fst-italic text-muted">This message was deleted</p>';
+    }
+
+    var msgType = m.messageType || "text";
+
+    if (msgType === "image") {
+      var imgSrc = "/uploads/chats/" + escapeHtml(m.content);
+      return (
+        '<a href="' + imgSrc + '" class="chat-img-link" data-glightbox="type: image" target="_blank">' +
+        '<img src="' + imgSrc + '" alt="' + escapeHtml(m.fileName || "image") + '" ' +
+        'class="img-fluid rounded chat-img-preview" style="max-width:240px;max-height:200px;cursor:pointer;" />' +
+        '</a>' +
+        (m.fileName ? '<p class="mb-0 mt-1 text-muted" style="font-size:11px;">' + escapeHtml(m.fileName) + (m.fileSize ? ' · ' + fmtFileSize(m.fileSize) : '') + '</p>' : '')
+      );
+    }
+
+    if (msgType === "video") {
+      var vidSrc = "/uploads/chats/" + escapeHtml(m.content);
+      return (
+        '<video controls class="chat-video-preview rounded" style="max-width:280px;max-height:200px;">' +
+        '<source src="' + vidSrc + '" />' +
+        'Your browser does not support video playback.' +
+        '</video>' +
+        (m.fileName ? '<p class="mb-0 mt-1 text-muted" style="font-size:11px;">' + escapeHtml(m.fileName) + (m.fileSize ? ' · ' + fmtFileSize(m.fileSize) : '') + '</p>' : '')
+      );
+    }
+
+    if (msgType === "file") {
+      var fileUrl = "/uploads/chats/" + escapeHtml(m.content);
+      var displayName = m.fileName || m.content || "Download file";
+      var sizeLabel = m.fileSize ? ' <span class="text-muted">(' + fmtFileSize(m.fileSize) + ')</span>' : '';
+      return (
+        '<div class="d-flex align-items-center gap-2 p-2 rounded border bg-light">' +
+        '<i class="ri-file-line fs-24 text-primary flex-shrink-0"></i>' +
+        '<div class="overflow-hidden">' +
+        '<a href="' + fileUrl + '" download="' + escapeHtml(displayName) + '" class="text-body fw-medium text-truncate d-block">' +
+        escapeHtml(displayName) + '</a>' + sizeLabel +
+        '</div>' +
+        '<a href="' + fileUrl + '" download="' + escapeHtml(displayName) + '" class="btn btn-sm btn-soft-primary ms-auto flex-shrink-0" title="Download">' +
+        '<i class="ri-download-2-line"></i></a>' +
+        '</div>'
+      );
+    }
+
+    // Default: text
+    return '<p class="mb-0 ctext-content">' + escapeHtml(m.content || "") + '</p>';
+  }
+
+  // ─── Messages ─────────────────────────────────────────────────────────────────
 
   function renderMessages(messages) {
     if (!convoEl) return;
@@ -174,7 +244,6 @@
       var isRight = (m.senderId || null) === (selfUserId || null);
       var align = isRight ? "right" : "left";
       var time = fmtTime(m.createdAt);
-      var text = escapeHtml(m.content || "");
 
       var avatarHtml = !isRight
         ? '<div class="chat-avatar"><img src="' + (m.senderProfileImage ? "/uploads/users/" + escapeHtml(m.senderProfileImage) : "/assets/images/users/user-dummy-img.jpg") + '" alt=""></div>'
@@ -184,20 +253,27 @@
         ? '<div class="mb-1"><small class="fw-semibold text-primary">' + escapeHtml(m.senderName) + '</small></div>'
         : "";
 
+      var contentHtml = renderMessageContent(m);
+
+      var dropdownItems = "";
+      if (isRight) {
+        var canCopy = !m.isDeleted && (m.messageType === "text" || !m.messageType);
+        if (canCopy) {
+          dropdownItems += '<a class="dropdown-item copy-message" href="#" data-msg="' + escapeHtml(m.content || "") + '"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>';
+        }
+        dropdownItems += '<a class="dropdown-item delete-message" href="#" data-message-id="' + m.id + '"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>';
+      }
       var dropdownHtml = isRight
         ? '<div class="dropdown align-self-start message-box-drop">' +
         '<a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="ri-more-2-fill"></i></a>' +
-        '<div class="dropdown-menu">' +
-        '<a class="dropdown-item copy-message" href="#" data-msg="' + escapeHtml(m.content || "") + '"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>' +
-        '<a class="dropdown-item delete-message" href="#" data-message-id="' + m.id + '"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>' +
-        '</div></div>'
+        '<div class="dropdown-menu">' + dropdownItems + '</div></div>'
         : "";
 
       convoEl.insertAdjacentHTML("beforeend",
         '<li class="chat-list ' + align + '" id="msg-' + m.id + '">' +
         '<div class="conversation-list">' + avatarHtml +
         '<div class="user-chat-content">' + senderNameHtml +
-        '<div class="ctext-wrap"><div class="ctext-wrap-content"><p class="mb-0 ctext-content">' + text + '</p></div>' +
+        '<div class="ctext-wrap"><div class="ctext-wrap-content">' + contentHtml + '</div>' +
         dropdownHtml + '</div>' +
         '<div class="conversation-name"><small class="text-muted time">' + escapeHtml(time) + '</small></div>' +
         '</div></div></li>'
@@ -219,11 +295,21 @@
         fetchJson(apiBase + "/" + currentChatId + "/messages/" + id + "/delete", { method: "POST" })
           .then(function () {
             var row = document.getElementById("msg-" + id);
-            if (row) { var ct = row.querySelector(".ctext-content"); if (ct) ct.textContent = "This message was deleted"; }
+            if (row) {
+              var ct = row.querySelector(".ctext-wrap-content");
+              if (ct) ct.innerHTML = '<p class="mb-0 ctext-content fst-italic text-muted">This message was deleted</p>';
+            }
           })
           .catch(function (err) { console.error(err); });
       });
     });
+
+    // Init GLightbox for image previews if available
+    try {
+      if (typeof GLightbox !== "undefined") {
+        GLightbox({ selector: ".chat-img-link" });
+      }
+    } catch (e) { }
 
     scrollToBottom();
   }
@@ -353,7 +439,7 @@
     });
   }
 
-  // ─── Data loading ─────────────────────────────────────────────────────────────
+  // ─── Data loading ──────────────────────────────────────────────────────────────
 
   function loadChatList() {
     if (!userListEl && !groupListEl) return Promise.resolve();
@@ -395,7 +481,7 @@
     });
   }
 
-  // ─── Send message ─────────────────────────────────────────────────────────────
+  // ─── Send text message ─────────────────────────────────────────────────────────
 
   if (chatForm) {
     chatForm.addEventListener("submit", function (e) {
@@ -419,7 +505,89 @@
     });
   }
 
-  // ─── Emoji picker ────────────────────────────────────────────────────────────
+  // ─── File attachment ───────────────────────────────────────────────────────────
+
+  // Wire up attach button -> trigger hidden file input
+  if (attachBtn) {
+    attachBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (!currentChatId) {
+        if (typeof Swal !== "undefined") {
+          Swal.fire("No chat selected", "Please select a chat first.", "info");
+        }
+        return;
+      }
+      // Re-query fileInput in case DOM wasn't ready at IIFE init time
+      var fi = document.getElementById("chat-file-input");
+      if (fi) {
+        fi.value = "";
+        fi.click();
+      }
+    });
+  }
+
+  // Wire up file input -> upload on change
+  if (fileInput) {
+    fileInput.addEventListener("change", function () {
+      doFileUpload(this);
+    });
+  }
+
+  // Also handle dynamically — in case the file input wasn't in DOM at startup
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "chat-file-input" && e.target !== fileInput) {
+      doFileUpload(e.target);
+    }
+  });
+
+  function doFileUpload(inputEl) {
+    var file = inputEl.files && inputEl.files[0];
+    if (!file || !currentChatId) return;
+
+    var formData = new FormData();
+    formData.append("file", file);
+
+    // Show a "sending" indicator
+    var sendingIndicator = null;
+    if (convoEl) {
+      sendingIndicator = document.createElement("li");
+      sendingIndicator.className = "chat-list right";
+      sendingIndicator.innerHTML =
+        '<div class="conversation-list">' +
+        '<div class="user-chat-content">' +
+        '<div class="ctext-wrap"><div class="ctext-wrap-content">' +
+        '<p class="mb-0 text-muted fst-italic"><i class="ri-upload-cloud-line me-1"></i>Sending ' + escapeHtml(file.name) + '…</p>' +
+        '</div></div></div></div>';
+      convoEl.appendChild(sendingIndicator);
+      scrollToBottom();
+    }
+
+    fetch(apiBase + "/" + currentChatId + "/messages/file", {
+      method: "POST",
+      credentials: "same-origin",
+      body: formData,
+      // No Content-Type header — browser sets multipart boundary automatically
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok || data.success === false) throw new Error(data.error || "Upload failed");
+          return data;
+        });
+      })
+      .then(function () {
+        if (sendingIndicator && sendingIndicator.parentNode) sendingIndicator.parentNode.removeChild(sendingIndicator);
+        inputEl.value = "";
+        return loadMessages(currentChatId);
+      })
+      .then(function () { return loadChatList(); })
+      .catch(function (err) {
+        if (sendingIndicator && sendingIndicator.parentNode) sendingIndicator.parentNode.removeChild(sendingIndicator);
+        console.error("File send error:", err);
+        if (typeof Swal !== "undefined") Swal.fire("Upload failed", (err && err.message) || "Could not send the file.", "error");
+      });
+  }
+
+  // ─── Emoji picker ─────────────────────────────────────────────────────────────
 
   try {
     if (window.FgEmojiPicker && document.querySelector(".chat-input")) {
@@ -435,7 +603,7 @@
     }
   } catch (e) { }
 
-  // ─── Init ────────────────────────────────────────────────────────────────────
+  // ─── Init ─────────────────────────────────────────────────────────────────────
 
   ensureDirectChat()
     .then(function () {

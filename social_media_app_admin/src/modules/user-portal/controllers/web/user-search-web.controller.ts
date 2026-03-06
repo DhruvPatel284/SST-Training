@@ -23,7 +23,7 @@ export class UserSearchController {
     private usersService: UsersService,
     private followsService: FollowsService,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   // ─── SEARCH PAGE ─────────────────────────────────────────────────────────────
   @Get()
@@ -40,8 +40,8 @@ export class UserSearchController {
 
       const currentUser = await this.usersService.findOne(userId);
 
-      let searchResults:any = [];
-      let suggestedUsers:any = [];
+      let searchResults: any = [];
+      let suggestedUsers: any = [];
 
       if (query && query.trim() !== '') {
         // Perform search - now includes currentUserId
@@ -94,7 +94,7 @@ export class UserSearchController {
 
       // Create notification for follow request
       try {
-        await this.notificationsService.create({
+        await this.notificationsService.createNotification({
           recipientId: targetUserId,
           actorId: userId,
           type: NotificationType.FOLLOW_REQUEST,
@@ -158,7 +158,7 @@ export class UserSearchController {
 
       // Create notification for follow accept
       try {
-        await this.notificationsService.create({
+        await this.notificationsService.createNotification({
           recipientId: follow.follower.id,
           actorId: userId,
           type: NotificationType.FOLLOW_ACCEPT,
@@ -197,7 +197,7 @@ export class UserSearchController {
 
       // Create notification for rejection (optional - let sender know)
       try {
-        await this.notificationsService.create({
+        await this.notificationsService.createNotification({
           recipientId: follow.follower.id,
           actorId: userId,
           type: NotificationType.FOLLOW_REJECT,

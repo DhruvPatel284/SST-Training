@@ -6,13 +6,17 @@ import {
   Post,
   Req,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { ChatsService } from 'src/modules/chats/chats.service';
 import { UsersService } from 'src/modules/users/users.service';
+import { multerChatFileConfig } from 'src/modules/chats/config/multer-chat-file.config';
 
 @Controller('user/chats')
 @UseGuards(AuthGuard)
@@ -145,7 +149,10 @@ export class UserChatsWebController {
             id: msg.id,
             chatId: Number(chatId),
             senderId: msg.sender?.id ?? null,
+            messageType: msg.messageType,
             content: msg.isDeleted ? 'This message was deleted' : msg.content,
+            fileName: msg.fileName ?? null,
+            fileSize: msg.fileSize ?? null,
             isDeleted: msg.isDeleted,
             createdAt: msg.createdAt,
           }
@@ -174,6 +181,44 @@ export class UserChatsWebController {
     } catch (error) {
       console.error('Delete message error:', error);
       return res.status(400).json({ success: false, error: 'Failed to delete message' });
+    }
+  }
+
+  @Post('api/:chatId/messages/file')
+  @UseInterceptors(FileInterceptor('file', multerChatFileConfig))
+  async apiSendFile(
+    @Param('chatId') chatId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return null;
+      if (!file) return res.status(400).json({ success: false, error: 'No file uploaded' });
+
+      const msg = await this.chatsService.sendFileMessage(Number(chatId), userId, file);
+      return res.json({
+        success: true,
+        message: msg
+          ? {
+            id: msg.id,
+            chatId: Number(chatId),
+            senderId: msg.sender?.id ?? null,
+            messageType: msg.messageType,
+            content: msg.content,
+            fileName: msg.fileName ?? null,
+            fileSize: msg.fileSize ?? null,
+            isDeleted: msg.isDeleted,
+            createdAt: msg.createdAt,
+          }
+          : null,
+      });
+    } catch (error) {
+      console.error('Send file error:', error);
+      return res
+        .status(400)
+        .json({ success: false, error: error?.message ?? 'Failed to send file' });
     }
   }
 
