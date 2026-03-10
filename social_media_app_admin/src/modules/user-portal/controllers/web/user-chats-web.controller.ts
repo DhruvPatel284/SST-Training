@@ -15,6 +15,7 @@ import { Request, Response } from 'express';
 
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { ChatsService } from 'src/modules/chats/chats.service';
+import { ChatGateway } from 'src/modules/chats/chat.gateway';
 import { UsersService } from 'src/modules/users/users.service';
 import { multerChatFileConfig } from 'src/modules/chats/config/multer-chat-file.config';
 
@@ -23,6 +24,7 @@ import { multerChatFileConfig } from 'src/modules/chats/config/multer-chat-file.
 export class UserChatsWebController {
   constructor(
     private chatsService: ChatsService,
+    private chatGateway: ChatGateway,
     private usersService: UsersService,
   ) { }
 
@@ -198,22 +200,27 @@ export class UserChatsWebController {
       if (!file) return res.status(400).json({ success: false, error: 'No file uploaded' });
 
       const msg = await this.chatsService.sendFileMessage(Number(chatId), userId, file);
-      return res.json({
-        success: true,
-        message: msg
-          ? {
-            id: msg.id,
-            chatId: Number(chatId),
-            senderId: msg.sender?.id ?? null,
-            messageType: msg.messageType,
-            content: msg.content,
-            fileName: msg.fileName ?? null,
-            fileSize: msg.fileSize ?? null,
-            isDeleted: msg.isDeleted,
-            createdAt: msg.createdAt,
-          }
-          : null,
-      });
+
+      const dto = msg ? {
+        id: msg.id,
+        chatId: Number(chatId),
+        senderId: msg.sender?.id ?? null,
+        senderName: (msg.sender as any)?.name ?? null,
+        senderProfileImage: (msg.sender as any)?.profile_image ?? null,
+        messageType: msg.messageType,
+        content: msg.content,
+        fileName: msg.fileName ?? null,
+        fileSize: msg.fileSize ?? null,
+        isDeleted: msg.isDeleted,
+        createdAt: msg.createdAt,
+      } : null;
+
+      // Broadcast to socket room so all members see the file in real time
+      if (dto) {
+        this.chatGateway.broadcastFileMessage(Number(chatId), dto as Record<string, unknown>);
+      }
+
+      return res.json({ success: true, message: dto });
     } catch (error) {
       console.error('Send file error:', error);
       return res

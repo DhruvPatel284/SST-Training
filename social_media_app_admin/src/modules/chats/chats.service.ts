@@ -40,6 +40,11 @@ export class ChatsService {
     return membership;
   }
 
+  /** Public wrapper used by ChatGateway to verify membership. */
+  async assertMemberPublic(chatId: number, userId: string) {
+    return this.assertMember(chatId, userId);
+  }
+
   async getOrCreateDirectChat(currentUserId: string, otherUserId: string) {
     if (currentUserId === otherUserId) {
       throw new BadRequestException('You cannot chat with yourself');
